@@ -14,6 +14,7 @@ export interface ISmartNode {
     ipAddress: string;
     statusCollateral: string,
     privateAddress:string,
+    privateAccount:string,
     private: boolean,
     collateral: number,
     participants:Iparticipant[];
@@ -36,6 +37,7 @@ const SmartNodeSchema = new mongoose.Schema<SmartNodeDocument>(
         statusCollateral: {type:String,default:""},
         private: {type:Boolean,default:false},
         privateAddress:String,
+        privateAccount:String,
         collateral:Number,
         participants:{type:[participantType],default:[]}
     },

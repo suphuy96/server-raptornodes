@@ -16,6 +16,8 @@ export default gql`
         label: String,
         ipAddress: String,
         privateAddress: String,
+        privateAccount: String,
+        balance:Float,
         private: Boolean,
         statusCollateral: String,
         collateral: Float,

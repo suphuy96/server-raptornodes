@@ -43,6 +43,9 @@ const ServiceResolvers = {
                      objSmartnode[ipAddress]=res[key];
                      objSmartnode[ipAddress].ipAddress = ipAddress;
                  });
+                const resB = await RPCRuner.listaddressbalances().catch(()=>{
+                    return {};
+                });
               return smartNodes.map((item:any)=>{
                     if(objSmartnode[item.ipAddress]){
                         objSmartnode[item.ipAddress].label = item.label;
@@ -50,7 +53,8 @@ const ServiceResolvers = {
                         objSmartnode[item.ipAddress].createdAt = item.createdAt;
                         objSmartnode[item.ipAddress].updatedAt = item.updatedAt;
                         objSmartnode[item.ipAddress].collateral = item.collateral;
-
+                        objSmartnode[item.ipAddress].balance = resB[item.privateAddress]||0;
+                        objSmartnode[item.ipAddress].privateAccount = item.privateAccount;
                         objSmartnode[item.ipAddress].privateAddress = item.privateAddress;
                         objSmartnode[item.ipAddress].statusCollateral = item.statusCollateral;
                         objSmartnode[item.ipAddress].participants = item.participants;
@@ -83,7 +87,7 @@ const ServiceResolvers = {
                         objSmartnode[item.ipAddress].updatedAt = item.updatedAt;
                         objSmartnode[item.ipAddress].collateral = item.collateral;
                         objSmartnode[item.ipAddress].privateAddress = item.privateAddress;
-
+                        objSmartnode[item.ipAddress].privateAccount = item.privateAccount;
                         objSmartnode[item.ipAddress].statusCollateral = item.statusCollateral;
                         objSmartnode[item.ipAddress].participants = item.participants;
                         return {...objSmartnode[item.ipAddress],...item};
@@ -117,7 +121,6 @@ const ServiceResolvers = {
                         objSmartnode[item.ipAddress].updatedAt = item.updatedAt;
                         objSmartnode[item.ipAddress].collateral = item.collateral;
                         objSmartnode[item.ipAddress].privateAddress = item.privateAddress;
-
                         objSmartnode[item.ipAddress].statusCollateral = item.statusCollateral;
                         objSmartnode[item.ipAddress].participants = item.participants;
                         return {...objSmartnode[item.ipAddress],...item};
@@ -162,6 +165,7 @@ const ServiceResolvers = {
                 return false;
             });
             smartNode.privateAddress = privateAddress;
+            smartNode.privateAccount = "SmartNode#"+smartNode.label;
             smartNode.collateral = global.settingSystem.collateral||1500000;
             if(args.collateral){
                 smartNode.collateral = args.collateral;
@@ -191,13 +195,16 @@ const ServiceResolvers = {
             if(args.private ||args.private===false){
                 smartNode.private = args.private;
             }
+            if(!smartNode.privateAccount ||smartNode.privateAccount===""){
+                smartNode.privateAccount = "SmartNode#"+smartNode.label;
+            }
             if(args.statusCollateral){
                 smartNode.statusCollateral = args.statusCollateral;
             }
             await smartNode.save();
             return smartNode;
         },
-        withdrawEnoughSmartNode: async (__: any, args:{_id:string,amount:number,address:string},ctx:any) => {
+        withdrawEnoughSmartNode: async (__: any, args:{_id:string,amount:number,address:string,tfa:string},ctx:any) => {
             checkIsAdmin(ctx.user);
             const smartNode = await SmartNode.findById(args._id);
             if(!smartNode){
@@ -206,12 +213,29 @@ const ServiceResolvers = {
             if(!args.amount){
                 throw new ApolloError("require amount");
             }
-            if(!args.address ||args.address ===''){
+            if(!args.address ||args.address ===""){
                 throw new ApolloError("require address");
             }
+            if(ctx.user.enableTfa){
+                if(!args.tfa||args.tfa===""){
+                    throw new ApolloError("undefined code 2fa");
+                }
+                const isVerified = speakeasy.totp.verify({
+                    secret: ctx.user.tfa.secret,
+                    encoding: "base32",
+                    token: args.tfa
+                });
+                if(!isVerified){
+                    throw new ApolloError("2fa is not correct");
+                }
+            }
             const comment = "sendTo address Smartnode "+smartNode.label;
+            let account =  smartNode.privateAccount;
+            if(smartNode.privateAccount&& smartNode.privateAccount!==""){
+                account = smartNode.privateAccount;
+            }
 
-            const rawData:string = await RPCRuner.sendFrom({address:args.address,account:ctx.user.accountRTM,comment,amount:args.amount,comment_to:""});
+            const rawData:string = await RPCRuner.sendFrom({address:args.address,account: account,comment,amount:args.amount,comment_to:""});
 
             await smartNode.save();
             return smartNode;
@@ -227,7 +251,6 @@ const ServiceResolvers = {
             return true;
         },
         joinSmartNode: async (__: any, args: {_id:string,token:string,amount:number},ctx:any) => {
-
             checkIsAuthen(ctx.user);
             try{
             if(global.settingSystem && global.settingSystem.mailJobSmartNode && global.settingSystem.mailJobSmartNode.enable){
