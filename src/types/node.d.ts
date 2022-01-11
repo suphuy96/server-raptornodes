@@ -1,4 +1,5 @@
- interface settingTemplateMail{
+
+interface settingTemplateMail{
     template:string
     label:string
     cc:any[]
@@ -11,6 +12,11 @@
      collateral: number;
      rewardAddress?:string,
      rewardAccount?:string,
+     paymentsPerDay:number,
+     feeReward:number,
+     scheduleTime:string,
+     scheduleDay:string,
+     scheduleValue:number,
     mailWellcome: settingTemplateMail;
     mailNewSession: settingTemplateMail;
     mailWithdraw: settingTemplateMail;

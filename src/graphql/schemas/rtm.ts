@@ -60,10 +60,15 @@ export default gql`
     pruned: Boolean
    
     }
+    type accountBalance{
+        account:String,
+        balance:Float
+    }
     type Query {
         getBalance:balance
         getBalanceByAddress(address:String!):balance
         transactions(category:String,count:Int,skip:Int):[Transaction]
+        listaccounts:[accountBalance]
         lastTxid:String
         getInfoRTM:InfoRTM
     }

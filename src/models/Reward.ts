@@ -1,18 +1,25 @@
 import mongoose,{Schema} from "mongoose";
-export interface IDataOld  {
-    description:string,
-    smartNode:string;
+export interface IReWard  {
+    description:string;
+    paymentsPerDay:number;
+    feeReward:number;
+    days:number;
+    isSchedule:boolean;
+    dayEnd:Date;
 }
-export type DataOldDocument = mongoose.Document & IDataOld
+export type ReWardDocument = mongoose.Document & IReWard
 
-
-const DataOldSchema = new mongoose.Schema<DataOldDocument>(
+const ReWardSchema = new mongoose.Schema<ReWardDocument>(
     {
         description:String,
-        smartNode: String
+        paymentsPerDay:Number,
+        feeReward:Number,
+        days:Number,
+        isSchedule:Boolean,
+        dayEnd:Date,
     },
     { timestamps: true },
 );
 
 
-export const DataOld = mongoose.model<DataOldDocument>("DataOld", DataOldSchema);
+export const ReWard = mongoose.model<ReWardDocument>("ReWard", ReWardSchema);

@@ -145,6 +145,10 @@ export default class RpcRaptoreum {
     listaddressbalances( opts?:OptionRequestJsonRpc):Promise<any>{
         return this.requestJsonRpc("listaddressbalances",null,opts);
     }
+    listaccounts( opts?:OptionRequestJsonRpc):Promise<any>{
+        return this.requestJsonRpc("listaccounts",null,opts);
+    }
+
     getwalletinfo(opts?:OptionRequestJsonRpc):Promise<{
         "walletname": string,
         "walletversion":number,

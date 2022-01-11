@@ -10,6 +10,12 @@ export interface ISystem  {
     testNet?: boolean;
     collateral: number;
     collateralMin: number;
+    paymentsPerDay:number;
+    feeReward:number;
+    scheduleTime:string,
+    scheduleDay:string,
+    scheduleValue:number,
+    rewardAddress:string,
     mailWellcome: settingTemplateMail;
     mailNewSession: settingTemplateMail;
     mailWithdraw: settingTemplateMail;
@@ -31,6 +37,12 @@ const SystemSchema = new mongoose.Schema<SystemDocument>(
         enableWithdraw: Boolean,
         collateral:Number,
         collateralMin: Number,
+        paymentsPerDay:Number,
+        rewardAddress:String,
+        feeReward:Number,
+        scheduleTime:String,
+        scheduleDay:String,
+        scheduleValue:Number,
         mailWellcome: templateSetting,
         mailNewSession: templateSetting,
         mailWithdraw: templateSetting,

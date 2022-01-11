@@ -1,6 +1,6 @@
 import { ApolloError } from "apollo-server-express";
 import speakeasy from "speakeasy";
-import QRCode from "qrcode";
+
 import { User, UserDocument } from "../../models/User";
 import {NativeError} from "mongoose";
 import sendMail from "../../libs/mail";
@@ -35,12 +35,12 @@ const ServiceResolvers = {
                 const secret = speakeasy.generateSecret({
                     length: 10,
                     name: ctx.user?ctx.user.email:"huyquansu96@gmail.com",
-                    issuer: "Raptornodes v1.0"
+                    issuer: "Raptornodes v1.2"+(process.env.TESTNET==="1"?"- testnet":"")
                 });
                 const url = speakeasy.otpauthURL({
                     secret: secret.base32,
                     label: ctx.user?ctx.user.email:"huyquansu96@gmail.com",
-                    issuer: "Raptornodes v1.0",
+                    issuer: "Raptornodes v1.2"+(process.env.TESTNET==="1"?"- testnet":""),
                     encoding: "base32"
                 });
                 // const dataURL= await QRCode.toDataURL(url);

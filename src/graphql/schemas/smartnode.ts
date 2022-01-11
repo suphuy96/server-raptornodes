@@ -22,6 +22,7 @@ export default gql`
         statusCollateral: String,
         collateral: Float,
         participants:[participant],
+        lastReward:DateTime,
         createdAt:DateTime,
         updatedAt:DateTime
     payee: String,

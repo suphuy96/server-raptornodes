@@ -285,6 +285,7 @@ const ServiceResolvers = {
                 const participants = smartNode.participants.find((ii:Iparticipant)=>ii.userId && typeof ii.userId==="object"&&ctx.user._id.equals(ii.userId._id));
                 if(participants){
                     participants.collateral+=args.amount;
+                    participants.percentOfNode=participants.collateral/smartNode.collateral;
                     participants.txids.push(rawData);
                     participants.time =new Date();
                 }else{

@@ -12,6 +12,7 @@ import withdraw from "./withdraw";
 import dataOld from "./dataOld";
 import contact from "./contact";
 import system from "./system";
+import reward from "./reward";
 
 export default [
     roi,
@@ -27,5 +28,6 @@ export default [
     withdraw,
     dataOld,
     contact,
-    system
+    system,
+    reward
 ];

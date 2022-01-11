@@ -7,7 +7,7 @@ import { schema } from "./graphql/schema";
 import {User, UserDocument} from "./models/User";
 import {NativeError} from "mongoose";
 import jwt from "jsonwebtoken";
-import {ISystem,System} from "./models/System";
+import {ISystem,SystemDocument,System} from "./models/System";
 import defaultSetting from "./config/settingSystemDefault";
 import RpcRaptoreum,{OptionRpcClient} from "./libs/rpc-raptoreum";
 const ODefaults: OptionRpcClient = {
@@ -106,15 +106,35 @@ const server = new ApolloServer({
     context,
     introspection: process.env.NODE_ENV!=="production"
 });
-// const server = app.listen(app.get("port"), () => {
-//     console.log(
-//         "  App is running at http://localhost:%d in %s mode",
-//         app.get("port"),
-//         app.get("env")
-//     );
-//     console.log("  Press CTRL-C to stop\n");
-// });
+const loadSystem = async()=>{
+    const settingSystem:SystemDocument = await System.findOne();
+    global.settingSystem = settingSystem;
+    try{
+        const res = await  RPCRuner.getblockchaininfo();
+        if(res && res && res.chain){
+            global.settingSystem.testNet = (res.chain!=="main"?true:false);
+        }
+
+    }catch (e){
+
+    }
+    global.settingSystem.rewardAccount ="Reward";
+    if(!global.settingSystem.rewardAddress ||global.settingSystem.rewardAddress==""){
+        const addressReward = await RPCRuner.getAccountAddress("Reward").catch((e) => {
+            console.log("không thể kết nối raptoreum", e.toString());
+            return false;
+        });
+        if(addressReward){
+            global.settingSystem.rewardAddress = addressReward;
+            settingSystem.rewardAddress = addressReward;
+            global.settingSystem.rewardAccount ="Reward";
+            await settingSystem.save();
+        }
+    }
+
+};
 const main = async ()=>{
+    await loadSystem();
     await server.start();
     server.applyMiddleware({ app, path: "/graphql" });
     const httpServer = createServer(app);
@@ -125,36 +145,11 @@ const main = async ()=>{
             app.get("env")
         );}
     );
-    cron();
-    const settingSystem:ISystem = await System.findOne();
-    global.settingSystem = settingSystem;
-    try{
-      const res = await  RPCRuner.getblockchaininfo();
-      if(res && res && res.chain){
-          global.settingSystem.testNet = (res.chain!=="main"?true:false);
-          console.log("heeyee",res);
-      }
-
-    }catch (e){
-
+    if(!process.env.NODE_APP_INSTANCE||process.env.NODE_APP_INSTANCE === "0"){
+        cron();
     }
-    // if(!settingSystem.rewardAddress ||settingSystem.rewardAddress===""){
-    // try{
-            const addressReward = await RPCRuner.getAccountAddress("#Reward").catch((e) => {
-                console.log("không thể kết nối raptoreum", e.toString());
-                return false;
-            });
-            if(addressReward){
-                global.settingSystem.rewardAddress = addressReward;
-                    // settingSystem.rewardAddress = addressReward;
-                    // settingSystem.save();
-                global.settingSystem.rewardAccount ="#Reward";
-            }
-    //         console.log("heeyee",res);
-    //
-    // }catch (e){
-    //         console.log(e);
-    // }}
+
+
 };
 main();
 export default server;

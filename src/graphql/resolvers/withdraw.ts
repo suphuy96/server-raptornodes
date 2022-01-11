@@ -22,7 +22,7 @@ const ServiceResolvers = {
     Query: {
         withdraws: async (__: any, args: any,ctx:any) => {
             try {
-                // checkIsAdmin(ctx.user);
+               checkIsAuthen(ctx.user);
                const ars = await Withdraw.find({author:ctx.user._id}).populate("author");
                 const res:any =  await RPCRuner.listtransactions([ctx.user.accountRTM]);
                 //

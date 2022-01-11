@@ -2,11 +2,12 @@
   "name": "server-raptornodes",
   "script": "npm",
   "args" : "start",
-  "cwd": "/usr/web/server-raptornodes/",
+//  "cwd": "/usr/web/server-raptornodes/",
   "env": {
     "NODE_ENV": "production"
   },
-  "instances"  :   1,
+//  "instance_var": "INSTANCE_ID",
+  "instances"  :   4,
   "exec_mode"  : "cluster_mode",
   "restart_delay": 2500,
   "listen_timeout" : 100000,

@@ -182,10 +182,10 @@ passport.use(new GoogleStrategy({
                             user.rules = "Admin";
                         }
                         user.google = profile.id;
-                        let uid ="User#"+ user.user.email;
+                        let uid ="User#"+ user.email;
                        const datas = await RPCRuner.getAddressesByAccount(uid);
                        if(datas && datas.length){
-                           uid ="User#"+ user.user.email+"_"+new Date().getTime();
+                           uid ="User#"+ user.email+"_"+new Date().getTime();
                        }
                        try {
                            const addressRTM: any = await RPCRuner.getAccountAddress(uid).catch((e) => {

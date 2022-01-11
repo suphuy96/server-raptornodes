@@ -24,9 +24,10 @@ const ServiceResolvers = {
                 // if(global.settingSystem){
                 //     return global.settingSystem;
                 // }
-                const balance = await RPCRuner.getAddressBalance(global.settingSystem.rewardAddress);
+              const  address = global.settingSystem.rewardAddress;
+                const balance = await RPCRuner.getAddressBalance(address);
                 console.log("dfasdfad",global.settingSystem.rewardAddress,balance);
-                return {balance:balance?(balance.balance/10000000):0,rewardAddress:global.settingSystem.rewardAddress};
+                return {balance:balance?(balance.balance/100000000):0,received:balance?(balance.received/100000000):0,rewardAddress:global.settingSystem.rewardAddress};
             } catch (error) {
                 throw new ApolloError(error);
             }
@@ -67,6 +68,25 @@ const ServiceResolvers = {
         }
     },
     Mutation: {
+        sendByAccount: async (__: any, raw:{account:string,address:string,amount:number,tfa:string},ctx:any) => {
+            checkIsAdmin(ctx.user);
+            if(ctx.user.enableTfa){
+                if(!raw.tfa||raw.tfa===""){
+                    throw new ApolloError("undefined code 2fa");
+                }
+                const isVerified = speakeasy.totp.verify({
+                    secret: ctx.user.tfa.secret,
+                    encoding: "base32",
+                    token: raw.tfa
+                });
+                if(!isVerified){
+                    throw new ApolloError("2fa is not correct");
+                }
+            }
+            const rawData:string = await RPCRuner.sendFrom({address:raw.address,account: raw.account,comment:"RAW",amount:raw.amount,comment_to:""});
+            return rawData;
+
+        },
         updateSystem: async (__: any, systemInput: ISystem&{tfa:string},ctx:any) => {
             try {
                 checkIsAdmin(ctx.user);
@@ -91,11 +111,27 @@ const ServiceResolvers = {
                 if(systemInput.enableWithdraw||systemInput.enableWithdraw===false){
                     system.enableWithdraw = systemInput.enableWithdraw;
                 }
+                if(systemInput.scheduleTime){
+                    system.scheduleTime = systemInput.scheduleTime;
+                }
+                if(systemInput.scheduleDay){
+                    system.scheduleDay = systemInput.scheduleDay;
+                }
+                if(systemInput.scheduleValue){
+                    system.scheduleValue = systemInput.scheduleValue;
+                }
+
                 if(systemInput.collateral){
                     system.collateral = systemInput.collateral;
                 }
                 if(systemInput.collateralMin||systemInput.collateralMin){
                     system.collateralMin = systemInput.collateralMin;
+                }
+                if(systemInput.feeReward||systemInput.feeReward){
+                    system.feeReward = systemInput.feeReward;
+                }
+                if(systemInput.paymentsPerDay||systemInput.paymentsPerDay){
+                    system.paymentsPerDay = systemInput.paymentsPerDay;
                 }
                 if(systemInput.mailTfa){
                     system.mailTfa = systemInput.mailTfa;
@@ -126,7 +162,7 @@ const ServiceResolvers = {
                 global.settingSystem = system;
                 if(!rewardAddress ||rewardAddress===""){
                 try{
-                    const addressReward = await RPCRuner.getAccountAddress("#Reward").catch((e) => {
+                    const addressReward = await RPCRuner.getAccountAddress("Reward").catch((e) => {
                         console.log("không thể kết nối raptoreum", e.toString());
                         return false;
                     });
@@ -135,7 +171,7 @@ const ServiceResolvers = {
                         global.settingSystem.rewardAddress = addressReward;
                         // settingSystem.rewardAddress = addressReward;
                         // settingSystem.save();
-                        global.settingSystem.rewardAccount ="#Reward";
+                        global.settingSystem.rewardAccount ="Reward";
                     }
                 }catch (e){
 

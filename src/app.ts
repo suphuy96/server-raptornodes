@@ -21,9 +21,9 @@ import * as passportConfig from "./config/passport";
 const app = express();
 app.use(expressUseragent.express());
 // Connect to MongoDB
-const mongoUrl = MONGODB_URI;
+const mongoUrl = MONGODB_URI +(process.env.TESTNET==="1"? process.env.DB_NAME_TESTNET:process.env.DB_NAME_MANNET);
 mongoose.Promise = bluebird;
-
+console.log("db"+process.env.TESTNET+mongoUrl);
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true } ).then(
     () => { /** ready to use. The `mongoose.connect()` promise resolves to undefined. */ },
 ).catch(err => {
@@ -84,6 +84,8 @@ app.use(
  * Primary app routes.
  */
 app.get("/", homeController.index);
+
+
 app.get("/index.html", homeController.index);
 app.use(routerPrimary());
 /**
@@ -110,7 +112,10 @@ app.get("/backup/file/:fileName",passportConfig.isAuthenticated, function(req, r
     });
 });
 
+app.use("/debug",(req, res, next) => {
 
+    res.send(process.env.NODE_APP_INSTANCE);
+});
 
 
 export default app;
