@@ -13,6 +13,7 @@ export interface IReWardHistory  {
     user:UserDocument;
     txid: string;
     amount:number;
+    feeHost:number;
     dayEnd:Date;
 }
 export type ReWardHistoryDocument = mongoose.Document & IReWardHistory
@@ -33,6 +34,7 @@ const ReWardHistorySchema = new mongoose.Schema<ReWardHistoryDocument>(
         dayEnd:Date,
         txid:String,
         amount:Number,
+        feeHost:Number,
         user:{ type: Schema.Types.ObjectId, ref: "User" },
     },
     { timestamps: true },

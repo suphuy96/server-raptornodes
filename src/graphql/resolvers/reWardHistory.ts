@@ -1,14 +1,8 @@
 import { ApolloError } from "apollo-server-express";
-import {ReWard, ReWardDocument, IReWard} from "../../models/ReWard";
 import {ReWardHistory} from "../../models/RewardHistory";
-import {User, IUser} from "../../models/User";
-import {SmartNode,SmartNodeDocument, ISmartNode} from "../../models/SmartNode";
-import {checkIsAuthen,checkIsAdmin} from "../../util/checkAuthen";
+import {checkIsAuthen} from "../../util/checkAuthen";
 import {OptionRpcClient} from "../../libs/rpc-raptoreum";
 import RpcRaptoreum from "../../libs/rpc-raptoreum";
-import _ from "lodash";
-import speakeasy from "speakeasy";
-import sendMail from "../../libs/mail";
 const ODefaults: OptionRpcClient = {
     host: process.env.rpcbind,
     port:  parseInt(process.env.rpcport||"19998"),

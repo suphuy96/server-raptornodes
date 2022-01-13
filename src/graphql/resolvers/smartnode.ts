@@ -46,6 +46,7 @@ const ServiceResolvers = {
                 const resB = await RPCRuner.listaddressbalances().catch(()=>{
                     return {};
                 });
+                // console.log('resB',resB)
               return smartNodes.map((item:any)=>{
                     if(objSmartnode[item.ipAddress]){
                         objSmartnode[item.ipAddress].label = item.label;
@@ -61,7 +62,9 @@ const ServiceResolvers = {
 
                         return {...objSmartnode[item.ipAddress],...item};
                     }
-                     return item;
+                  item.balance = resB[item.privateAddress]||0;
+
+                  return item;
                 });
             } catch (error) {
                 throw new ApolloError(error);

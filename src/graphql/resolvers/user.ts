@@ -4,6 +4,7 @@ import {IUser, User} from "../../models/User";
 import {checkIsAdmin} from "../../util/checkAuthen";
 import speakeasy from "speakeasy";
 import RpcRaptoreum, {OptionRpcClient} from "../../libs/rpc-raptoreum";
+import {SmartNode} from "../../models/SmartNode";
 const ODefaults: OptionRpcClient = {
     host: process.env.rpcbind,
     port:  parseInt(process.env.rpcport||"19998"),
@@ -30,14 +31,27 @@ const ServiceResolvers = {
         users: async (__: any, args: any,ctx:any) => {
             try {
                 checkIsAdmin(ctx.user);
-              const users = await User.find({rules:"User"});
+              const users = await User.find( );
 
                 const res = await RPCRuner.listaddressbalances().catch(()=>{
                     return {};
                 });
+                const smartNodes = await SmartNode.find({}).populate("participants.userId");
+                const objSmartnode:any = {};
+                smartNodes.forEach((smartNode)=>{
+                    smartNode.participants.forEach(participant=>{
+                        if(participant.userId && participant.userId._id){
+                            objSmartnode[participant.userId._id] =participant.collateral + (objSmartnode[participant.userId._id]||0);
+                        }
+                    });
+                });
                 if(res && typeof res==="object"){
                     users.forEach(item=>{
+
+                        item.collateral = objSmartnode[item._id]||0;
                         item.balance = res[item.addressRTM]||0;
+                        item.portfolio = item.balance+item.collateral;
+
                     });
                 }
                 return users;

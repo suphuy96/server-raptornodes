@@ -22,6 +22,8 @@ export interface IUser {
     addressRTM:string;
     enableTfa:boolean;
     balance?:number;
+    collateral?:number;
+    portfolio?:number;
     status:boolean;
     accountRTMError?:boolean;
     tokenJWT?: string;

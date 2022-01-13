@@ -1,15 +1,13 @@
 import { ApolloError } from "apollo-server-express";
-import {ReWard, ReWardDocument, IReWard} from "../../models/ReWard";
+import {ReWard, ReWardDocument, IReWard} from "../../models/Reward";
 import {ReWardHistory} from "../../models/RewardHistory";
-import {User, IUser} from "../../models/User";
-import {SmartNode,SmartNodeDocument, ISmartNode} from "../../models/SmartNode";
+import {SmartNode} from "../../models/SmartNode";
 import {checkIsAuthen,checkIsAdmin} from "../../util/checkAuthen";
 import {OptionRpcClient} from "../../libs/rpc-raptoreum";
 import RpcRaptoreum from "../../libs/rpc-raptoreum";
 import _ from "lodash";
 import speakeasy from "speakeasy";
 import sendMail from "../../libs/mail";
-import moment from "moment";
 const ODefaults: OptionRpcClient = {
     host: process.env.rpcbind,
     port:  parseInt(process.env.rpcport||"19998"),
@@ -40,9 +38,8 @@ const funReward = async (reward:ReWardDocument) => {
         for  await (const smartnode of smartnodes) {
             for await (const participant of smartnode.participants) {
                 const comment = "ReWard in Raptornodes.com";
-                const amount = global.settingSystem.paymentsPerDay * participant.percentOfNode * ((100 - global.settingSystem.feeReward) / 100);
-                console.log(participant.userId.addressRTM);
-
+                const amount = (global.settingSystem.paymentsPerDay * participant.percentOfNode * ((100 - global.settingSystem.feeReward) / 100))*(1-(global.settingSystem.feeReward/100));
+                const feeHost =  (global.settingSystem.paymentsPerDay * participant.percentOfNode * ((100 - global.settingSystem.feeReward) / 100))*global.settingSystem.feeReward/100;
                 const rawData = await RPCRuner.sendFrom({
                     address: participant.userId.addressRTM,
                     account: global.settingSystem.rewardAccount,
@@ -62,6 +59,7 @@ const funReward = async (reward:ReWardDocument) => {
                 history.percentOfNode = participant.percentOfNode;
                 history.feeReward = global.settingSystem.feeReward;
                 history.smartNode = smartnode._id;
+                history.feeHost = feeHost;
                 history.amount = parseFloat((amount).toFixed(8));
                 history.reward = reward._id;
                 history.days = reward.days;

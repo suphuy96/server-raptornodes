@@ -27,6 +27,8 @@ export default gql`
         profile: Profile,
         rules: String,
         balance:Float,
+        collateral:Float,
+        portfolio:Float,
         status:Boolean,
         enableTfa:Boolean,
         createdAt:DateTime,

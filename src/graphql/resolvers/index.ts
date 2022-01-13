@@ -12,7 +12,7 @@ import withdraw from "./withdraw";
 import dataOld from "./dataOld";
 import contact from "./contact";
 import system from "./system";
-import reward from "./reward";
+import reward from "./reWard";
 import rewardHistory from "./reWardHistory";
 
 export default [

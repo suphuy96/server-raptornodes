@@ -24,8 +24,8 @@ const ServiceResolvers = {
                 if(!ctx.user){
                     throw new ApolloError("No session login");
                 }
-                if(ctx.user.tfa && ctx.user.tfa.dataURL && ctx.user.tfa.dataURL!==""){
-                    // console.log("không vào đây rrrr");
+                if(ctx.user.tfa && ctx.user.tfa.dataURL&&ctx.user.tfa.dataURL!=='' && ctx.user.enableTfa){
+                    // console.log("không vào đây rrrr")
                        // if(ctx.user.tfa.secret){
                        //
                        // }
@@ -35,12 +35,12 @@ const ServiceResolvers = {
                 const secret = speakeasy.generateSecret({
                     length: 10,
                     name: ctx.user?ctx.user.email:"huyquansu96@gmail.com",
-                    issuer: "Raptornodes v1.2"+(process.env.TESTNET==="1"?"- testnet":"")
+                    issuer: "Raptornodes v1.1"+(process.env.TESTNET==="1"?"- testnet":"")
                 });
                 const url = speakeasy.otpauthURL({
                     secret: secret.base32,
                     label: ctx.user?ctx.user.email:"huyquansu96@gmail.com",
-                    issuer: "Raptornodes v1.2"+(process.env.TESTNET==="1"?"- testnet":""),
+                    issuer: "Raptornodes v1.1"+(process.env.TESTNET==="1"?"- testnet":""),
                     encoding: "base32"
                 });
                 // const dataURL= await QRCode.toDataURL(url);
