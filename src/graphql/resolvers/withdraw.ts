@@ -61,6 +61,9 @@ const ServiceResolvers = {
                 const comment = "Withdraw in Raptornodes.com";
                 withdraw.description = wr.description||comment;
                 withdraw.author = ctx.user._id;
+                if(!ctx.user.enableTfa){
+                    throw new ApolloError("You need to enable Two Factor Authentication");
+                }
                 if(ctx.user.enableTfa){
                     if(!wr.tfa||wr.tfa===""){
                         throw new ApolloError("undefined code 2fa");

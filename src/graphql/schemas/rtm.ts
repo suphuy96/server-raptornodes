@@ -12,7 +12,8 @@ export default gql`
         account:String,
         address:String,
         category: String
-        amount: Int,
+        amount: Float,
+        fee:Float,
         label: String,
         vout: Int
         confirmations: Int,
@@ -37,6 +38,7 @@ export default gql`
     type balance{
         balance:Float,
         received:Float
+        rewarded:Float
     }
     type InfoRTM {
     walletversion:Int,
@@ -62,7 +64,8 @@ export default gql`
     }
     type accountBalance{
         account:String,
-        balance:Float
+        balance:Float,
+        rewarded:Float
     }
     type Query {
         getBalance:balance

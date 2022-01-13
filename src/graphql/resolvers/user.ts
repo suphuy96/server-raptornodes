@@ -33,7 +33,7 @@ const ServiceResolvers = {
                 checkIsAdmin(ctx.user);
               const users = await User.find( );
 
-                const res = await RPCRuner.listaddressbalances().catch(()=>{
+                const res = await RPCRuner.listaccounts().catch(()=>{
                     return {};
                 });
                 const smartNodes = await SmartNode.find({}).populate("participants.userId");
@@ -49,7 +49,7 @@ const ServiceResolvers = {
                     users.forEach(item=>{
 
                         item.collateral = objSmartnode[item._id]||0;
-                        item.balance = res[item.addressRTM]||0;
+                        item.balance = res[item.accountRTM]||0;
                         item.portfolio = item.balance+item.collateral;
 
                     });

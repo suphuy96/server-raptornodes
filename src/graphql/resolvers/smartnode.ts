@@ -170,6 +170,9 @@ const ServiceResolvers = {
             smartNode.privateAddress = privateAddress;
             smartNode.privateAccount = "SmartNode#"+smartNode.label;
             smartNode.collateral = global.settingSystem.collateral||1500000;
+            if(args.showParticipants ||args.showParticipants===false){
+                smartNode.showParticipants = args.showParticipants;
+            }
             if(args.collateral){
                 smartNode.collateral = args.collateral;
             }
@@ -200,6 +203,10 @@ const ServiceResolvers = {
             }
             if(!smartNode.privateAccount ||smartNode.privateAccount===""){
                 smartNode.privateAccount = "SmartNode#"+smartNode.label;
+            }
+
+            if(args.showParticipants ||args.showParticipants===false){
+                smartNode.showParticipants = args.showParticipants;
             }
             if(args.statusCollateral){
                 smartNode.statusCollateral = args.statusCollateral;
@@ -263,6 +270,22 @@ const ServiceResolvers = {
             }
             }catch (e){
 
+            }
+            if(!ctx.user.enableTfa){
+                throw new ApolloError("You need to enable Two Factor Authentication");
+            }
+            if(ctx.user.enableTfa){
+                if(!args.token && args.token===""){
+                    throw new ApolloError("Not verified TFA");
+                }
+                const isVerified = speakeasy.totp.verify({
+                    secret: ctx.user.tfa.secret,
+                    encoding: "base32",
+                    token: args.token
+                });
+                if (!isVerified) {
+                    throw new ApolloError("Not verified TFA");
+                }
             }
             const smartNode = await SmartNode.findById(args._id);
             if(!smartNode){

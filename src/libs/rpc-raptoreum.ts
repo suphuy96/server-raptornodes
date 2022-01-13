@@ -120,6 +120,13 @@ export default class RpcRaptoreum {
     getAddressBalance(address:string,opts?:OptionRequestJsonRpc):Promise<any>{
         return this.requestJsonRpc("getaddressbalance",[{addresses:[address||""]}],opts);
     }
+    getbalance(account:string,opts?:OptionRequestJsonRpc):Promise<any>{
+        return this.requestJsonRpc("getbalance",[account],opts);
+    }
+
+    getreceivedbyaccount(account:string,opts?:OptionRequestJsonRpc):Promise<any>{
+        return this.requestJsonRpc("getreceivedbyaccount",[account],opts);
+    }
     listAccounts(opts?:OptionRequestJsonRpc):Promise<any>{
         return this.requestJsonRpc("listaccounts",null,opts);
     }

@@ -3,6 +3,8 @@ import {OptionRpcClient} from "../../libs/rpc-raptoreum";
 import RpcRaptoreum from "../../libs/rpc-raptoreum";
 import _ from "lodash";
 import {checkIsAuthen,checkIsAdmin} from "../../util/checkAuthen";
+import {ReWardHistory} from "../../models/RewardHistory";
+
 const ODefaults: OptionRpcClient = {
     host: process.env.rpcbind,
     port:  parseInt(process.env.rpcport||"19998"),
@@ -11,7 +13,6 @@ const ODefaults: OptionRpcClient = {
     protocol: "http",
     disableAgent: false,
     queueSize: 16,
-
 };
 const RPCRuner = new RpcRaptoreum(ODefaults);
 const ServiceResolvers = {
@@ -19,8 +20,15 @@ const ServiceResolvers = {
         getBalance: async (__: any, args: any,ctx:any) => {
             try {
                 checkIsAuthen(ctx.user);
-
-                return await RPCRuner.getAddressBalance(ctx.user.addressRTM);
+                const balance = await RPCRuner.getbalance(ctx.user.accountRTM);
+                const received = await RPCRuner.getreceivedbyaccount(ctx.user.accountRTM);
+                console.log(received,balance);
+               let rewarded = 0;
+              const rewards = await ReWardHistory.find({user:ctx.user._id});
+                rewards.forEach((reward)=>{
+                    rewarded += reward.amount;
+                });
+                return await {balance,received,rewarded};
             } catch (error) {
                 throw new ApolloError(error);
             }
