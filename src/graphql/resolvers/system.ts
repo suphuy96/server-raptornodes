@@ -21,13 +21,10 @@ const ServiceResolvers = {
         rewardInfo: async (__: any, args: any,ctx:any) => {
             try {
                 checkIsAdmin(ctx.user);
-                // if(global.settingSystem){
-                //     return global.settingSystem;
-                // }
-              const  address = global.settingSystem.rewardAddress;
-                const balance = await RPCRuner.getAddressBalance(address);
-                console.log("dfasdfad",global.settingSystem.rewardAddress,balance);
-                return {balance:balance?(balance.balance/100000000):0,received:balance?(balance.received/100000000):0,rewardAddress:global.settingSystem.rewardAddress};
+                const  address = global.settingSystem.rewardAddress;
+                const balance = await RPCRuner.getbalance(global.settingSystem.rewardAccount);
+                const received = await RPCRuner.getreceivedbyaccount(global.settingSystem.rewardAccount);
+                return {balance:balance?(balance):0,received:received?(received):0,rewardAddress:global.settingSystem.rewardAddress};
             } catch (error) {
                 throw new ApolloError(error);
             }

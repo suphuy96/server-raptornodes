@@ -34,7 +34,7 @@ export default gql`
     }
     type Query {
         rewards:[Reward]
-        rewardHistorys:[RewardHistory]
+        rewardHistorys(reward:String):[RewardHistory]
     }
     type Mutation {
         createReward(days:Int,description:String,tfa:String):Reward

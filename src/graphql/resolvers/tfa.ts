@@ -24,7 +24,7 @@ const ServiceResolvers = {
                 if(!ctx.user){
                     throw new ApolloError("No session login");
                 }
-                if(ctx.user.tfa && ctx.user.tfa.dataURL&&ctx.user.tfa.dataURL!=="" && ctx.user.enableTfa){
+                if(ctx.user.tfa && ctx.user.tfa.dataURL&&ctx.user.tfa.dataURL!=="" && ctx.user.tfa.tempSecret!==""){
                     // console.log("không vào đây rrrr")
                        // if(ctx.user.tfa.secret){
                        //

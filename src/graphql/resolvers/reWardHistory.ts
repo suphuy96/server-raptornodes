@@ -3,6 +3,7 @@ import {ReWardHistory} from "../../models/RewardHistory";
 import {checkIsAuthen} from "../../util/checkAuthen";
 import {OptionRpcClient} from "../../libs/rpc-raptoreum";
 import RpcRaptoreum from "../../libs/rpc-raptoreum";
+import {mongo} from "mongoose";
 const ODefaults: OptionRpcClient = {
     host: process.env.rpcbind,
     port:  parseInt(process.env.rpcport||"19998"),
@@ -20,6 +21,9 @@ const ServiceResolvers = {
         rewardHistorys: async (__: any, args: any,ctx:any) => {
             try {
                 checkIsAuthen(ctx.user);
+                if(ctx.user.rules==="Admin"){
+                    return await ReWardHistory.find({reward: args.reward  }).populate("user");
+                }
                const ars = await ReWardHistory.find({user:ctx.user._id});
                    // .populate("author");
                 // const res:any =  await RPCRuner.listtransactions([ctx.user.accountRTM]);

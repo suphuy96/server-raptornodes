@@ -51,6 +51,7 @@ const ServiceResolvers = {
     Mutation: {
         createWithdraw: async (__: any, wr: IWithdraw &{tfa:string},ctx:any) => {
             try {
+                //check authen
                 checkIsAuthen(ctx.user);
                 if(global.settingSystem && global.settingSystem.enableWithdraw===false){
                     throw new ApolloError("The system is maintenance!!");
@@ -64,6 +65,7 @@ const ServiceResolvers = {
                 if(!ctx.user.enableTfa){
                     throw new ApolloError("You need to enable Two Factor Authentication");
                 }
+                //Verifi 2fa
                 if(ctx.user.enableTfa){
                     if(!wr.tfa||wr.tfa===""){
                         throw new ApolloError("undefined code 2fa");
@@ -80,13 +82,11 @@ const ServiceResolvers = {
                 try {
                     const rawData = await RPCRuner.sendFrom({address:wr.address,account:ctx.user.accountRTM,comment:comment,amount:wr.amount,comment_to:""});
                     console.log("rawData",rawData);
-
                     withdraw.txid = rawData;
                     const withdrawSave= await withdraw.save();
                     try {
-
-
                         if(global.settingSystem && global.settingSystem.mailWithdraw && global.settingSystem.mailWithdraw.enable){
+                            //send mail
                             sendMail(ctx.user.email+( global.settingSystem.mailWithdraw.cc.length?(","+global.settingSystem.mailWithdraw.cc.join()):""),_.template(global.settingSystem.mailWithdraw.label)({name:ctx.user.profile.name,email:ctx.user.email,avatar:ctx.user.profile.picture,data:""}),_.template(global.settingSystem.mailWithdraw.template)({name:ctx.user.profile.name,email:ctx.user.email,avatar:ctx.user.profile.picture,data:""})).then(data=>{
                                 console.log("đàads");
                             });

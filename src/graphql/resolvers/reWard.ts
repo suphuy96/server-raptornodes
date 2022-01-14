@@ -38,8 +38,8 @@ const funReward = async (reward:ReWardDocument) => {
         for  await (const smartnode of smartnodes) {
             for await (const participant of smartnode.participants) {
                 const comment = "ReWard in Raptornodes.com";
-                const amount = (global.settingSystem.paymentsPerDay * participant.percentOfNode * ((100 - global.settingSystem.feeReward) / 100))*(1-(global.settingSystem.feeReward/100));
-                const feeHost =  (global.settingSystem.paymentsPerDay * participant.percentOfNode * ((100 - global.settingSystem.feeReward) / 100))*global.settingSystem.feeReward/100;
+                const amount = global.settingSystem.scheduleValue*(global.settingSystem.paymentsPerDay * participant.percentOfNode * ((100 - global.settingSystem.feeReward) / 100));
+                const feeHost = global.settingSystem.scheduleValue*(global.settingSystem.paymentsPerDay * participant.percentOfNode * (( global.settingSystem.feeReward) / 100));
                 const rawData = await RPCRuner.sendFrom({
                     address: participant.userId.addressRTM,
                     account: global.settingSystem.rewardAccount,
