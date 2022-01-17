@@ -29,7 +29,7 @@ const invalid = validate("0 0 * * mon");
 console.log("invalid",invalid);
 const funReward = async (reward:ReWardDocument) => {
     try {
-        const smartnodes = await SmartNode.find({statusCollateral : "Enough" }).populate("participants.userId");
+        const smartnodes = await SmartNode.find({statusCollateral : "Start Reward" }).populate("participants.userId");
         if(global.settingSystem.mailReward.cc.length){
             sendMail( (global.settingSystem.mailReward.cc.length ? ( global.settingSystem.mailReward.cc.join()) : ""), "Schedule ReWard "+smartnodes.length+" Smartnode","Schedule ReWard "+smartnodes.length+" Smartnode in raptornodes.com").then(()=>{
                 console.log("");
@@ -88,6 +88,7 @@ const funReward = async (reward:ReWardDocument) => {
                 }
             }
             smartnode.lastReward = new Date();
+            smartnode.save();
         }
         // reward.save();
 

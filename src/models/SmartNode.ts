@@ -20,6 +20,7 @@ export interface ISmartNode {
     participants:Iparticipant[];
     showParticipants:boolean;
     lastReward:Date,
+    timeStartReward:Date,
 }
 export type SmartNodeDocument = mongoose.Document & ISmartNode
 
@@ -42,6 +43,7 @@ const SmartNodeSchema = new mongoose.Schema<SmartNodeDocument>(
         privateAccount:String,
         collateral:Number,
         lastReward:Date,
+        timeStartReward:Date,
         participants:{type:[participantType],default:[]},
         showParticipants:{type:Boolean,default:false}
     },

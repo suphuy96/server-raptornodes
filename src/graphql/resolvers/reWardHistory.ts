@@ -22,7 +22,7 @@ const ServiceResolvers = {
             try {
                 checkIsAuthen(ctx.user);
                 if(ctx.user.rules==="Admin"){
-                    return await ReWardHistory.find({reward: args.reward  }).populate("user");
+                    return await ReWardHistory.find(args).populate("user");
                 }
                const ars = await ReWardHistory.find({user:ctx.user._id});
                    // .populate("author");

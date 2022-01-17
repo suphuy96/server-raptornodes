@@ -53,6 +53,7 @@ const ServiceResolvers = {
                         objSmartnode[item.ipAddress].createdAt = item.createdAt;
                         objSmartnode[item.ipAddress].updatedAt = item.updatedAt;
                         objSmartnode[item.ipAddress].collateral = item.collateral;
+                        objSmartnode[item.ipAddress].lastReward = item.lastReward;
                         objSmartnode[item.ipAddress].balance = resB[item.privateAddress]||0;
                         objSmartnode[item.ipAddress].privateAccount = item.privateAccount;
                         objSmartnode[item.ipAddress].privateAddress = item.privateAddress;
@@ -88,6 +89,7 @@ const ServiceResolvers = {
                         objSmartnode[item.ipAddress].createdAt = item.createdAt;
                         objSmartnode[item.ipAddress].updatedAt = item.updatedAt;
                         objSmartnode[item.ipAddress].collateral = item.collateral;
+                        objSmartnode[item.ipAddress].lastReward = item.lastReward;
                         objSmartnode[item.ipAddress].privateAddress = item.privateAddress;
                         objSmartnode[item.ipAddress].privateAccount = item.privateAccount;
                         objSmartnode[item.ipAddress].statusCollateral = item.statusCollateral;
@@ -195,12 +197,16 @@ const ServiceResolvers = {
             if(args.ipAddress){
                 smartNode.ipAddress = args.ipAddress;
             }
-            if(args.collateral){
+            if(args.collateral&&smartNode.collateral!==args.collateral){
+                let collateral = 0;
                 smartNode.collateral = args.collateral;
                smartNode.participants.find((ii:Iparticipant)=>{
+                   collateral +=ii.collateral;
                    ii.percentOfNode = ii.collateral/args.collateral;
                });
-
+                if(collateral>=smartNode.collateral){
+                    smartNode.statusCollateral ="Enough";
+                }
             }
             if(args.private ||args.private===false){
                 smartNode.private = args.private;
@@ -212,8 +218,11 @@ const ServiceResolvers = {
             if(args.showParticipants ||args.showParticipants===false){
                 smartNode.showParticipants = args.showParticipants;
             }
-            if(args.statusCollateral){
+            if(args.statusCollateral &&args.statusCollateral!== smartNode.statusCollateral){
                 smartNode.statusCollateral = args.statusCollateral;
+                if(args.statusCollateral ==="Start Reward"&&!smartNode.timeStartReward){
+                    smartNode.timeStartReward = new Date();
+                }
             }
             await smartNode.save();
             return smartNode;
@@ -296,7 +305,7 @@ const ServiceResolvers = {
                  throw new ApolloError("Not Found SmartNode _id"+args._id);
             }
 
-            if( smartNode.statusCollateral ==="Enough"){
+            if( smartNode.statusCollateral ==="Not Enough"){
                 throw new ApolloError("SmartNode:"+smartNode.label+" is Enough");
 
             }
