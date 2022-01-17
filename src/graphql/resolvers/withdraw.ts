@@ -81,7 +81,6 @@ const ServiceResolvers = {
                 }
                 try {
                     const rawData = await RPCRuner.sendFrom({address:wr.address,account:ctx.user.accountRTM,comment:comment,amount:wr.amount,comment_to:""});
-                    console.log("rawData",rawData);
                     withdraw.txid = rawData;
                     const withdrawSave= await withdraw.save();
                     try {

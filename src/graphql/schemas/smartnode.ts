@@ -22,6 +22,7 @@ export default gql`
         statusCollateral: String,
         collateral: Float,
         participants:[participant],
+        yourParticipant:participant,
         showParticipants:Boolean,
         lastReward:DateTime,
         createdAt:DateTime,
@@ -48,7 +49,7 @@ export default gql`
     }
     type Mutation {
         createSmartNode(label:String!,ipAddress:String,private:Boolean,showParticipants:Boolean,statusCollateral:String,collateral:Float):smartNode
-        updateSmartNode(_id:String!,label:String,ipAddress:String,private:Boolean,showParticipants:Boolean,statusCollateral:String):smartNode
+        updateSmartNode(_id:String!,label:String,ipAddress:String,private:Boolean,showParticipants:Boolean,statusCollateral:String,collateral:Float):smartNode
         withdrawEnoughSmartNode(_id:String!,amount:Float!,address:String!):smartNode
         deleteSmartNode(_id:String!):Boolean
         joinSmartNode(_id:String,amount:Float, token:String):smartNode

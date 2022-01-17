@@ -42,7 +42,10 @@ export default gql`
         enableWithdraw: Boolean,
         paymentsPerDay:Float,
         feeReward:Float,
-        testNet:Boolean
+        testNet:Boolean,
+        scheduleTime:String,
+        scheduleDay:String,
+        scheduleValue:Int,
     }
     type RewardRTM {
         rewardAddress:String,

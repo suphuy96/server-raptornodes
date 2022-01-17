@@ -25,7 +25,6 @@ const ServiceResolvers = {
             try {
                 // checkIsAuthen(ctx.user);
                 const smartNode = await SmartNode.findOne({statusCollateral : "Not Enough"}).populate("participants.userId");
-
                 return smartNode;
             } catch (error) {
                 throw new ApolloError(error);
@@ -67,6 +66,7 @@ const ServiceResolvers = {
                   return item;
                 });
             } catch (error) {
+                console.log("dddd",error);
                 throw new ApolloError(error);
             }
         },
@@ -81,7 +81,6 @@ const ServiceResolvers = {
                     objSmartnode[ipAddress]=res[key];
                     objSmartnode[ipAddress].ipAddress = ipAddress;
                 });
-                console.log("smartNodes",smartNodes);
                 return smartNodes.filter(item=> item.participants.filter(ii=>ii.userId && typeof ii.userId==="object"&&ctx.user._id.equals(ii.userId._id)).length!==0).map((item:any)=>{
                     if(objSmartnode[item.ipAddress]){
                         objSmartnode[item.ipAddress].label = item.label;
@@ -98,6 +97,7 @@ const ServiceResolvers = {
                     return item;
                 });
             } catch (error) {
+                console.log(error);
                 throw new ApolloError(error);
             }
         },
@@ -197,6 +197,10 @@ const ServiceResolvers = {
             }
             if(args.collateral){
                 smartNode.collateral = args.collateral;
+               smartNode.participants.find((ii:Iparticipant)=>{
+                   ii.percentOfNode = ii.collateral/args.collateral;
+               });
+
             }
             if(args.private ||args.private===false){
                 smartNode.private = args.private;
@@ -324,9 +328,9 @@ const ServiceResolvers = {
                     collateral+=ii.collateral;
                 });
                 if(collateral>=smartNode.collateral){
-                    smartNode.statusCollateral ==="Enough";
+                    smartNode.statusCollateral ="Enough";
                 }
-                smartNode.save();
+               await smartNode.save();
                 return smartNode;
             }else{
                 throw new ApolloError("Error 1234567");
@@ -363,6 +367,11 @@ const ServiceResolvers = {
 
             }
             return true;
+        }
+    },
+    smartNode:{
+        yourParticipant:async (model:ISmartNode,args:any, ctx:any) => {
+            return model.participants.find(ii=>ii.userId && typeof ii.userId==="object"&&ctx.user._id.equals(ii.userId._id));
         }
     }
 };
