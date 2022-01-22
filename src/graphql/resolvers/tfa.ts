@@ -133,7 +133,7 @@ const ServiceResolvers = {
                     // });
                     return true;
                 } else {
-                    throw new ApolloError("Not verified TFA");
+                    throw new ApolloError("Not verified 2FA");
                 }
 
             } catch (error) {

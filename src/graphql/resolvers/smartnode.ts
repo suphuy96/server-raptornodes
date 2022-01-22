@@ -37,16 +37,19 @@ const ServiceResolvers = {
 
                 const res:any = await RPCRuner.smartnodelist();
                 const objSmartnode:any = {};
-                 Object.keys(res).forEach((key)=>{
-                     const ipAddress =res[key].address.replace(":10227","").replace(":10226","");
-                     objSmartnode[ipAddress]=res[key];
-                     objSmartnode[ipAddress].ipAddress = ipAddress;
-                 });
-                const resB = await RPCRuner.listaddressbalances().catch(()=>{
+                Object.keys(res).forEach((key)=>{
+                    const ipAddress =res[key].address.replace(":10227","").replace(":10226","");
+                    objSmartnode[ipAddress]=res[key];
+                    objSmartnode[ipAddress].ipAddress = ipAddress;
+                });
+                // const resB = await RPCRuner.listaddressbalances().catch(()=>{
+                //     return {};
+                // });
+                const resB = await RPCRuner.listaccounts().catch(()=>{
                     return {};
                 });
                 // console.log('resB',resB)
-              return smartNodes.map((item:any)=>{
+                return smartNodes.map((item:any)=>{
                     if(objSmartnode[item.ipAddress]){
                         objSmartnode[item.ipAddress].label = item.label;
                         objSmartnode[item.ipAddress]._id = item._id;
@@ -54,7 +57,7 @@ const ServiceResolvers = {
                         objSmartnode[item.ipAddress].updatedAt = item.updatedAt;
                         objSmartnode[item.ipAddress].collateral = item.collateral;
                         objSmartnode[item.ipAddress].lastReward = item.lastReward;
-                        objSmartnode[item.ipAddress].balance = resB[item.privateAddress]||0;
+                        objSmartnode[item.ipAddress].balance = resB[item.privateAccount]||0;
                         objSmartnode[item.ipAddress].privateAccount = item.privateAccount;
                         objSmartnode[item.ipAddress].privateAddress = item.privateAddress;
                         objSmartnode[item.ipAddress].statusCollateral = item.statusCollateral;
@@ -62,9 +65,9 @@ const ServiceResolvers = {
 
                         return {...objSmartnode[item.ipAddress],...item};
                     }
-                  item.balance = resB[item.privateAddress]||0;
+                    item.balance = resB[item.privateAddress]||0;
 
-                  return item;
+                    return item;
                 });
             } catch (error) {
                 console.log("dddd",error);
@@ -148,9 +151,12 @@ const ServiceResolvers = {
     },  Mutation:{
         createSmartNode:  async(__: any, args: ISmartNode,ctx:any) => {
             checkIsAdmin(ctx.user);
-                const smartNode = new SmartNode();
+            const smartNode = new SmartNode();
             smartNode.label = args.label;
             smartNode.ipAddress = args.ipAddress||"";
+            if(global.settingSystem.isMaintenance){
+                throw new ApolloError("System is Maintenance");
+            }
             if(args.participants) {
                 smartNode.participants = args.participants;
             }
@@ -162,9 +168,9 @@ const ServiceResolvers = {
                 smartNode.private = args.private;
             }
             const smartNodes = await SmartNode.find({label:smartNode.label});
-                if(smartNodes && smartNodes.length){
-                    throw new ApolloError("Label not unique");
-                }
+            if(smartNodes && smartNodes.length){
+                throw new ApolloError("Label not unique");
+            }
             const privateAddress: any = await RPCRuner.getAccountAddress("SmartNode#"+smartNode.label).catch((e) => {
                 console.log("không thể kết nối raptoreum", e.toString());
                 return false;
@@ -200,10 +206,10 @@ const ServiceResolvers = {
             if(args.collateral&&smartNode.collateral!==args.collateral){
                 let collateral = 0;
                 smartNode.collateral = args.collateral;
-               smartNode.participants.find((ii:Iparticipant)=>{
-                   collateral +=ii.collateral;
-                   ii.percentOfNode = ii.collateral/args.collateral;
-               });
+                smartNode.participants.find((ii:Iparticipant)=>{
+                    collateral +=ii.collateral;
+                    ii.percentOfNode = ii.collateral/args.collateral;
+                });
                 if(collateral>=smartNode.collateral){
                     smartNode.statusCollateral ="Enough";
                 }
@@ -232,6 +238,9 @@ const ServiceResolvers = {
             const smartNode = await SmartNode.findById(args._id);
             if(!smartNode){
                 throw new ApolloError("Not found document");
+            }
+            if(global.settingSystem.isMaintenance){
+                throw new ApolloError("System is Maintenance");
             }
             if(!args.amount){
                 throw new ApolloError("require amount");
@@ -269,6 +278,9 @@ const ServiceResolvers = {
             if(!smartNode){
                 throw new ApolloError("Not found document");
             }
+            if(global.settingSystem.isMaintenance){
+                throw new ApolloError("System is Maintenance");
+            }
             await smartNode.remove();
 
             return true;
@@ -276,20 +288,23 @@ const ServiceResolvers = {
         joinSmartNode: async (__: any, args: {_id:string,token:string,amount:number},ctx:any) => {
             checkIsAuthen(ctx.user);
             try{
-            if(global.settingSystem && global.settingSystem.mailJobSmartNode && global.settingSystem.mailJobSmartNode.enable){
-                sendMail(ctx.user.email+( global.settingSystem.mailJobSmartNode.cc.length?(","+global.settingSystem.mailJobSmartNode.cc.join()):""),_.template(global.settingSystem.mailJobSmartNode.label)({name:ctx.user.profile.name,email:ctx.user.email,avatar:ctx.user.profile.picture,data:""}),_.template(global.settingSystem.mailJobSmartNode.template)({name:ctx.user.profile.name,email:ctx.user.email,avatar:ctx.user.profile.picture,data:""})).then(data=>{
-                    console.log("đàads");
-                });
-            }
+                if(global.settingSystem && global.settingSystem.mailJobSmartNode && global.settingSystem.mailJobSmartNode.enable){
+                    sendMail(ctx.user.email+( global.settingSystem.mailJobSmartNode.cc.length?(","+global.settingSystem.mailJobSmartNode.cc.join()):""),_.template(global.settingSystem.mailJobSmartNode.label)({name:ctx.user.profile.name,email:ctx.user.email,avatar:ctx.user.profile.picture,data:""}),_.template(global.settingSystem.mailJobSmartNode.template)({name:ctx.user.profile.name,email:ctx.user.email,avatar:ctx.user.profile.picture,data:""})).then(data=>{
+                        console.log("đàads");
+                    });
+                }
             }catch (e){
 
             }
             if(!ctx.user.enableTfa){
                 throw new ApolloError("You need to enable Two Factor Authentication");
             }
+            if(global.settingSystem.isMaintenance){
+                throw new ApolloError("System is Maintenance");
+            }
             if(ctx.user.enableTfa){
                 if(!args.token && args.token===""){
-                    throw new ApolloError("Not verified TFA");
+                    throw new ApolloError("Not verified 2FA");
                 }
                 const isVerified = speakeasy.totp.verify({
                     secret: ctx.user.tfa.secret,
@@ -297,67 +312,70 @@ const ServiceResolvers = {
                     token: args.token
                 });
                 if (!isVerified) {
-                    throw new ApolloError("Not verified TFA");
+                    throw new ApolloError("Not verified 2FA");
                 }
             }
             const smartNode = await SmartNode.findById(args._id);
             if(!smartNode){
-                 throw new ApolloError("Not Found SmartNode _id"+args._id);
+                throw new ApolloError("Not Found SmartNode _id"+args._id);
             }
 
-            if( smartNode.statusCollateral ==="Not Enough"){
-                throw new ApolloError("SmartNode:"+smartNode.label+" is Enough");
+            if( smartNode.statusCollateral !=="Not Enough"){
+                throw new ApolloError("SmartNode:"+smartNode.label+" is "+smartNode.statusCollateral);
 
             }
             try{
                 const comment = "#join SmartNode:#"+smartNode.label+"- Raptornodes.com";
-            const rawData:string = await RPCRuner.sendFrom({address:smartNode.privateAddress,account:ctx.user.accountRTM,comment,amount:args.amount,comment_to:""});
-            if(rawData){
-                const withdraw = new Withdraw();
-                withdraw.address = smartNode.privateAddress;
-                withdraw.amount = args.amount;
-                withdraw.description = comment;
-                // withdraw.type = comment;
-                withdraw.author = ctx.user._id;
-                withdraw.txid = rawData;
-                withdraw.save();
-                const participants = smartNode.participants.find((ii:Iparticipant)=>ii.userId && typeof ii.userId==="object"&&ctx.user._id.equals(ii.userId._id));
-                if(participants){
-                    participants.collateral+=args.amount;
-                    participants.percentOfNode=participants.collateral/smartNode.collateral;
-                    participants.txids.push(rawData);
-                    participants.time =new Date();
+                const rawData:string = await RPCRuner.sendFrom({address:smartNode.privateAddress,account:ctx.user.accountRTM,comment,amount:args.amount,comment_to:""});
+                if(rawData){
+                    const withdraw = new Withdraw();
+                    withdraw.address = smartNode.privateAddress;
+                    withdraw.amount = args.amount;
+                    withdraw.description = comment;
+                    // withdraw.type = comment;
+                    withdraw.author = ctx.user._id;
+                    withdraw.txid = rawData;
+                    withdraw.save();
+                    const participants = smartNode.participants.find((ii:Iparticipant)=>ii.userId && typeof ii.userId==="object"&&ctx.user._id.equals(ii.userId._id));
+                    if(participants){
+                        participants.collateral+=args.amount;
+                        participants.percentOfNode=participants.collateral/smartNode.collateral;
+                        participants.txids.push(rawData);
+                        participants.time =new Date();
+                    }else{
+                        smartNode.participants.push({userId:ctx.user._id,RTMRewards:0,collateral:args.amount,pendingRTMRewards:0,percentOfNode:args.amount/smartNode.collateral
+                            ,txids:[rawData]
+                            ,time:new Date()});
+                    }
+                    let collateral = 0;
+                    smartNode.participants.forEach((ii:Iparticipant)=>{
+                        collateral+=ii.collateral;
+                    });
+                    if(collateral>=smartNode.collateral){
+                        smartNode.statusCollateral ="Enough";
+                    }
+                    await smartNode.save();
+                    return smartNode;
                 }else{
-                    smartNode.participants.push({userId:ctx.user._id,RTMRewards:0,collateral:args.amount,pendingRTMRewards:0,percentOfNode:args.amount/smartNode.collateral
-                        ,txids:[rawData]
-                        ,time:new Date()});
-                }
-                let collateral = 0;
-                smartNode.participants.forEach((ii:Iparticipant)=>{
-                    collateral+=ii.collateral;
-                });
-                if(collateral>=smartNode.collateral){
-                    smartNode.statusCollateral ="Enough";
-                }
-               await smartNode.save();
-                return smartNode;
-            }else{
-                throw new ApolloError("Error 1234567");
+                    throw new ApolloError("Error 1234567");
 
-            }
+                }
             }catch (e){
                 throw new ApolloError("Error"+e.toString());
             }
 
-                return {};
+            return {};
         },
         widthDrawlSmartNode: async (__: any, args: {_id:string,token:string},ctx:any) => {
             if(!ctx.user){
                 throw new ApolloError("No session login");
             }
+            if(global.settingSystem.isMaintenance){
+                throw new ApolloError("System is Maintenance");
+            }
             if(ctx.user.enableTfa){
                 if(!args.token && args.token===""){
-                    throw new ApolloError("Not verified TFA");
+                    throw new ApolloError("Not verified 2FA");
                 }
                 const isVerified = speakeasy.totp.verify({
                     secret: ctx.user.tfa.secret,
@@ -365,7 +383,7 @@ const ServiceResolvers = {
                     token: args.token
                 });
                 if (!isVerified) {
-                    throw new ApolloError("Not verified TFA");
+                    throw new ApolloError("Not verified 2FA");
                 }
             }
             try{

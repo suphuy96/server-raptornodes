@@ -146,7 +146,7 @@ export default class RpcRaptoreum {
     getaddresstxids(account:string,opts?:OptionRequestJsonRpc):Promise<{total:number,enabled:number}>{
         return this.requestJsonRpc("listtransactions", [account],opts);
     }
-    listtransactions(params:any, opts?:OptionRequestJsonRpc):Promise<{total:number,enabled:number}>{
+    listtransactions(params:any, opts?:OptionRequestJsonRpc):Promise<any[]>{
         return this.requestJsonRpc("listtransactions",params,opts);
     }
     listaddressbalances( opts?:OptionRequestJsonRpc):Promise<any>{

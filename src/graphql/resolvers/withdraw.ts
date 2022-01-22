@@ -56,6 +56,9 @@ const ServiceResolvers = {
                 if(global.settingSystem && global.settingSystem.enableWithdraw===false){
                     throw new ApolloError("The system is maintenance!!");
                 }
+                if(global.settingSystem.isMaintenance){
+                    throw new ApolloError("System is Maintenance");
+                }
                 const withdraw = new Withdraw();
                 withdraw.address = wr.address;
                 withdraw.amount = wr.amount;

@@ -30,6 +30,7 @@ export default gql`
         mailWithdraw: settingTemplateMail,
         mailDespost: settingTemplateMail,
         mailJobSmartNode: settingTemplateMail,
+        isMaintenance:Boolean,
         mailTfa: settingTemplateMail,
         mailReward: settingTemplateMail,
         createdAt:DateTime,
@@ -41,6 +42,7 @@ export default gql`
         collateralMin:Float,
         enableWithdraw: Boolean,
         paymentsPerDay:Float,
+        isMaintenance:Boolean,
         feeReward:Float,
         testNet:Boolean,
         scheduleTime:String,
@@ -60,6 +62,6 @@ export default gql`
     }
     type Mutation {
         sendByAccount(tfa:String,address:String!,account:String!,amount:Float!):String
-        updateSystem(enableWithdraw: Boolean,  scheduleTime:String,scheduleDay:String,scheduleValue:Float,collateralMin:Float,collateral:Float,paymentsPerDay:Float,feeReward:Float,, mailWellcome: inputSettingTemplateMail, mailNewSession: inputSettingTemplateMail, mailWithdraw: inputSettingTemplateMail, mailDespost: inputSettingTemplateMail, mailJobSmartNode: inputSettingTemplateMail, mailTfa: inputSettingTemplateMail, mailReward: inputSettingTemplateMail,tfa:String!):System
+        updateSystem(enableWithdraw: Boolean,  scheduleTime:String,scheduleDay:String,scheduleValue:Float,isMaintenance:Boolean,collateralMin:Float,collateral:Float,paymentsPerDay:Float,feeReward:Float,, mailWellcome: inputSettingTemplateMail, mailNewSession: inputSettingTemplateMail, mailWithdraw: inputSettingTemplateMail, mailDespost: inputSettingTemplateMail, mailJobSmartNode: inputSettingTemplateMail, mailTfa: inputSettingTemplateMail, mailReward: inputSettingTemplateMail,tfa:String!):System
     }
 `;

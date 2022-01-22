@@ -39,7 +39,15 @@ const ServiceResolvers = {
                     await ss.save();
                     return ss;
                 }
-                return ars[0];
+                // const smartnodeCount:{total:number,enabled:number} = await RPCRuner.smartnodeCount();
+                // if(smartnodeCount.total){
+                //     settingSystem.paymentsPerDay = 720000/smartnodeCount.enabled;
+                // }else if(paymentsPerDayOld){
+                //     settingSystem.paymentsPerDay = paymentsPerDayOld;
+                // }
+                const re = ars[0];
+                re.paymentsPerDay=settingSystem.paymentsPerDay;
+                return re;
             } catch (error) {
                 throw new ApolloError(error);
             }
@@ -150,6 +158,9 @@ const ServiceResolvers = {
                 }
                 if(systemInput.mailDespost){
                     system.mailDespost = systemInput.mailDespost;
+                }
+                if(systemInput.isMaintenance || systemInput.isMaintenance===false){
+                    system.isMaintenance = systemInput.isMaintenance;
                 }
                        await system.save();
 

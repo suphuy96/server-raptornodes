@@ -17,6 +17,7 @@ interface settingTemplateMail{
      scheduleTime:string,
      scheduleDay:string,
      scheduleValue:number,
+     isMaintenance?:boolean;
     mailWellcome: settingTemplateMail;
     mailNewSession: settingTemplateMail;
     mailWithdraw: settingTemplateMail;

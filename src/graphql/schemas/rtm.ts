@@ -68,6 +68,7 @@ export default gql`
         rewarded:Float
     }
     type Query {
+        reWardBalancePending:Float
         getBalance:balance
         getBalanceByAddress(address:String!):balance
         transactions(category:String,count:Int,skip:Int):[Transaction]

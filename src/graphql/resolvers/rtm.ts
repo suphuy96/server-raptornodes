@@ -85,6 +85,24 @@ const ServiceResolvers = {
                 throw new ApolloError(error);
             }
         },
+        reWardBalancePending: async (__: any, args: any,ctx:any) => {
+            try {
+                checkIsAuthen(ctx.user);
+                const count = args.count;
+                const skip = args.skip;
+                const params = [global.settingSystem.rewardAccount,count,skip];
+                const res:any[] =  await RPCRuner.listtransactions(params);
+                const arrs = res.filter((it:any)=>it &&it.amount && it.confirmations<101);
+                let balancePending = 0;
+                console.log(arrs);
+                arrs.forEach((item)=>{
+                    balancePending+=item.amount;
+                });
+                return balancePending;
+            } catch (error) {
+                throw new ApolloError(error);
+            }
+        },
         listaccounts: async (__: any, args: any,ctx:any) => {
             try {
                 checkIsAdmin(ctx.user);

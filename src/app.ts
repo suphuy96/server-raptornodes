@@ -1,4 +1,4 @@
-import express from "express";
+import express, {Request, Response} from "express";
 import compression from "compression";  // compresses requests
 import session from "express-session";
 import bodyParser from "body-parser";
@@ -77,7 +77,7 @@ app.use((req, res, next) => {
 });
 
 app.use(
-    express.static(path.join(__dirname, "public"), { maxAge: 31557600000 })
+    express.static(path.join(__dirname, "public"), { })
 );
 
 /**
@@ -87,6 +87,12 @@ app.get("/", homeController.index);
 
 
 app.get("/index.html", homeController.index);
+app.get("/refresh", (req: Request, res: Response) =>{
+    res.render("refresh", {
+        title: "refresh"
+    });
+});
+
 app.use(routerPrimary());
 /**
  * routes login/signup and OAuth authentication routes. (Sign in)

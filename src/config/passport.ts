@@ -15,6 +15,7 @@ import {Strategy as JwtStrategy,ExtractJwt} from "passport-jwt";
 // import { Strategy, Profile, VerifyCallback  } from "@oauth-everything/passport-discord";
  import {  Strategy as GoogleStrategy} from "passport-google-oauth20";
 import RpcRaptoreum ,{OptionRpcClient} from "../libs/rpc-raptoreum";
+import {ApolloError} from "apollo-server-express";
 _.templateSettings.interpolate = /{{([\s\S]+?)}}/g;
 const ODefaults: OptionRpcClient = {
     host: process.env.rpcbind,
@@ -174,7 +175,11 @@ passport.use(new GoogleStrategy({
                         done(err);
                     } else {
                         console.log("vào đây444");
+                        if(global.settingSystem.isMaintenance){
+                            req.flash("errors", { msg: "System is Maintenance" });
+                            return  done(new Error("System is Maintenance"));
 
+                        }
                         const user: any = new User();
                         user.rules = "User";
                         user.email = profile._json.email;
@@ -188,10 +193,18 @@ passport.use(new GoogleStrategy({
                            uid ="User#"+ user.email+"_"+new Date().getTime();
                        }
                        try {
-                           const addressRTM: any = await RPCRuner.getAccountAddress(uid).catch((e) => {
+                           let addressRTM: any = await RPCRuner.getAccountAddress(uid).catch((e) => {
                                console.log("không thể kết nối raptoreum", e.toString());
                                return false;
                            });
+                          const addressRTMExist = await User.findOne({addressRTM:addressRTM});
+                          if(addressRTMExist){
+                              // get another wallet address
+                              addressRTM = await RPCRuner.getAccountAddress(uid).catch((e) => {
+                                  console.log("không thể kết nối raptoreum", e.toString());
+                                  return false;
+                              });
+                          }
                            const token = jwt.sign({email: user.email, tokenJWT: uuidv4()}, process.env.SESSION_SECRET, {
                                expiresIn: 10000000,
                            });
