@@ -17,6 +17,8 @@ export interface ISystem  {
     scheduleValue:number,
     rewardAddress:string,
     isMaintenance:boolean,
+    missingReward?:boolean,
+    timeMissingReward?:Date,
     mailWellcome: settingTemplateMail;
     mailNewSession: settingTemplateMail;
     mailWithdraw: settingTemplateMail;
@@ -45,6 +47,8 @@ const SystemSchema = new mongoose.Schema<SystemDocument>(
         scheduleDay:String,
         scheduleValue:Number,
         isMaintenance:Boolean,
+        missingReward:Boolean,
+        timeMissingReward:Date,
         mailWellcome: templateSetting,
         mailNewSession: templateSetting,
         mailWithdraw: templateSetting,

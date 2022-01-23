@@ -31,6 +31,8 @@ export default gql`
         mailDespost: settingTemplateMail,
         mailJobSmartNode: settingTemplateMail,
         isMaintenance:Boolean,
+        missingReward:Boolean,
+        timeMissingReward: Date,
         mailTfa: settingTemplateMail,
         mailReward: settingTemplateMail,
         createdAt:DateTime,

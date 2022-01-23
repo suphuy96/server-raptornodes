@@ -5,6 +5,8 @@ export interface IReWard  {
     feeReward:number;
     days:number;
     isSchedule:boolean;
+    missingReward?:boolean,
+    timeReTry?:Date,
     dayEnd:Date;
 }
 export type ReWardDocument = mongoose.Document & IReWard
@@ -16,6 +18,8 @@ const ReWardSchema = new mongoose.Schema<ReWardDocument>(
         feeReward:Number,
         days:Number,
         isSchedule:Boolean,
+        missingReward:Boolean,
+        timeReTry:Date,
         dayEnd:Date,
     },
     { timestamps: true },

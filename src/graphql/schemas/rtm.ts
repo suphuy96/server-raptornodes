@@ -68,6 +68,7 @@ export default gql`
         rewarded:Float
     }
     type Query {
+        getblockcount:Float
         reWardBalancePending:Float
         getBalance:balance
         getBalanceByAddress(address:String!):balance

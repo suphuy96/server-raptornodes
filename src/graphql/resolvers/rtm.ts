@@ -4,7 +4,7 @@ import RpcRaptoreum from "../../libs/rpc-raptoreum";
 import _ from "lodash";
 import {checkIsAuthen,checkIsAdmin} from "../../util/checkAuthen";
 import {ReWardHistory} from "../../models/RewardHistory";
-
+import {getblockcount} from "../../helper/request/explorerRaptoreum";
 const ODefaults: OptionRpcClient = {
     host: process.env.rpcbind,
     port:  parseInt(process.env.rpcport||"19998"),
@@ -102,6 +102,10 @@ const ServiceResolvers = {
             } catch (error) {
                 throw new ApolloError(error);
             }
+        },
+        getblockcount:async (__: any, args: any,ctx:any) => {
+           const res:{data:number} = await  getblockcount(global.settingSystem.testNet);
+            return res.data;
         },
         listaccounts: async (__: any, args: any,ctx:any) => {
             try {

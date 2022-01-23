@@ -9,3 +9,6 @@ export const getMarketcap =():Promise<AxiosResponse>=> {
 export const getTotalLockedCoins =():Promise<AxiosResponse>=> {
   return axios.get( urlApi+"/gettotallockedcoins");
 };
+export const  getblockcount =(testnet=false):Promise<AxiosResponse&{data:number}>=> {
+  return axios.get( "https://"+(testnet?"testnet":"explorer")+".raptoreum.com/api/getblockcount");
+};

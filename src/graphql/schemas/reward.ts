@@ -9,6 +9,7 @@ export default gql`
         days: Int,
         isSchedule:Boolean,
         dayEnd: Date,
+        missingReward:Boolean,
         createdAt:DateTime,
         updatedAt:DateTime
         
@@ -27,6 +28,7 @@ export default gql`
         user:Author,
         txid:String,
         amount:Float,
+        
         dayEnd:Float,
         createdAt:DateTime,
         updatedAt:DateTime
@@ -37,6 +39,7 @@ export default gql`
         rewardHistorys(reward:String,smartNode:String,user:String):[RewardHistory]
     }
     type Mutation {
+        tryReward(_id:String,tfa:String):Reward
         createReward(days:Int,description:String,tfa:String):Reward
     }
 `;

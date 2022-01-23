@@ -57,11 +57,23 @@ const funReward = async (reward:ReWardDocument) => {
             });
         }
         if(totalReward>realReWardBalance){
+            try{
+                const settingSystem:SystemDocument = await System.findOne();
+                settingSystem.missingReward = true;
+                settingSystem.timeMissingReward = new Date();
+                settingSystem.save();
+                reward.missingReward = true;
+                reward.save();
+            }catch (e){
+
+            }
+
             sendMail( process.env.ADMINS, "Error!! Not enough balance to pay the reward, "+smartnodes.length+" Smartnode","Schedule ReWard "+smartnodes.length+" Smartnode in raptornodes.com, totalReward:" +totalReward.toFixed(8)+"RTM, reWardBalance:"+reWardBalance+"RTM, balancePending:"+balancePending+"RTM").then(()=>{
                 console.log("");
             });
         }else
         {
+
             for await (const smartnode of smartnodes) {
                 for await (const participant of smartnode.participants) {
                     const comment = "ReWard in Raptornodes.com";
@@ -116,6 +128,13 @@ const funReward = async (reward:ReWardDocument) => {
                 }
                 smartnode.lastReward = new Date();
                 smartnode.save();
+            }
+            try{
+                const settingSystem:SystemDocument = await System.findOne();
+                settingSystem.missingReward = false;
+                settingSystem.save();
+            }catch (e){
+
             }
         }
         // reward.save();
@@ -263,7 +282,41 @@ const ServiceResolvers = {
             } catch (error) {
                 throw new ApolloError(error);
             }
+        },
+        tryReward: async (__: any, wr: {_id:string,tfa:string},ctx:any) => {
+            try {
+                checkIsAdmin(ctx.user);
+                const reward = await ReWard.findById(wr._id);
+                if(!reward){
+                    throw new ApolloError("Not found ReWard");
+                }
+                if(!reward.missingReward ){
+                    throw new ApolloError("ReWard not Missing");
+                }
+                if(global.settingSystem.isMaintenance){
+                    throw new ApolloError("System is Maintenance");
+                }
+                if(ctx.user.enableTfa){
+                    if(!wr.tfa||wr.tfa===""){
+                        throw new ApolloError("undefined code 2fa");
+                    }
+                    const isVerified = speakeasy.totp.verify({
+                        secret: ctx.user.tfa.secret,
+                        encoding: "base32",
+                        token: wr.tfa
+                    });
+                    if(!isVerified){
+                        throw new ApolloError("2fa is not correct");
+                    }
+                }
+                await funReward(reward);
+                return reward;
+
+            } catch (error) {
+                throw new ApolloError(error);
+            }
         }
+
     }
 };
 
