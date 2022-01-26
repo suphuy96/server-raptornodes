@@ -48,7 +48,6 @@ const ServiceResolvers = {
                 const resB = await RPCRuner.listaccounts().catch(()=>{
                     return {};
                 });
-                // console.log('resB',resB)
                 return smartNodes.map((item:any)=>{
                     if(objSmartnode[item.ipAddress]){
                         objSmartnode[item.ipAddress].label = item.label;
@@ -65,7 +64,7 @@ const ServiceResolvers = {
 
                         return {...objSmartnode[item.ipAddress],...item};
                     }
-                    item.balance = resB[item.privateAddress]||0;
+                    item.balance = resB[item.privateAccount]||0;
 
                     return item;
                 });
@@ -171,7 +170,17 @@ const ServiceResolvers = {
             if(smartNodes && smartNodes.length){
                 throw new ApolloError("Label not unique");
             }
-            const privateAddress: any = await RPCRuner.getAccountAddress("SmartNode#"+smartNode.label).catch((e) => {
+            let accountAddress ="User#"+ smartNode.label;
+            const datas = await RPCRuner.getAddressesByAccount(accountAddress);
+            //check used account
+            if(datas && datas.length){
+                accountAddress ="User#"+ smartNode.label+"_"+new Date().getTime();
+            }
+            // const privateAddress: any = await RPCRuner.getAccountAddress("SmartNode#"+smartNode.label).catch((e) => {
+            //     console.log("không thể kết nối raptoreum", e.toString());
+            //     return false;
+            // });
+            const privateAddress: any = await RPCRuner.getAccountAddress(accountAddress).catch((e) => {
                 console.log("không thể kết nối raptoreum", e.toString());
                 return false;
             });
@@ -274,14 +283,15 @@ const ServiceResolvers = {
         },
         deleteSmartNode: async (__: any, args:ISmartNode&{_id:string},ctx:any) => {
             checkIsAdmin(ctx.user);
-            const smartNode = await SmartNode.findById(args._id);
-            if(!smartNode){
-                throw new ApolloError("Not found document");
-            }
-            if(global.settingSystem.isMaintenance){
-                throw new ApolloError("System is Maintenance");
-            }
-            await smartNode.remove();
+            throw new ApolloError("delete not allow");
+            // const smartNode = await SmartNode.findById(args._id);
+            // if(!smartNode){
+            //     throw new ApolloError("Not found document");
+            // }
+            // if(global.settingSystem.isMaintenance){
+            //     throw new ApolloError("System is Maintenance");
+            // }
+            // await smartNode.remove();
 
             return true;
         },

@@ -7,6 +7,7 @@ export default gql`
         percentOfNode:Float,
         RTMRewards:Float,
         pendingRTMRewards:Float,
+        txids:[String],
         time:Date
     }
     type smartNode {

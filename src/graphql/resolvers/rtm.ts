@@ -107,6 +107,20 @@ const ServiceResolvers = {
            const res:{data:number} = await  getblockcount(global.settingSystem.testNet);
             return res.data;
         },
+        listaddressgroupings: async (__: any, args: any,ctx:any) => {
+            try {
+                checkIsAdmin(ctx.user);
+                const objDa = await RPCRuner.listaddressgroupings();
+                console.log(objDa,'objDa');
+                const list:{account:string,balance:number}[] = [];
+                Object.keys(objDa).forEach((key)=>{
+                    list.push({account:key,balance:objDa[key]});
+                });
+                return await list;
+            } catch (error) {
+                throw new ApolloError(error);
+            }
+        },
         listaccounts: async (__: any, args: any,ctx:any) => {
             try {
                 checkIsAdmin(ctx.user);

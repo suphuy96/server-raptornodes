@@ -74,6 +74,7 @@ export default gql`
         getBalanceByAddress(address:String!):balance
         transactions(category:String,count:Int,skip:Int):[Transaction]
         listaccounts:[accountBalance]
+        listaddressgroupings:[[String]]
         lastTxid:String
         getInfoRTM:InfoRTM
     }
