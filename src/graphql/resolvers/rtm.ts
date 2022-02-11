@@ -111,7 +111,7 @@ const ServiceResolvers = {
             try {
                 checkIsAdmin(ctx.user);
                 const objDa = await RPCRuner.listaddressgroupings();
-                console.log(objDa,'objDa');
+                console.log(objDa,"objDa");
                 const list:{account:string,balance:number}[] = [];
                 Object.keys(objDa).forEach((key)=>{
                     list.push({account:key,balance:objDa[key]});
