@@ -2,8 +2,10 @@ import mongoose,{Schema} from "mongoose";
 export interface IWithdrawWeekly  {
     address: string;
     amount:number;
+    collateralOld:number;
     ip: string;
-    status: boolean;
+    smartNode:string;
+    status: string;
     confirm:boolean;
     description:string;
     txid: string;
@@ -16,8 +18,10 @@ const WithdrawWeeklySchema = new mongoose.Schema<WithdrawWeeklyDocument>(
     {
         address: { type: String },
         amount: Number,
+        collateralOld:Number,
         ip: String,
-        status: { type: Boolean ,default:false},
+        smartNode:String,
+        status: { type: String ,default: "Pending"},
         confirm: { type: Boolean ,default:false},
         description:String,
         txid: String,

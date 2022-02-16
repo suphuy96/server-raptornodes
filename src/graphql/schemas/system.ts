@@ -24,6 +24,7 @@ export default gql`
         withdrawWeekly: Boolean,
         withdrawWeeklyConfirm: Boolean,
         withdrawWeeklyMinimum: Int,
+        withdrawWeeklyScheduleTime: String,
         feeReward:Float,
         scheduleTime:String,
         scheduleDay:String,
@@ -45,6 +46,10 @@ export default gql`
         _id:String,
         collateral:Float,
         collateralMin:Float,
+        withdrawWeekly:Boolean,
+        withdrawWeeklyConfirm:Boolean,
+        withdrawWeeklyMinimum:Float,
+        withdrawWeeklyScheduleTime:String,
         enableWithdraw: Boolean,
         paymentsPerDay:Float,
         isMaintenance:Boolean,
@@ -62,7 +67,10 @@ export default gql`
     type withdrawlWeeklyRTM {
         address:String,
         balance:Float,
-        received:Float
+        received:Float,
+        withdrawlIsPending:Float,
+        withdrawlISPaid:Float,
+        withdrawlISPaidCount:Float,withdrawlIsPendingCount:Float
     }
     type Query {
         variableSystem:VariableSystem
@@ -74,6 +82,7 @@ export default gql`
         sendByAccount(tfa:String,address:String!,account:String!,amount:Float!):String
         updateSystem(enableWithdraw: Boolean,    withdrawWeekly: Boolean,
             withdrawWeeklyConfirm: Boolean,
-            withdrawWeeklyMinimum: Int, scheduleTime:String,scheduleDay:String,scheduleValue:Float,isMaintenance:Boolean,collateralMin:Float,collateral:Float,paymentsPerDay:Float,feeReward:Float,, mailWellcome: inputSettingTemplateMail, mailNewSession: inputSettingTemplateMail, mailWithdraw: inputSettingTemplateMail, mailDespost: inputSettingTemplateMail, mailJobSmartNode: inputSettingTemplateMail, mailTfa: inputSettingTemplateMail, mailReward: inputSettingTemplateMail,tfa:String!):System
+            withdrawWeeklyScheduleTime:String,
+            withdrawWeeklyMinimum: Float, scheduleTime:String,scheduleDay:String,scheduleValue:Float,isMaintenance:Boolean,collateralMin:Float,collateral:Float,paymentsPerDay:Float,feeReward:Float,, mailWellcome: inputSettingTemplateMail, mailNewSession: inputSettingTemplateMail, mailWithdraw: inputSettingTemplateMail, mailDespost: inputSettingTemplateMail, mailJobSmartNode: inputSettingTemplateMail, mailTfa: inputSettingTemplateMail, mailReward: inputSettingTemplateMail,tfa:String!):System
     }
 `;

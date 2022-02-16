@@ -30,7 +30,7 @@ const ServiceResolvers = {
         updateFaq: async (__: any, args: any,ctx:any) => {
             try {
                 checkIsAdmin(ctx.user);
-                const faq = await Faq.findById(args._ida);
+                const faq = await Faq.findById(args._id);
                 if(!faq){
                     throw new ApolloError("Not found document");
                 }
@@ -40,8 +40,8 @@ const ServiceResolvers = {
                 if(args.label){
                     faq.label = args.label;
                 }
+                await  faq.save();
                 return faq;
-              await  faq.save();
             } catch (error) {
                 throw new ApolloError(error);
             }

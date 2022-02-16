@@ -1,6 +1,7 @@
 import { ApolloError } from "apollo-server-express";
 import {ReWard, ReWardDocument, IReWard} from "../../models/Reward";
 import {ReWardHistory} from "../../models/RewardHistory";
+import {WithdrawWeekly, WithdrawWeeklyDocument, IWithdrawWeekly} from "../../models/WithdrawWeekly";
 import {SmartNode} from "../../models/SmartNode";
 import {checkIsAuthen,checkIsAdmin} from "../../util/checkAuthen";
 import {OptionRpcClient} from "../../libs/rpc-raptoreum";
@@ -25,8 +26,6 @@ let rewardTask :ScheduledTask= schedule("59 23 * * *",async () => {
     console.log("schedule-- rewardTask ----nulll");
 });
 
-const invalid = validate("0 0 * * mon");
-console.log("invalid",invalid);
 const funReward = async (reward:ReWardDocument) => {
     try {
         const smartnodes = await SmartNode.find({statusCollateral : "Start Reward" }).populate("participants.userId");
@@ -180,7 +179,16 @@ const scheduleReward =()=>{
 
 };
 let keyCheck = "";
+const funWithdrawWeekly = async  ()=>{
+    const query :any&{status:string,confirm?:boolean}= {status:"Pending"};
+    if(global.settingSystem.withdrawWeeklyConfirm){
+        query.confirm = true;
+    }
+    const withdrawWeeklys = await WithdrawWeekly.find(query);
+    for  await (const withdrawWeekly of withdrawWeeklys) {
 
+    }
+};
 if(!process.env.NODE_APP_INSTANCE||process.env.NODE_APP_INSTANCE === "0"){
   setTimeout(()=>{
       keyCheck = global.settingSystem.scheduleDay+global.settingSystem.scheduleTime+global.settingSystem.scheduleValue+"fff";
@@ -253,6 +261,8 @@ const ServiceResolvers = {
                 //         item.timereceived= check.timereceived;
                 //     }
                 // });
+                // const lastReward = await ReWard.findOne().sort({createdAt: -1}).exec();
+                // console.log("ddlastReward",lastReward);
                 return ars;
             } catch (error) {
                 throw new ApolloError(error);

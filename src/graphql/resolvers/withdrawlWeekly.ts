@@ -1,11 +1,13 @@
 import { ApolloError } from "apollo-server-express";
 import {WithdrawWeekly, WithdrawWeeklyDocument, IWithdrawWeekly} from "../../models/WithdrawWeekly";
-import {checkIsAuthen} from "../../util/checkAuthen";
+
+import {checkIsAdmin, checkIsAuthen} from "../../util/checkAuthen";
 import {OptionRpcClient} from "../../libs/rpc-raptoreum";
 import RpcRaptoreum from "../../libs/rpc-raptoreum";
 import _ from "lodash";
 import speakeasy from "speakeasy";
 import sendMail from "../../libs/mail";
+import {Iparticipant, ISmartNode, SmartNode} from "../../models/SmartNode";
 const ODefaults: OptionRpcClient = {
     host: process.env.rpcbind,
     port:  parseInt(process.env.rpcport||"19998"),
@@ -20,10 +22,17 @@ const RPCRuner = new RpcRaptoreum(ODefaults);
 
 const ServiceResolvers = {
     Query: {
-        withdrawWeeklys: async (__: any, args: any,ctx:any) => {
+        withdrawWeeklys: async (__: any, args: { status:string,smartNode:string },ctx:any) => {
             try {
                 checkIsAuthen(ctx.user);
-                const ars = await WithdrawWeekly.find({author:ctx.user._id}).populate("author");
+                const objFilter:any&{status?:string,smartNode?:string,author?:string} = ctx.user.rules==="Admin"?{}:{author:ctx.user._id};
+                if (args.status){
+                    objFilter.status =args.status;
+                }
+                if (args.smartNode){
+                    objFilter.smartNode =args.smartNode;
+                }
+                const ars = await WithdrawWeekly.find(objFilter).populate("author");
                 const res:any =  await RPCRuner.listtransactions([ctx.user.accountRTM]);
                 //
                 // "walletconflicts": null,
@@ -55,12 +64,26 @@ const ServiceResolvers = {
                 if(global.settingSystem.isMaintenance){
                     throw new ApolloError("System is Maintenance");
                 }
-                const withdraw = new WithdrawWeekly();
-                withdraw.address = wr.address;
-                withdraw.amount = wr.amount;
-                withdraw.author = ctx.user._id;
+                if(!wr.smartNode || wr.smartNode===""){
+                    throw new ApolloError("Missing field Data smartNode");
+                }
+                if(!wr.address || wr.address ===""){
+                    throw new ApolloError("Please enter data field address");
+                }
+                if(!wr.amount || wr.amount <global.settingSystem.withdrawlWeeklyMinimum){
+                    throw new ApolloError("the amount must be lower "+global.settingSystem.withdrawlWeeklyMinimum);
+                }
                 if(!ctx.user.enableTfa){
                     throw new ApolloError("You need to enable Two Factor Authentication");
+                }
+                const smartNode = await SmartNode.findById(wr.smartNode);
+                if(!smartNode){
+                    throw new ApolloError("Missing field Data smartNode");
+                }
+                const participant :Iparticipant = smartNode.participants.find(ii=>ii.userId && typeof ii.userId==="object"&&ctx.user._id.equals(ii.userId._id));
+                if(!participant){
+                    throw new ApolloError("you have no collateral in smartnode "+smartNode.label);
+
                 }
                 //Verifi 2fa
                 if(ctx.user.enableTfa){
@@ -76,19 +99,58 @@ const ServiceResolvers = {
                         throw new ApolloError("2fa is not correct");
                     }
                 }
-                try {
-                    const withdrawSave= await withdraw.save();
+                const WithdrawWeeklys = await WithdrawWeekly.find({smartNode:wr.smartNode});
+                const WithdrawWeeklyCurrent = WithdrawWeeklys.find(item=>item.status==="Pending");
+                if(WithdrawWeeklyCurrent){
+                    if(WithdrawWeeklyCurrent.confirm===true){
+                        throw new ApolloError("You have been approved with the amount "+WithdrawWeeklyCurrent.amount+"RTM, if you want to change please cancel the current request!");
+                    }
+                    if(wr.address)
+                    WithdrawWeeklyCurrent.address = wr.address;
+                    if(wr.amount)
+                        WithdrawWeeklyCurrent.amount = wr.amount;
 
-                    return withdrawSave;
-                }catch (e){
-                    throw new ApolloError("Error"+e.toString());
-                    console.log("fixx",e);
+                    WithdrawWeeklyCurrent.collateralOld = participant.collateral;
+                    await WithdrawWeeklyCurrent.save();
+                    return  WithdrawWeeklyCurrent;
+                } else {
+                    const withdraw = new WithdrawWeekly();
+                    withdraw.address = wr.address;
+                    withdraw.amount = wr.amount;
+
+                    withdraw.collateralOld = participant.collateral;
+                    withdraw.author = ctx.user._id;
+                    withdraw.smartNode = wr.smartNode;
+                    try {
+                        const withdrawSave= await withdraw.save();
+
+                        return withdrawSave;
+                    }catch (e){
+                        throw new ApolloError("Error"+e.toString());
+                        console.log("fixx",e);
+                    }
+                    return withdraw;
+
                 }
-                return withdraw;
+
+
 
             } catch (error) {
                 throw new ApolloError(error);
             }
+        },
+        updateWithdrawWeekly: async (__: any, args:{_id:string,confirm:boolean,tfa:string},ctx:any) => {
+            checkIsAdmin(ctx.user);
+            const withdrawWeekly = await WithdrawWeekly.findById(args._id);
+            if(!withdrawWeekly){
+                throw new ApolloError("Not found document");
+            }
+            if(args.confirm|| args.confirm===false){
+                withdrawWeekly.confirm = args.confirm;
+            }
+
+            await withdrawWeekly.save();
+            return withdrawWeekly;
         }
     }
 };

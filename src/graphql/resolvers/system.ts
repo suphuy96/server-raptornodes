@@ -1,5 +1,6 @@
 import { ApolloError } from "apollo-server-express";
 import {System, SystemDocument, ISystem} from "../../models/System";
+import {WithdrawWeekly, WithdrawWeeklyDocument, IWithdrawWeekly} from "../../models/WithdrawWeekly";
 import {checkIsAdmin,checkIsAuthen} from "../../util/checkAuthen";
 import {mongo} from "mongoose";
 import speakeasy from "speakeasy";
@@ -32,9 +33,30 @@ const ServiceResolvers = {
         withdrawlWeeklyInfo: async (__: any, args: any,ctx:any) => {
             try {
                 checkIsAuthen(ctx.user);
-                const balance = await RPCRuner.getbalance(global.settingSystem.withdrawlWeeklyAccount);
-                const received = await RPCRuner.getreceivedbyaccount(global.settingSystem.withdrawlWeeklyAccount);
-                return {balance:balance?(balance):0,received:received?(received):0,address:global.settingSystem.withdrawlWeeklyAddress};
+
+
+                const balance = await RPCRuner.getbalance(global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly");
+                const received = await RPCRuner.getreceivedbyaccount(global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly");
+               const  withdrawWeeklys = await WithdrawWeekly.aggregate([{ $match:{status:"Pending"}},{
+                       $group :{
+                           _id : null,
+                           count:{ "$sum":1
+                           },
+                           amount:{ "$sum":"$amount"
+               }}}]).exec();
+                const  withdrawWeeklysPaid = await WithdrawWeekly.aggregate([{ $match:{status:"Paid"}},{
+                    $group :{
+                        _id : null,
+                        count:{ "$sum":1
+                        },
+                        amount:{ "$sum":"$amount"
+                        }}}]).exec();
+               console.log("withdrawWeeklys",withdrawWeeklys);
+                const withdrawlIsPending = withdrawWeeklys && withdrawWeeklys.length?withdrawWeeklys[0].amount:0;
+                const withdrawlIsPendingCount = withdrawWeeklys && withdrawWeeklys.length?withdrawWeeklys[0].count:0;
+                const withdrawlISPaid = withdrawWeeklysPaid && withdrawWeeklysPaid.length?withdrawWeeklysPaid[0].amount:0;
+                const withdrawlISPaidCount = withdrawWeeklysPaid && withdrawWeeklysPaid.length?withdrawWeeklysPaid[0].count:0;
+                return {balance:balance?(balance):0,withdrawlIsPending,withdrawlISPaid,withdrawlISPaidCount,withdrawlIsPendingCount,received:received?(received):0,address:global.settingSystem.withdrawWeeklyAddress};
             } catch (error) {
                 throw new ApolloError(error);
             }
@@ -178,6 +200,9 @@ const ServiceResolvers = {
                 if(systemInput.withdrawWeeklyMinimum ||systemInput.withdrawWeeklyMinimum===0){
                     system.withdrawWeeklyMinimum = systemInput.withdrawWeeklyMinimum;
                 }
+                if(systemInput.withdrawWeeklyScheduleTime ||systemInput.withdrawWeeklyScheduleTime===""){
+                    system.withdrawWeeklyScheduleTime = systemInput.withdrawWeeklyScheduleTime;
+                }
                 if(systemInput.isMaintenance || systemInput.isMaintenance===false){
                     system.isMaintenance = systemInput.isMaintenance;
                 }
@@ -187,6 +212,7 @@ const ServiceResolvers = {
                 const rewardAddress = global.settingSystem.rewardAddress;
                 // const rewardAddress = global.settingSystem.rewardAddress;
                 global.settingSystem = system;
+                global.settingSystem.withdrawlWeeklyAccount = "WithdrawlWeekly";
                 if(!rewardAddress ||rewardAddress===""){
                 try{
                     const addressReward = await RPCRuner.getAccountAddress("Reward").catch((e) => {

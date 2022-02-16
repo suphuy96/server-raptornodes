@@ -132,15 +132,15 @@ const loadSystem = async()=>{
         }
     }
     global.settingSystem.withdrawlWeeklyAccount = "WithdrawlWeekly";
-    if(!global.settingSystem.withdrawlWeeklyAddress ||global.settingSystem.withdrawlWeeklyAddress==""){
-        const withdrawlWeeklyAddress = await RPCRuner.getAccountAddress("WithdrawlWeekly").catch((e) => {
+    if(!global.settingSystem.withdrawWeeklyAddress ||global.settingSystem.withdrawWeeklyAddress==""){
+        const withdrawWeeklyAddress = await RPCRuner.getAccountAddress("WithdrawlWeekly").catch((e) => {
             console.log("không thể kết nối raptoreum", e.toString());
             return false;
         });
-        console.log(withdrawlWeeklyAddress,"withdrawlWeeklyAddress");
-        if(withdrawlWeeklyAddress){
-            global.settingSystem.withdrawlWeeklyAddress = withdrawlWeeklyAddress;
-            settingSystem.withdrawlWeeklyAddress = withdrawlWeeklyAddress;
+        console.log(withdrawWeeklyAddress,"withdrawWeeklyAddress");
+        if(withdrawWeeklyAddress){
+            global.settingSystem.withdrawWeeklyAddress = withdrawWeeklyAddress;
+            settingSystem.withdrawWeeklyAddress = withdrawWeeklyAddress;
             global.settingSystem.withdrawlWeeklyAccount ="WithdrawlWeekly";
             await settingSystem.save();
         }

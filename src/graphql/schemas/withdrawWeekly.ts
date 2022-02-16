@@ -4,8 +4,11 @@ export default gql`
     type WithdrawWeekly {
         _id:String!,
         description :String,
-        status:Boolean,
+        status:String,
+        address:String,
+        smartNode:String,
         confirm:Boolean,
+        collateralOld:Float,
         author:Author,
         txid:String,
         amount:Float,
@@ -18,11 +21,11 @@ export default gql`
         updatedAt:DateTime
     }
     type Query {
-        withdrawWeeklys:[WithdrawWeekly]
+        withdrawWeeklys(smartNode:String,status:String):[WithdrawWeekly]
     }
     type Mutation {
-        createWithdrawWeekly(address:String!,amount:Float!,tfa:String):WithdrawWeekly
-        updateWithdrawWeekly(_id:String!,tfa:String):WithdrawWeekly
+        createWithdrawWeekly(smartNode:String!,address:String!,amount:Float!,tfa:String):WithdrawWeekly
+        updateWithdrawWeekly(_id:String!,confirm:Boolean,tfa:String):WithdrawWeekly
         confirmWithdrawWeekly(_id:String!,tfa:String):WithdrawWeekly
     }
 `;
