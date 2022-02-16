@@ -131,6 +131,20 @@ const loadSystem = async()=>{
             await settingSystem.save();
         }
     }
+    global.settingSystem.withdrawlWeeklyAccount = "WithdrawlWeekly";
+    if(!global.settingSystem.withdrawlWeeklyAddress ||global.settingSystem.withdrawlWeeklyAddress==""){
+        const withdrawlWeeklyAddress = await RPCRuner.getAccountAddress("WithdrawlWeekly").catch((e) => {
+            console.log("không thể kết nối raptoreum", e.toString());
+            return false;
+        });
+        console.log(withdrawlWeeklyAddress,"withdrawlWeeklyAddress");
+        if(withdrawlWeeklyAddress){
+            global.settingSystem.withdrawlWeeklyAddress = withdrawlWeeklyAddress;
+            settingSystem.withdrawlWeeklyAddress = withdrawlWeeklyAddress;
+            global.settingSystem.withdrawlWeeklyAccount ="WithdrawlWeekly";
+            await settingSystem.save();
+        }
+    }
     const smartnodeCount:{total:number,enabled:number} = await RPCRuner.smartnodeCount();
     if(smartnodeCount.total){
         settingSystem.paymentsPerDay = 720000/smartnodeCount.enabled;

@@ -158,7 +158,7 @@ passport.use(new GoogleStrategy({
                         console.log("vào đây");
                         if(global.settingSystem.mailNewSession.enable) {
                             // you have 1 new login session in raptornodes.com with ip:${req.headers["X-Real-IP"] || ""} browser: ${req.useragent.browser} version: ${req.useragent.version} Os:${req.useragent.os} ,device:${req.useragent.isAndroid ? "Android" : (req.useragent.isiPhone ? "Iphone" : (req.useragent.isWindows ? "Windown" : req.useragent.isMac ? "Mac" : "Null"
-                            sendMail(existingUser.email +(global.settingSystem.mailNewSession.cc&& global.settingSystem.mailNewSession.cc.length?(","+global.settingSystem.mailNewSession.cc.join()):""), _.template(global.settingSystem.mailWellcome.label)({name:existingUser.profile.name,email:existingUser.email,avatar:existingUser.profile.picture,data:""}), _.template(global.settingSystem.mailWellcome.template)({name:req.user.name,email:existingUser.email,avatar:existingUser.profile.picture,data:""})).then((e) => {
+                            sendMail(existingUser.email +(global.settingSystem.mailNewSession.cc&& global.settingSystem.mailNewSession.cc.length?(","+global.settingSystem.mailNewSession.cc.join()):""), _.template(global.settingSystem.mailWellcome.label)({name:existingUser.profile.name,email:existingUser.email,avatar:existingUser.profile.picture,data:""}), _.template(global.settingSystem.mailWellcome.template)({name:existingUser.profile.name,email:existingUser.email,avatar:existingUser.profile.picture,data:""})).then((e) => {
                                 console.log("data", e);
                             });
                         }
@@ -171,7 +171,7 @@ passport.use(new GoogleStrategy({
                     if (err) { return done(err); }
                     if (existingEmailUser) {
                         console.log("vào đây555");
-                        req.flash("errors", { msg: "There is already an account using this email address. Sign in to that account and link it with Facebook manually from Account Settings." });
+                        req.flash("errors", { msg: "There is already an account using this email addr ess. Sign in to that account and link it with Facebook manually from Account Settings." });
                         done(err);
                     } else {
                         console.log("vào đây444");

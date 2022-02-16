@@ -162,7 +162,8 @@ const scheduleReward =()=>{
         reward.feeReward = global.settingSystem.feeReward;
         // reward.days = global.settingSystem.scheduleValue;
         // reward.dayEnd = new Date();
-        const lastReward = await ReWard.findOne().sort({created_at: -1}).exec();
+        // fix lastReward
+        const lastReward = await ReWard.findOne().sort({created_at: 1}).exec();
         reward.dayEnd = new Date();
         // fix custom day
         if(lastReward){

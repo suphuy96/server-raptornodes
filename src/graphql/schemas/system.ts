@@ -21,6 +21,9 @@ export default gql`
         collateral: Float,
         collateralMin: Float,
         paymentsPerDay:Float,
+        withdrawWeekly: Boolean,
+        withdrawWeeklyConfirm: Boolean,
+        withdrawWeeklyMinimum: Int,
         feeReward:Float,
         scheduleTime:String,
         scheduleDay:String,
@@ -56,14 +59,21 @@ export default gql`
         balance:Float,
         received:Float
     }
-  
+    type withdrawlWeeklyRTM {
+        address:String,
+        balance:Float,
+        received:Float
+    }
     type Query {
         variableSystem:VariableSystem
         settingSystem:System
         rewardInfo:RewardRTM
+        withdrawlWeeklyInfo:withdrawlWeeklyRTM
     }
     type Mutation {
         sendByAccount(tfa:String,address:String!,account:String!,amount:Float!):String
-        updateSystem(enableWithdraw: Boolean,  scheduleTime:String,scheduleDay:String,scheduleValue:Float,isMaintenance:Boolean,collateralMin:Float,collateral:Float,paymentsPerDay:Float,feeReward:Float,, mailWellcome: inputSettingTemplateMail, mailNewSession: inputSettingTemplateMail, mailWithdraw: inputSettingTemplateMail, mailDespost: inputSettingTemplateMail, mailJobSmartNode: inputSettingTemplateMail, mailTfa: inputSettingTemplateMail, mailReward: inputSettingTemplateMail,tfa:String!):System
+        updateSystem(enableWithdraw: Boolean,    withdrawWeekly: Boolean,
+            withdrawWeeklyConfirm: Boolean,
+            withdrawWeeklyMinimum: Int, scheduleTime:String,scheduleDay:String,scheduleValue:Float,isMaintenance:Boolean,collateralMin:Float,collateral:Float,paymentsPerDay:Float,feeReward:Float,, mailWellcome: inputSettingTemplateMail, mailNewSession: inputSettingTemplateMail, mailWithdraw: inputSettingTemplateMail, mailDespost: inputSettingTemplateMail, mailJobSmartNode: inputSettingTemplateMail, mailTfa: inputSettingTemplateMail, mailReward: inputSettingTemplateMail,tfa:String!):System
     }
 `;

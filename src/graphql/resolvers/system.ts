@@ -29,6 +29,16 @@ const ServiceResolvers = {
                 throw new ApolloError(error);
             }
         },
+        withdrawlWeeklyInfo: async (__: any, args: any,ctx:any) => {
+            try {
+                checkIsAuthen(ctx.user);
+                const balance = await RPCRuner.getbalance(global.settingSystem.withdrawlWeeklyAccount);
+                const received = await RPCRuner.getreceivedbyaccount(global.settingSystem.withdrawlWeeklyAccount);
+                return {balance:balance?(balance):0,received:received?(received):0,address:global.settingSystem.withdrawlWeeklyAddress};
+            } catch (error) {
+                throw new ApolloError(error);
+            }
+        },
         settingSystem: async (__: any, args: any,ctx:any) => {
             try {
                 checkIsAdmin(ctx.user);
@@ -158,6 +168,15 @@ const ServiceResolvers = {
                 }
                 if(systemInput.mailDespost){
                     system.mailDespost = systemInput.mailDespost;
+                }
+                if(systemInput.withdrawWeekly ||systemInput.withdrawWeekly===false){
+                    system.withdrawWeekly = systemInput.withdrawWeekly;
+                }
+                if(systemInput.withdrawWeeklyConfirm ||systemInput.withdrawWeeklyConfirm===false){
+                    system.withdrawWeeklyConfirm = systemInput.withdrawWeeklyConfirm;
+                }
+                if(systemInput.withdrawWeeklyMinimum ||systemInput.withdrawWeeklyMinimum===0){
+                    system.withdrawWeeklyMinimum = systemInput.withdrawWeeklyMinimum;
                 }
                 if(systemInput.isMaintenance || systemInput.isMaintenance===false){
                     system.isMaintenance = systemInput.isMaintenance;

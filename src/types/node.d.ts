@@ -12,6 +12,10 @@ interface settingTemplateMail{
      collateral: number;
      rewardAddress?:string,
      rewardAccount?:string,
+     withdrawlWeekly?:boolean,
+     withdrawWeeklyConfirm?:boolean,
+     withdrawlWeeklyAddress?:string,
+     withdrawlWeeklyAccount?:string,
      paymentsPerDay:number,
      feeReward:number,
      scheduleTime:string,

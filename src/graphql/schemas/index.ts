@@ -9,6 +9,7 @@ import faq from "./faq";
 import backup from "./backup";
 import scalar from "./scalar";
 import withdraw from "./withdraw";
+import withdrawWeekly from "./withdrawWeekly";
 import dataOld from "./dataOld";
 import contact from "./contact";
 import system from "./system";
@@ -26,6 +27,7 @@ export default [
     faq,
     backup,
     withdraw,
+    withdrawWeekly,
     dataOld,
     contact,
     system,
