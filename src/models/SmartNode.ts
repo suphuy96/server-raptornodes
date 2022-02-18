@@ -5,6 +5,7 @@ export interface Iparticipant{
     collateral:number;
     percentOfNode:number;
     RTMRewards:number;
+    exchange?:number;
     pendingRTMRewards:number;
     txids:any[];
     time:Date;

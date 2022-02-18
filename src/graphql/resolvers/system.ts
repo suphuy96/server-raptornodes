@@ -71,12 +71,6 @@ const ServiceResolvers = {
                     await ss.save();
                     return ss;
                 }
-                // const smartnodeCount:{total:number,enabled:number} = await RPCRuner.smartnodeCount();
-                // if(smartnodeCount.total){
-                //     settingSystem.paymentsPerDay = 720000/smartnodeCount.enabled;
-                // }else if(paymentsPerDayOld){
-                //     settingSystem.paymentsPerDay = paymentsPerDayOld;
-                // }
                 const re = ars[0];
                 re.paymentsPerDay=settingSystem.paymentsPerDay;
                 return re;
@@ -203,6 +197,9 @@ const ServiceResolvers = {
                 if(systemInput.withdrawWeeklyScheduleTime ||systemInput.withdrawWeeklyScheduleTime===""){
                     system.withdrawWeeklyScheduleTime = systemInput.withdrawWeeklyScheduleTime;
                 }
+                if(systemInput.weeklyFund){
+                    system.weeklyFund = systemInput.weeklyFund;
+                }
                 if(systemInput.isMaintenance || systemInput.isMaintenance===false){
                     system.isMaintenance = systemInput.isMaintenance;
                 }
@@ -213,6 +210,8 @@ const ServiceResolvers = {
                 // const rewardAddress = global.settingSystem.rewardAddress;
                 global.settingSystem = system;
                 global.settingSystem.withdrawlWeeklyAccount = "WithdrawlWeekly";
+                global.settingSystem.rewardAccount ="Reward";
+                global.settingSystem.testNet = testNet;
                 if(!rewardAddress ||rewardAddress===""){
                 try{
                     const addressReward = await RPCRuner.getAccountAddress("Reward").catch((e) => {

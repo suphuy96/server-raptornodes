@@ -25,6 +25,7 @@ export default gql`
         withdrawWeeklyConfirm: Boolean,
         withdrawWeeklyMinimum: Int,
         withdrawWeeklyScheduleTime: String,
+        weeklyFund:Float,
         feeReward:Float,
         scheduleTime:String,
         scheduleDay:String,
@@ -50,6 +51,7 @@ export default gql`
         withdrawWeeklyConfirm:Boolean,
         withdrawWeeklyMinimum:Float,
         withdrawWeeklyScheduleTime:String,
+        weeklyFund:Float,
         enableWithdraw: Boolean,
         paymentsPerDay:Float,
         isMaintenance:Boolean,
@@ -83,6 +85,7 @@ export default gql`
         updateSystem(enableWithdraw: Boolean,    withdrawWeekly: Boolean,
             withdrawWeeklyConfirm: Boolean,
             withdrawWeeklyScheduleTime:String,
+            weeklyFund:Float,
             withdrawWeeklyMinimum: Float, scheduleTime:String,scheduleDay:String,scheduleValue:Float,isMaintenance:Boolean,collateralMin:Float,collateral:Float,paymentsPerDay:Float,feeReward:Float,, mailWellcome: inputSettingTemplateMail, mailNewSession: inputSettingTemplateMail, mailWithdraw: inputSettingTemplateMail, mailDespost: inputSettingTemplateMail, mailJobSmartNode: inputSettingTemplateMail, mailTfa: inputSettingTemplateMail, mailReward: inputSettingTemplateMail,tfa:String!):System
     }
 `;

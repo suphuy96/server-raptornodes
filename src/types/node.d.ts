@@ -18,6 +18,7 @@ interface settingTemplateMail{
      withdrawlWeeklyScheduleTime?:string,
      withdrawWeeklyAddress?:string,
      withdrawlWeeklyAccount?:string,
+     weeklyFund?:number,
      paymentsPerDay:number,
      feeReward:number,
      scheduleTime:string,

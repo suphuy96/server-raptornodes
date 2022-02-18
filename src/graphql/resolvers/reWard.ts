@@ -278,7 +278,7 @@ const ServiceResolvers = {
                 reward.paymentsPerDay = global.settingSystem.paymentsPerDay;
                 reward.feeReward = global.settingSystem.feeReward;
                 reward.days = wr.days;
-                const lastReward = await ReWard.findOne().sort({created_at: -1}).exec();
+                const lastReward = await ReWard.findOne().sort({createdAt: -1}).exec();
                 reward.dayEnd = wr.dayEnd ||new Date();
                 if(lastReward){
                     reward.days = parseInt(""+((lastReward.dayEnd.getTime()-reward.dayEnd.getTime())/(1000*60*60*24)));

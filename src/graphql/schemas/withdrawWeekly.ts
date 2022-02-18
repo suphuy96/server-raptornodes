@@ -20,8 +20,19 @@ export default gql`
         createdAt:DateTime,
         updatedAt:DateTime
     }
+    type withdrawlsInSmartNode {
+        count:Int
+        amount:Float
+    }
+    type withdrawWeeklyOnboarding{
+        balance:Float,
+        withdrawlIsPending:Float,
+        weeklyFund:Float,
+        availability:Float,
+    }
     type Query {
         withdrawWeeklys(smartNode:String,status:String):[WithdrawWeekly]
+        withdrawWeeklyOnboardings:withdrawWeeklyOnboarding
     }
     type Mutation {
         createWithdrawWeekly(smartNode:String!,address:String!,amount:Float!,tfa:String):WithdrawWeekly

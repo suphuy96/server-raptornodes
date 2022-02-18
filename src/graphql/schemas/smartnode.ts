@@ -1,10 +1,12 @@
 import { gql } from "apollo-server-express";
 
 export default gql`
+    
     type participant {
         userId:Author,
         collateral:Float,
         percentOfNode:Float,
+        exchange:Float,
         RTMRewards:Float,
         pendingRTMRewards:Float,
         txids:[String],

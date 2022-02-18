@@ -34,9 +34,8 @@ export default function ():Router {
      * OAuth google authentication routes. (Sign in)
      */
     routerAuth.get("/auth/google", (req, res,next) => {
-        console.log("vào đây check");
+      //  console.log("vào đây check");
         if(req.query.checkauthen){
-            console.log("vào đây nè");
             if (req.isAuthenticated()) {
                 const u:any = req.user;
                 return res.redirect(process.env.NODE_ENV==="production"?"/#":"http://localhost:8080/#/login?token="+(u.tokenJWT||""));

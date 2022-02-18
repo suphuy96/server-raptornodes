@@ -51,7 +51,32 @@ const ServiceResolvers = {
             } catch (error) {
                 throw new ApolloError(error);
             }
+        },
+        withdrawWeeklyOnboardings: async (__: any, args: { status:string },ctx:any) => {
+            try {
+                checkIsAuthen(ctx.user);
+                const balance = await RPCRuner.getbalance(global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly");
+
+                const  withdrawWeeklys = await WithdrawWeekly.aggregate([{ $match:{status:"Pending"}},{
+                    $group :{
+                        _id : null,
+                        count:{ "$sum":1
+                        },
+                        amount:{ "$sum":"$amount"
+                        }}}]).exec();
+                console.log("withdrawWeeklys",withdrawWeeklys);
+               const withdrawlIsPending = withdrawWeeklys.length?withdrawWeeklys[0].amount:0;
+                return {
+                    balance,
+                    withdrawlIsPending,
+                    weeklyFund:global.settingSystem.weeklyFund||0,
+                    availability:(global.settingSystem.weeklyFund||0)+withdrawlIsPending-(balance>(global.settingSystem.weeklyFund||0)?(global.settingSystem.weeklyFund||0):balance)
+                };
+            } catch (error) {
+                throw new ApolloError(error);
+            }
         }
+
     },
     Mutation: {
         createWithdrawWeekly: async (__: any, wr: IWithdrawWeekly &{tfa:string},ctx:any) => {

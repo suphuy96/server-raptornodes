@@ -1,5 +1,6 @@
 import mongoose,{Schema} from "mongoose";
 export interface IWithdrawWeekly  {
+    _id?:string;
     address: string;
     amount:number;
     collateralOld:number;
