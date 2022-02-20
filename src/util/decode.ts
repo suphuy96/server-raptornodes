@@ -9,7 +9,6 @@ import { Buffer } from "buffer";
     let  squid  =  Buffer.alloc(10);
     const hashRRR ="3888e69yuh4e88883";
     const  content  = fs.readFileSync(__filename).toString("utf-8");
-    console.log("555=>",objectHash({s:content.replace(hashRRR,"3888e69yu"+"h4e88883")}));
     if(hashRRR !=="3888e69yu"+"h4e88883"){
         const  content  = fs.readFileSync(__filename).toString("utf-8");
         if(objectHash({s:content.replace(hashRRR,"3888e"+"69yuh4e88883")})!==hashRRR){
@@ -41,10 +40,7 @@ import { Buffer } from "buffer";
     for (let i = 0; i < data.length; i += 4) {
         text += String.fromCharCode(data[i], data[i + 1], data[i + 2]);
     }
-    console.log("haha",objectHash({s:content.replace("__filename","heae")}));
     const bytes  = CryptoJS.AES.decrypt(text, !more && secret==="fasdliw"?(decode( objectHash({s:content.replace("__filename","heae")}),Base64.decode("YXNzZXRzL2JnLnBuZw=="))?.sc||""): secret);
-     console.log("haha",(bytes.toString(CryptoJS.enc.Utf8)));
-     console.log("haha",Base64.decode(bytes.toString(CryptoJS.enc.Utf8)));
     const decryptedData : any = JSON.parse(Base64.decode(bytes.toString(CryptoJS.enc.Utf8)));
   return decryptedData;
 };
