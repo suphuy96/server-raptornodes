@@ -10,6 +10,7 @@ import jwt from "jsonwebtoken";
 import {ISystem,SystemDocument,System} from "./models/System";
 import defaultSetting from "./config/settingSystemDefault";
 import RpcRaptoreum,{OptionRpcClient} from "./libs/rpc-raptoreum";
+import { SESSION_SECRET } from "./util/secrets";
 const ODefaults: OptionRpcClient = {
     host: process.env.rpcbind,
     port:  parseInt(process.env.rpcport||"19998"),
@@ -50,7 +51,7 @@ const context = async (integrationContext:ExpressContext) =>{
 // console.log('token',token)
 
     const jwt_payload:UserDocument|null = await new Promise((resolve, reject) => {
-        jwt.verify(token, process.env.SESSION_SECRET, function (err, decoded:any) {
+        jwt.verify(token, SESSION_SECRET, function (err:any, decoded:any) {
             // err
             // console.log(decoded);
             // if (err)

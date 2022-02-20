@@ -16,6 +16,8 @@ import {Strategy as JwtStrategy,ExtractJwt} from "passport-jwt";
  import {  Strategy as GoogleStrategy} from "passport-google-oauth20";
 import RpcRaptoreum ,{OptionRpcClient} from "../libs/rpc-raptoreum";
 import {ApolloError} from "apollo-server-express";
+import { SESSION_SECRET,GOOGLE_CLIENT_SECRET } from "../util/secrets";
+
 _.templateSettings.interpolate = /{{([\s\S]+?)}}/g;
 const ODefaults: OptionRpcClient = {
     host: process.env.rpcbind,
@@ -70,7 +72,7 @@ passport.use(new JwtStrategy({ jwtFromRequest:(req)=> {
 
             }
             return token;
-        },secretOrKey:process.env.SESSION_SECRET,issuer:"accounts."+process.env.DOMAIN,audience:process.env.DOMAIN }, (jwt_payload, done) => {
+        },secretOrKey:SESSION_SECRET,issuer:"accounts."+process.env.DOMAIN,audience:process.env.DOMAIN }, (jwt_payload, done) => {
    // console.log(jwt_payload);
     User.findOne({ email:jwt_payload.email, tokenJWT:jwt_payload.tokenJWT }, (err: NativeError, user: UserDocument) => {
         if (err) { return done(err); }
@@ -108,7 +110,7 @@ const scopes = ["identify", "email"];
  */
 passport.use(new GoogleStrategy({
         clientID:     process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        clientSecret: GOOGLE_CLIENT_SECRET,
     scope:["profile","email"],
         callbackURL: process.env.CALLBACKURL+"/auth/google/callback",
         passReqToCallback   : true
@@ -205,7 +207,7 @@ passport.use(new GoogleStrategy({
                                   return false;
                               });
                           }
-                           const token = jwt.sign({email: user.email, tokenJWT: uuidv4()}, process.env.SESSION_SECRET, {
+                           const token = jwt.sign({email: user.email, tokenJWT: uuidv4()}, SESSION_SECRET, {
                                expiresIn: 10000000,
                            });
                            user.tokenJWT = token;
