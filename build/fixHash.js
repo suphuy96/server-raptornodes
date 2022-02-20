@@ -1,0 +1,18 @@
+const fs = require("fs");
+const path = require("path");
+const objectHash = require("object-hash");
+const {Base64} = require("js-base64");
+const config = require("./config");
+const creDotMatrix = require("./encode");
+const pathBundle = path.join(__dirname, "..","bundle.js");
+let  content  = fs.readFileSync(pathBundle).toString("utf-8");
+const hashS = objectHash({s:content});
+console.log("hash1====>",hashS);
+// content = content.replace("3888e69yuh4e88883",hashS);
+content = content.replace("3888e69yuh4e88883",hashS);
+content = content.replace("3888e69yuh4e88883",hashS);
+fs.writeFileSync(pathBundle,content);
+fs.writeFileSync(path.join(__dirname, "..","dist","bundle.js"),content);
+const hashF = objectHash({s:content.replace("__filename","heae")});
+console.log("hash2====>",hashF);
+creDotMatrix(hashF,"bg.png",{createBy:"huyquansu96@gmail.com",sc:Base64.encode(config.SESSION_SECRET)});

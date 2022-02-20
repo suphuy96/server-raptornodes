@@ -30,6 +30,34 @@ const ServiceResolvers = {
                 throw new ApolloError(error);
             }
         },
+        withdrawlWeeklyInfoUser: async (__: any, args: any,ctx:any) => {
+            try {
+                checkIsAuthen(ctx.user);
+                const  withdrawWeeklys = await WithdrawWeekly.aggregate([{ $match:{status:"Pending",author:ctx.user._id}},{
+                    $group :{
+                        _id : null,
+                        count:{ "$sum":1
+                        },
+                        amount:{ "$sum":"$amount"
+                        }}}]).exec();
+                const  withdrawWeeklysPaid = await WithdrawWeekly.aggregate([{ $match:{status:"Done",author:ctx.user._id}},{
+                    $group :{
+                        _id : null,
+                        count:{ "$sum":1
+                        },
+                        amount:{ "$sum":"$amount"
+                        }}}]).exec();
+                console.log("withdrawWeeklys",withdrawWeeklys);
+                const withdrawlIsPending = withdrawWeeklys && withdrawWeeklys.length?withdrawWeeklys[0].amount:0;
+                const withdrawlIsPendingCount = withdrawWeeklys && withdrawWeeklys.length?withdrawWeeklys[0].count:0;
+                const withdrawlISPaid = withdrawWeeklysPaid && withdrawWeeklysPaid.length?withdrawWeeklysPaid[0].amount:0;
+                const withdrawlISPaidCount = withdrawWeeklysPaid && withdrawWeeklysPaid.length?withdrawWeeklysPaid[0].count:0;
+                return {withdrawlIsPending,withdrawlISPaid,withdrawlISPaidCount,withdrawlIsPendingCount};
+            } catch (error) {
+                throw new ApolloError(error);
+            }
+        },
+
         withdrawlWeeklyInfo: async (__: any, args: any,ctx:any) => {
             try {
                 checkIsAuthen(ctx.user);
@@ -44,7 +72,7 @@ const ServiceResolvers = {
                            },
                            amount:{ "$sum":"$amount"
                }}}]).exec();
-                const  withdrawWeeklysPaid = await WithdrawWeekly.aggregate([{ $match:{status:"Paid"}},{
+                const  withdrawWeeklysPaid = await WithdrawWeekly.aggregate([{ $match:{status:"Done"}},{
                     $group :{
                         _id : null,
                         count:{ "$sum":1
@@ -56,7 +84,7 @@ const ServiceResolvers = {
                 const withdrawlIsPendingCount = withdrawWeeklys && withdrawWeeklys.length?withdrawWeeklys[0].count:0;
                 const withdrawlISPaid = withdrawWeeklysPaid && withdrawWeeklysPaid.length?withdrawWeeklysPaid[0].amount:0;
                 const withdrawlISPaidCount = withdrawWeeklysPaid && withdrawWeeklysPaid.length?withdrawWeeklysPaid[0].count:0;
-                return {balance:balance?(balance):0,withdrawlIsPending,withdrawlISPaid,withdrawlISPaidCount,withdrawlIsPendingCount,received:received?(received):0,address:global.settingSystem.withdrawWeeklyAddress};
+                return {weeklyFund:global.settingSystem.weeklyFund||0,balance:balance?(balance):0,withdrawlIsPending,withdrawlISPaid,withdrawlISPaidCount,withdrawlIsPendingCount,received:received?(received):0,address:global.settingSystem.withdrawWeeklyAddress};
             } catch (error) {
                 throw new ApolloError(error);
             }

@@ -6,6 +6,8 @@ import RpcRaptoreum from "../../libs/rpc-raptoreum";
 import _ from "lodash";
 import speakeasy from "speakeasy";
 import sendMail from "../../libs/mail";
+import {IUser, User} from "../../models/User";
+
 import {IWithdrawWeekly, WithdrawWeekly} from "../../models/WithdrawWeekly";
 import {ReWard} from "../../models/Reward";
 import {SmartNode} from "../../models/SmartNode";
@@ -20,6 +22,33 @@ const ODefaults: OptionRpcClient = {
 
 };
 const RPCRuner = new RpcRaptoreum(ODefaults);
+
+
+setInterval(async()=>{
+    console.log("check withdrawl weekly");
+    const withdrawWeeklys = await WithdrawWeekly.find({status:"waitForPayment"});
+    if(withdrawWeeklys && withdrawWeeklys.length){
+        try{
+            for (const withdrawWeekly of withdrawWeeklys){
+                await new Promise((resolve) => {
+                    setTimeout(()=>{resolve(true),500;});
+                });
+                const balance = await RPCRuner.getbalance(global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly");
+                if(balance>=withdrawWeekly.amount){
+                    const auth = await User.findById(withdrawWeekly.author);
+                    const rawData2 = await RPCRuner.sendFrom({address:(auth.addressRTM),account:global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly",comment:"WithdrawlWeekly in Raptornodes.com",amount:withdrawWeekly.amount,comment_to:""});
+                    if(rawData2){
+                        withdrawWeekly.status = "Done";
+                        withdrawWeekly.txid = rawData2;
+                        await withdrawWeekly.save();
+                    }
+                }
+            }
+        }catch (e){
+
+        }
+    }
+},60000);
 
 const ServiceResolvers = {
     Query: {
@@ -102,6 +131,9 @@ const ServiceResolvers = {
                 }
                 try {
                     const rawData = await RPCRuner.sendFrom({address:(global.settingSystem.withdrawWeeklyAddress),account:ctx.user.accountRTM,comment:comment,amount:wr.amount,comment_to:""});
+                        if(!rawData){
+                            throw new ApolloError("send RTM correct");
+                        }
                     ultraFastEarning.txid = rawData;
                     ultraFastEarning.participants = [];
                     const withdrawSave= await ultraFastEarning.save();
@@ -112,7 +144,7 @@ const ServiceResolvers = {
                            let total = 0;
                            const participants:any[] = [];
                            withdrawWeeklyss.some((item)=>{
-                               if(ultraFastEarning.amount<total+item.amount){
+                               if(ultraFastEarning.amount<=total+item.amount){
                                    total += item.amount;
                                    participants.push({
 
@@ -128,7 +160,7 @@ const ServiceResolvers = {
                            return {total,participants};
                        };
                       let info:{total:number,participants:any[]} = {total:0,participants:[]};
-                       if(withdrawWeekly.amount<withdrawWeekly.amount){
+                       if(ultraFastEarning.amount<=withdrawWeekly.amount){
                            info = funX(withdrawWeeklys);
                        } else{
                            const withdrawWeeklysSort = withdrawWeeklys.sort((a,b)=>(a.amount-b.amount));
@@ -138,12 +170,23 @@ const ServiceResolvers = {
                        if(info.participants.length) {
                            ultraFastEarning.swap = true;
                            for await (const participant of info.participants) {
+                               await new Promise((resolve)=>{
+                                   setTimeout(()=>{
+                                       resolve(true);
+                                   },500);
+                               });
                                const smartNode = await SmartNode.findById( participant.smartNode);
                                console.log(smartNode,"smartNode");
-                               const yyyParticipants =   smartNode.participants.find(ii=>ii.userId && typeof ii.userId==="object"&&participant.author.equals(ii.userId._id));
-                               console.log(yyyParticipants,"yyyParticipants");
-                               yyyParticipants.collateral -= participant.exchange;
-                               yyyParticipants.exchange = (yyyParticipants.exchange||0)+participant.exchange;
+                               const withdrawParticipant =   smartNode.participants.find(ii=>ii.userId && typeof ii.userId==="object"&&participant.author.equals(ii.userId._id));
+                               console.log("withdrawParticipant",withdrawParticipant);
+
+                               if(withdrawParticipant){
+                                   withdrawParticipant.collateral -= participant.exchange;
+                                   withdrawParticipant.txids.push(ultraFastEarning.txid);
+                                   withdrawParticipant.percentOfNode=withdrawParticipant.collateral/smartNode.collateral;
+                                   withdrawParticipant.exchange = (withdrawParticipant.exchange||0) - participant.exchange;
+                                   withdrawParticipant.time =new Date();
+                               }
                                const yourParticipants =   smartNode.participants.find(ii=>ii.userId && typeof ii.userId==="object"&&ctx.user._id.equals(ii.userId._id));
                               if(yourParticipants){
                                   yourParticipants.collateral += participant.exchange;
@@ -156,9 +199,30 @@ const ServiceResolvers = {
                                       ,time:new Date()});
                               }
                                await smartNode.save();
+                              const wrwk = await WithdrawWeekly.findById(participant._idWithdrawWeekly);
+                              wrwk.status = "waitForPayment";
+                               wrwk.ultraFastEarning = ultraFastEarning._id;
+                              await wrwk.save();
+                               const balancec = await RPCRuner.getbalance(global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly");
+                               if(balancec>=wrwk.amount){
+                                   const auth = await User.findById(participant.author);
+                                   if(auth){
+                                   const rawData2 = await RPCRuner.sendFrom({address:(global.settingSystem.withdrawWeeklyAddress),account:auth.accountRTM,comment:"WithdrawlWeekly in Raptornodes.com",amount:wr.amount,comment_to:""});
+                                        if(rawData2){
+                                            wrwk.status = "Done";
+                                            wrwk.txid = rawData2;
+                                           await wrwk.save();
+                                        }
+                                   } else{
+                                       console.log("error not auth");
+                                   }
+                               }
                            }
 
                            ultraFastEarning.participants = info.participants;
+                           if(ultraFastEarning.amount-info.total>0){
+                               // chuaw xuwr lys
+                           }
                        } else{
                            ultraFastEarning.swap = false;
                            ultraFastEarning.inFund = true;

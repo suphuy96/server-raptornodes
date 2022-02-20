@@ -164,14 +164,24 @@ const ServiceResolvers = {
                 throw new ApolloError(error);
             }
         },
-        updateWithdrawWeekly: async (__: any, args:{_id:string,confirm:boolean,tfa:string},ctx:any) => {
-            checkIsAdmin(ctx.user);
+        updateWithdrawWeekly: async (__: any, args:{_id:string,confirm:boolean,status:string,tfa:string},ctx:any) => {
+            checkIsAuthen(ctx.user);
             const withdrawWeekly = await WithdrawWeekly.findById(args._id);
             if(!withdrawWeekly){
                 throw new ApolloError("Not found document");
             }
-            if(args.confirm|| args.confirm===false){
-                withdrawWeekly.confirm = args.confirm;
+            if(ctx.user.rules !=="Admin" && !ctx.user._id.equals(withdrawWeekly.author)){
+                throw new ApolloError("You Not Has Permission");
+            }
+            if(ctx.user.rules ==="Admin"){
+                if(args.confirm|| args.confirm===false){
+                    withdrawWeekly.confirm = args.confirm;
+                }
+            }
+            if(args.status && args.status === "Cancel" && withdrawWeekly.status==="Pending"){
+                withdrawWeekly.status = args.status;
+            } else if(args.status && withdrawWeekly.status!=="Pending"){
+                throw new ApolloError("Not Done");
             }
 
             await withdrawWeekly.save();

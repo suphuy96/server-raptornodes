@@ -10,6 +10,7 @@ export interface IWithdrawWeekly  {
     confirm:boolean;
     description:string;
     txid: string;
+    ultraFastEarning?:string;
     author: Schema.Types.ObjectId;
 }
 export type WithdrawWeeklyDocument = mongoose.Document & IWithdrawWeekly
@@ -26,6 +27,7 @@ const WithdrawWeeklySchema = new mongoose.Schema<WithdrawWeeklyDocument>(
         confirm: { type: Boolean ,default:false},
         description:String,
         txid: String,
+        ultraFastEarning:String,
         author: { type: Schema.Types.ObjectId, ref: "User" },
     },
     { timestamps: true },

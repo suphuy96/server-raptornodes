@@ -11,6 +11,7 @@ export default gql`
         collateralOld:Float,
         author:Author,
         txid:String,
+        ultraFastEarning:String,
         amount:Float,
         blockhash:String,
         confirmations:String,
@@ -36,7 +37,7 @@ export default gql`
     }
     type Mutation {
         createWithdrawWeekly(smartNode:String!,address:String!,amount:Float!,tfa:String):WithdrawWeekly
-        updateWithdrawWeekly(_id:String!,confirm:Boolean,tfa:String):WithdrawWeekly
+        updateWithdrawWeekly(_id:String!,status:String,confirm:Boolean,tfa:String):WithdrawWeekly
         confirmWithdrawWeekly(_id:String!,tfa:String):WithdrawWeekly
     }
 `;

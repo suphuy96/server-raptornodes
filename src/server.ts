@@ -50,7 +50,7 @@ const context = async (integrationContext:ExpressContext) =>{
 // console.log('token',token)
 
     const jwt_payload:UserDocument|null = await new Promise((resolve, reject) => {
-        jwt.verify(token, process.env.SESSION_SECRET, function (err, decoded) {
+        jwt.verify(token, process.env.SESSION_SECRET, function (err, decoded:any) {
             // err
             // console.log(decoded);
             // if (err)
@@ -100,7 +100,6 @@ const context = async (integrationContext:ExpressContext) =>{
     }
 
 };
-console.log("hahaprocess.env.NODE_ENV",process.env.NODE_ENV,process.env.ADMINS);
 const server = new ApolloServer({
     schema,
     context,

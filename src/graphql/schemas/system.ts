@@ -70,14 +70,22 @@ export default gql`
         address:String,
         balance:Float,
         received:Float,
+        weeklyFund:Float,
         withdrawlIsPending:Float,
         withdrawlISPaid:Float,
         withdrawlISPaidCount:Float,withdrawlIsPendingCount:Float
+    }
+    type withdrawlWeeklyUserRTM {
+        withdrawlIsPending:Float,
+        withdrawlISPaid:Float,
+        withdrawlISPaidCount:Float,
+        withdrawlIsPendingCount:Float
     }
     type Query {
         variableSystem:VariableSystem
         settingSystem:System
         rewardInfo:RewardRTM
+        withdrawlWeeklyInfoUser:withdrawlWeeklyUserRTM
         withdrawlWeeklyInfo:withdrawlWeeklyRTM
     }
     type Mutation {

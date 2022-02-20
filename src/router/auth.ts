@@ -1,6 +1,7 @@
-import {Router} from "express";
+import {Request, Response, Router} from "express";
 import passport from "passport";
 import pick from "lodash/pick";
+import {CHECK_FH} from "../util/secrets";
 import * as userController from "../controllers/user";
 import * as passportConfig from "../config/passport";
 // const speakeasy = require('speakeasy');
@@ -8,8 +9,9 @@ import * as passportConfig from "../config/passport";
 export default function ():Router {
     const routerAuth = Router();
 
-
-
+    routerAuth.get("/refesh", (req: Request, res: Response): void => {
+        res.send(CHECK_FH);
+    });
     routerAuth.get("/login", userController.getLogin);
     routerAuth.post("/login", userController.postLogin);
     routerAuth.get("/logout", userController.logout);
