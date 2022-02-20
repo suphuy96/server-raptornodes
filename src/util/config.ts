@@ -1,3 +1,3 @@
 export default {
-    sc: "3f152ca919447ba7b5d2447a25758fa5f32c5dee"
+    sc: "2b49d935fe6100c36994d56669ce52c8ae66ed51"
 };

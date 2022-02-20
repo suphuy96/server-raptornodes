@@ -9,7 +9,7 @@ import path from "path";
 import mongoose from "mongoose";
 import passport from "passport";
 import bluebird from "bluebird";
-import { MONGODB_URI, SESSION_SECRET } from "./util/secrets";
+import { MONGODB_URI, SESSION_SECRET,DB_NAME_MANNET } from "./util/secrets";
 // Controllers (route handlers)
 import * as homeController from "./controllers/home";
 import  routerAuthe from "./router/auth";
@@ -21,7 +21,7 @@ import * as passportConfig from "./config/passport";
 const app = express();
 app.use(expressUseragent.express());
 // Connect to MongoDB
-const mongoUrl = MONGODB_URI +(process.env.TESTNET==="1"? process.env.DB_NAME_TESTNET:process.env.DB_NAME_MANNET);
+const mongoUrl = MONGODB_URI +(process.env.TESTNET==="1"? process.env.DB_NAME_TESTNET:DB_NAME_MANNET);
 mongoose.Promise = bluebird;
 console.log("db"+process.env.TESTNET+mongoUrl);
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true } ).then(
