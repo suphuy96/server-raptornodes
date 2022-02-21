@@ -22,6 +22,7 @@ const ODefaults: OptionRpcClient = {
 const RPCRuner = new RpcRaptoreum(ODefaults);
 import  {ScheduledTask,schedule,validate} from "node-cron";
 import {System, SystemDocument} from "../../models/System";
+import {WALLET_PASS_PHRASE} from "../../util/secrets";
 let rewardTask :ScheduledTask= schedule("59 23 * * *",async () => {
     console.log("schedule-- rewardTask ----nulll");
 });
@@ -78,6 +79,7 @@ const funReward = async (reward:ReWardDocument) => {
                     const comment = "ReWard in Raptornodes.com";
                     const amount = global.settingSystem.scheduleValue * (global.settingSystem.paymentsPerDay * participant.percentOfNode * ((100 - global.settingSystem.feeReward) / 100));
                     const feeHost = global.settingSystem.scheduleValue * (global.settingSystem.paymentsPerDay * participant.percentOfNode * ((global.settingSystem.feeReward) / 100));
+                    await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,30000);
                     const rawData = await RPCRuner.sendFrom({
                         address: participant.userId.addressRTM,
                         account: global.settingSystem.rewardAccount,

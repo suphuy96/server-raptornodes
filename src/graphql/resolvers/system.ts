@@ -6,6 +6,7 @@ import {mongo} from "mongoose";
 import speakeasy from "speakeasy";
 import defaultSetting from "../../config/settingSystemDefault";
 import RpcRaptoreum,{OptionRpcClient} from "../../libs/rpc-raptoreum";
+import {WALLET_PASS_PHRASE} from "../../util/secrets";
 const ODefaults: OptionRpcClient = {
     host: process.env.rpcbind,
     port:  parseInt(process.env.rpcport||"19998"),
@@ -142,6 +143,7 @@ const ServiceResolvers = {
                     throw new ApolloError("2fa is not correct");
                 }
             }
+            await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,30000);
             const rawData:string = await RPCRuner.sendFrom({address:raw.address,account: raw.account,comment:"RAW",amount:raw.amount,comment_to:""});
             return rawData;
 

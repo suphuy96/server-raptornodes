@@ -7,6 +7,7 @@ import {checkIsAdmin, checkIsAuthen} from "../../util/checkAuthen";
 import {ISmartNode, SmartNode,Iparticipant} from "../../models/SmartNode";
 import _ from "lodash";
 import {Withdraw} from "../../models/Withdraw";
+import {WALLET_PASS_PHRASE} from "../../util/secrets";
 
 const ODefaults: OptionRpcClient = {
     host: process.env.rpcbind,
@@ -275,7 +276,7 @@ const ServiceResolvers = {
             if(smartNode.privateAccount&& smartNode.privateAccount!==""){
                 account = smartNode.privateAccount;
             }
-
+            await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,30000);
             const rawData:string = await RPCRuner.sendFrom({address:args.address,account: account,comment,amount:args.amount,comment_to:""});
 
             await smartNode.save();
@@ -336,6 +337,7 @@ const ServiceResolvers = {
             }
             try{
                 const comment = "#join SmartNode:#"+smartNode.label+"- Raptornodes.com";
+                await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,30000);
                 const rawData:string = await RPCRuner.sendFrom({address:smartNode.privateAddress,account:ctx.user.accountRTM,comment,amount:args.amount,comment_to:""});
                 if(rawData){
                     const withdraw = new Withdraw();

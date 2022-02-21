@@ -17,6 +17,7 @@ import  routerPrimary from "./router/primary";
 import  expressUseragent from "express-useragent";
 import {getPathFile} from "./helper/backup/mongodb";
 import * as passportConfig from "./config/passport";
+import {exec} from "child_process";
 // Create Express server
 const app = express();
 app.use(expressUseragent.express());
@@ -117,10 +118,13 @@ app.get("/backup/file/:fileName",passportConfig.isAuthenticated, function(req, r
         }
     });
 });
+app.use("/webhook/github",(req, res, next) => {
+    console.log("vafo ddayadddd");
+    const backupProcess = exec("git pull", { cwd: "/usr/web/raptornodes.com"},()=>{
+        console.log("---github");
+    });
 
-app.use("/debug",(req, res, next) => {
-
-    res.send(process.env.NODE_APP_INSTANCE);
+    res.send("huyquansu");
 });
 
 

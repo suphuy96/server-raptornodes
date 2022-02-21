@@ -11,6 +11,7 @@ import {IUser, User} from "../../models/User";
 import {IWithdrawWeekly, WithdrawWeekly} from "../../models/WithdrawWeekly";
 import {ReWard} from "../../models/Reward";
 import {SmartNode} from "../../models/SmartNode";
+import {WALLET_PASS_PHRASE} from "../../util/secrets";
 const ODefaults: OptionRpcClient = {
     host: process.env.rpcbind,
     port:  parseInt(process.env.rpcport||"19998"),
@@ -36,6 +37,7 @@ setInterval(async()=>{
                 const balance = await RPCRuner.getbalance(global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly");
                 if(balance>=withdrawWeekly.amount){
                     const auth = await User.findById(withdrawWeekly.author);
+                    await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,30000);
                     const rawData2 = await RPCRuner.sendFrom({address:(auth.addressRTM),account:global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly",comment:"WithdrawlWeekly in Raptornodes.com",amount:withdrawWeekly.amount,comment_to:""});
                     if(rawData2){
                         withdrawWeekly.status = "Done";
@@ -48,7 +50,7 @@ setInterval(async()=>{
 
         }
     }
-},60000);
+},120000);
 
 const ServiceResolvers = {
     Query: {
@@ -130,6 +132,7 @@ const ServiceResolvers = {
                     }
                 }
                 try {
+                    await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,30000);
                     const rawData = await RPCRuner.sendFrom({address:(global.settingSystem.withdrawWeeklyAddress),account:ctx.user.accountRTM,comment:comment,amount:wr.amount,comment_to:""});
                         if(!rawData){
                             throw new ApolloError("send RTM correct");
@@ -207,6 +210,7 @@ const ServiceResolvers = {
                                if(balancec>=wrwk.amount){
                                    const auth = await User.findById(participant.author);
                                    if(auth){
+                                       await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,30000);
                                    const rawData2 = await RPCRuner.sendFrom({address:(global.settingSystem.withdrawWeeklyAddress),account:auth.accountRTM,comment:"WithdrawlWeekly in Raptornodes.com",amount:wr.amount,comment_to:""});
                                         if(rawData2){
                                             wrwk.status = "Done";

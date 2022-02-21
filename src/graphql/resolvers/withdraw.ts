@@ -6,6 +6,7 @@ import RpcRaptoreum from "../../libs/rpc-raptoreum";
 import _ from "lodash";
 import speakeasy from "speakeasy";
 import sendMail from "../../libs/mail";
+import {WALLET_PASS_PHRASE} from "../../util/secrets";
 const ODefaults: OptionRpcClient = {
     host: process.env.rpcbind,
     port:  parseInt(process.env.rpcport||"19998"),
@@ -83,6 +84,7 @@ const ServiceResolvers = {
                     }
                 }
                 try {
+                    await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,30000);
                     const rawData = await RPCRuner.sendFrom({address:wr.address,account:ctx.user.accountRTM,comment:comment,amount:wr.amount,comment_to:""});
                     withdraw.txid = rawData;
                     const withdrawSave= await withdraw.save();
@@ -98,7 +100,7 @@ const ServiceResolvers = {
                     }
                     return withdrawSave;
                 }catch (e){
-                    throw new ApolloError("Error"+e.toString());
+                    throw new ApolloError(""+e.toString());
                     console.log("fixx",e);
                 }
                 return withdraw;
