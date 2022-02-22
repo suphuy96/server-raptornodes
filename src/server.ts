@@ -7,7 +7,7 @@ import { schema } from "./graphql/schema";
 import {User, UserDocument} from "./models/User";
 import {NativeError} from "mongoose";
 import jwt from "jsonwebtoken";
-import {ISystem,SystemDocument,System} from "./models/System";
+import {SystemDocument,System} from "./models/System";
 import defaultSetting from "./config/settingSystemDefault";
 import RpcRaptoreum,{OptionRpcClient} from "./libs/rpc-raptoreum";
 import { SESSION_SECRET } from "./util/secrets";
