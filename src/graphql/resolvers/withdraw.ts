@@ -84,7 +84,11 @@ const ServiceResolvers = {
                     }
                 }
                 try {
-                    await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,30000);
+                    try{
+                        await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,20);
+                    }catch (e){
+                        console.log(e);
+                    }
                     const rawData = await RPCRuner.sendFrom({address:wr.address,account:ctx.user.accountRTM,comment:comment,amount:wr.amount,comment_to:""});
                     withdraw.txid = rawData;
                     const withdrawSave= await withdraw.save();

@@ -35,5 +35,6 @@ export default gql`
     }
     type Mutation {
         createUltraFastEarning(amount:Float!,description:String,tfa:String):UltraFastEarning
+        updateUltraFastEarning(_id:String!,description:String,status:String):UltraFastEarning
     }
 `;

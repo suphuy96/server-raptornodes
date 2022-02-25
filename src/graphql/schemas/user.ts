@@ -14,7 +14,12 @@ export default gql`
     type Author {
         _id:String,
         username: String,
-        email: String,
+        email: String,   name: String,
+        discordName:String,
+        discordAvatar:String,
+        location: String,
+        website: String,
+        picture: String,
         discord:String,
         profile: Profile
     }

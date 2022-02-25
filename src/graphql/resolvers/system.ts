@@ -143,7 +143,11 @@ const ServiceResolvers = {
                     throw new ApolloError("2fa is not correct");
                 }
             }
-            await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,30000);
+            try{
+                await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,20);
+            }catch (e){
+                console.log(e);
+            }
             const rawData:string = await RPCRuner.sendFrom({address:raw.address,account: raw.account,comment:"RAW",amount:raw.amount,comment_to:""});
             return rawData;
 

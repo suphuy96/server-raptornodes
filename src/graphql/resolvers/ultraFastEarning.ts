@@ -12,6 +12,7 @@ import {IWithdrawWeekly, WithdrawWeekly} from "../../models/WithdrawWeekly";
 import {ReWard} from "../../models/Reward";
 import {SmartNode} from "../../models/SmartNode";
 import {WALLET_PASS_PHRASE} from "../../util/secrets";
+import {DataUltraFastEarning, IDataUltraFastEarning, IparticipantInUFE} from "../../models/dataUltraFastEarning";
 const ODefaults: OptionRpcClient = {
     host: process.env.rpcbind,
     port:  parseInt(process.env.rpcport||"19998"),
@@ -24,20 +25,37 @@ const ODefaults: OptionRpcClient = {
 };
 const RPCRuner = new RpcRaptoreum(ODefaults);
 
+const getDataUFE = async ()=>{
+    console.log("hahahahaha");
+    const ars = await DataUltraFastEarning.find();
+    if(ars.length===0){
+        const deff = {amount:0,status:"Enough",description:""};
+        const ss = new DataUltraFastEarning(deff);
+        await ss.save();
+        return ss;
+    }
+    return ars[0];
+};
+let isCheckWithdrawlWeekly = false;
 
 setInterval(async()=>{
     console.log("check withdrawl weekly");
+    isCheckWithdrawlWeekly = true;
     const withdrawWeeklys = await WithdrawWeekly.find({status:"waitForPayment"});
     if(withdrawWeeklys && withdrawWeeklys.length){
         try{
             for (const withdrawWeekly of withdrawWeeklys){
                 await new Promise((resolve) => {
-                    setTimeout(()=>{resolve(true),500;});
+                    setTimeout(()=>{resolve(true),2000;});
                 });
                 const balance = await RPCRuner.getbalance(global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly");
                 if(balance>=withdrawWeekly.amount){
                     const auth = await User.findById(withdrawWeekly.author);
-                    await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,30000);
+                    try{
+                        await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,20);
+                    }catch (e){
+                        console.log(e);
+                    }
                     const rawData2 = await RPCRuner.sendFrom({address:(auth.addressRTM),account:global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly",comment:"WithdrawlWeekly in Raptornodes.com",amount:withdrawWeekly.amount,comment_to:""});
                     if(rawData2){
                         withdrawWeekly.status = "Done";
@@ -47,17 +65,176 @@ setInterval(async()=>{
                 }
             }
         }catch (e){
-
+            console.log("e",e);
         }
     }
-},120000);
+    console.log("dataUFEf");
+
+    const dataUFEf = await getDataUFE();
+    console.log(dataUFEf);
+        if(dataUFEf && dataUFEf.participants.length){
+            const withdrawWeeklyPendings = await WithdrawWeekly.find({status:"Pending"});
+            const funX = (participants:IparticipantInUFE[],dataUFE:IDataUltraFastEarning)=>{
+                let total = 0;
+                const participantsS:any[] = [];
+                participants.some((item)=>{
+                    if(dataUFE.amount<=total+item.amount){
+                        total += item.amount;
+                        participantsS.push({
+                            ultraFastEarnings:item.ultraFastEarnings,
+                            txids:item.txids,
+                            author:item.author,
+                            full:true,
+                            amount :item.amount ,
+                            change:0,
+                            timeEchange:new Date()});
+                    } else{
+                        if(dataUFE.amount<total) {
+                           const participantr=  {
+                                ultraFastEarnings: item.ultraFastEarnings,
+                                    txids: item.txids,
+                                author: item.author,
+                                full: true,
+                                amount: dataUFE.amount-total,
+                                change: item.amount -(dataUFE.amount-total),
+                                timeEchange: new Date()
+                            };
+                            participantsS.push(participantr);
+                            total+=participantr.amount;
+
+                        }
+                        return true;
+                    }
+                });
+                return {total,participants};
+            };
+            if(withdrawWeeklyPendings && withdrawWeeklyPendings.length){
+                try {
+                    for (const withdrawWeekly of withdrawWeeklyPendings) {
+                        await new Promise((resolve) => {
+                            setTimeout(() => {
+                                resolve(true), 500;
+                            });
+                        });
+                        const dataUFE = await getDataUFE();
+                        const balance = await RPCRuner.getbalance(global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly");
+                        if(balance>=withdrawWeekly.amount){
+                            let info:{total:number,participants:any[]} = {total:0,participants:[]};
+                            if(withdrawWeekly.amount>=dataUFE.participants[0].amount){
+                                info = funX(dataUFE.participants,dataUFE);
+                            } else{
+                                const participantsSort = dataUFE.participants.sort((a,b)=>(a.amount-b.amount));
+                                if(withdrawWeekly.amount>=participantsSort[0].amount){
+                                    info = funX(participantsSort,dataUFE);
+                                }else{
+
+                                }
+                            }
+                            if(info.participants.length && info.total === withdrawWeekly.amount){
+                                for await (const participant of info.participants) {
+                                    await new Promise((resolve)=>{
+                                        setTimeout(()=>{
+                                            resolve(true);
+                                        },500);
+                                    });
+                                    const auth = await User.findById(withdrawWeekly.author);
+                                    try{
+                                        await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,20);
+                                    }catch (e){
+                                        console.log(e);
+                                    }
+                                    // setup status;
+                                    // withdrawWeekly.status = "waitForPayment";
+                                    // await withdrawWeekly.save();
+                                    const rawData3 = await RPCRuner.sendFrom({address:(auth.addressRTM),account:global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly",comment:"WithdrawlWeekly in Raptornodes.com",amount:withdrawWeekly.amount,comment_to:""});
+                                    if(rawData3){
+                                        // update transition in withdrawWeekly
+                                        withdrawWeekly.status = "Done";
+                                        withdrawWeekly.txid = rawData3;
+                                        withdrawWeekly.ultraFastEarning = participant.ultraFastEarnings?participant.ultraFastEarnings[participant.ultraFastEarnings.length-1]:"";
+                                        await withdrawWeekly.save();
+
+                                        const smartNode = await SmartNode.findById( withdrawWeekly.smartNode);
+                                        console.log(smartNode,"444smartNode");
+
+                                        const withdrawParticipant =   smartNode.participants.find(ii=>ii.userId && typeof ii.userId==="object"&&withdrawWeekly.author ===ii.userId._id);
+                                        console.log("withdrawParticipant222",withdrawParticipant);
+
+                                        if(withdrawParticipant){
+                                            withdrawParticipant.collateral -= withdrawWeekly.amount;
+                                            withdrawParticipant.txids.push(rawData3);
+                                            withdrawParticipant.percentOfNode=withdrawParticipant.collateral/smartNode.collateral;
+                                            withdrawParticipant.exchange = (withdrawParticipant.exchange||0) - withdrawWeekly.amount;
+                                            withdrawParticipant.time =new Date();
+                                            await smartNode.save();
+                                        }
+
+                                            // const arss:[IparticipantInUFE]= new Array() ;
+                                            let totalD = 0;
+                                            // dataUFE.participants.forEach((part:IparticipantInUFE)=>{
+                                                for await (const part of dataUFE.participants) {
+                                                const participantInUFEDone = info.participants.find((item)=>item.author ===part.author);
+                                                if(participantInUFEDone){
+                                                    if(participantInUFEDone.full){
+                                                        part.amount = 0;
+                                                    } else{
+                                                        part.amount =participantInUFEDone.change;
+                                                        // arss.push(part);
+                                                    }
+                                                    const yourParticipants =   smartNode.participants.find(ii=>ii.userId && typeof ii.userId==="object"&&part.author===ii.userId._id);
+                                                    if(yourParticipants){
+                                                        yourParticipants.collateral += part.amount;
+                                                        yourParticipants.txids =yourParticipants.txids.concat(part.txids);
+                                                        yourParticipants.percentOfNode=yourParticipants.collateral/smartNode.collateral;
+                                                        yourParticipants.time =new Date();
+                                                    } else{
+                                                        smartNode.participants.push({userId:part.author,RTMRewards:0,collateral:part.amount,pendingRTMRewards:0,percentOfNode:part.amount/smartNode.collateral
+                                                            ,txids:part.txids
+                                                            ,time:new Date()});
+                                                    }
+                                                }
+                                                    totalD+=part.amount;
+
+
+                                                        await smartNode.save();
+
+
+                                            }
+                                        dataUFE.participants = dataUFE.participants.filter((item:IparticipantInUFE)=>item.amount);
+                                        dataUFE.amount = totalD;
+                                        await dataUFE.save();
+                                        // update transition in ultraFastEarning
+
+                                        // update smartnode for user ultraFastEarning
+
+
+                                    }
+
+                                }
+                            }
+                        }
+
+                    }
+                }catch (e){
+                }
+            }
+        }
+    isCheckWithdrawlWeekly = false;
+},180000);
 
 const ServiceResolvers = {
     Query: {
         ultraFastEarnings: async (__: any, args: any,ctx:any) => {
             try {
                checkIsAuthen(ctx.user);
-               const ars = await UltraFastEarning.find({author:ctx.user._id}).populate("author");
+                const objFilter:any&{status?:string,smartNode?:string,author?:string} = ctx.user.rules==="Admin"?{}:{author:ctx.user._id};
+                if (args.status){
+                    objFilter.status =args.status;
+                }
+                if (args.smartNode){
+                    objFilter.smartNode =args.smartNode;
+                }
+               const ars = await UltraFastEarning.find(objFilter).populate("author");
                 const res:any =  await RPCRuner.listtransactions([ctx.user.accountRTM]);
                 console.log(args,__);
                 ars.forEach((item:any)=>{
@@ -132,7 +309,11 @@ const ServiceResolvers = {
                     }
                 }
                 try {
-                    await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,30000);
+                    try{
+                        await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,20);
+                    }catch (e){
+                        console.log(e);
+                    }
                     const rawData = await RPCRuner.sendFrom({address:(global.settingSystem.withdrawWeeklyAddress),account:ctx.user.accountRTM,comment:comment,amount:wr.amount,comment_to:""});
                         if(!rawData){
                             throw new ApolloError("send RTM correct");
@@ -149,7 +330,7 @@ const ServiceResolvers = {
                            withdrawWeeklyss.some((item)=>{
                                if(ultraFastEarning.amount<=total+item.amount){
                                    total += item.amount;
-                                   participants.push({
+                                           participants.push({
 
                                        smartNode:item.smartNode,author:item.author,collateralOld :item.collateralOld ,
                                        collateralNew:item.collateralOld-item.amount,
@@ -167,11 +348,12 @@ const ServiceResolvers = {
                            info = funX(withdrawWeeklys);
                        } else{
                            const withdrawWeeklysSort = withdrawWeeklys.sort((a,b)=>(a.amount-b.amount));
-                         if(withdrawWeeklysSort[0].amount<withdrawWeekly.amount)
+                         if(ultraFastEarning.amount<=withdrawWeeklysSort[0].amount)
                            info = funX(withdrawWeeklysSort);
                        }
                        if(info.participants.length) {
                            ultraFastEarning.swap = true;
+                           ultraFastEarning.inFund = false;
                            for await (const participant of info.participants) {
                                await new Promise((resolve)=>{
                                    setTimeout(()=>{
@@ -210,7 +392,11 @@ const ServiceResolvers = {
                                if(balancec>=wrwk.amount){
                                    const auth = await User.findById(participant.author);
                                    if(auth){
-                                       await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,30000);
+                                       try{
+                                           await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,20);
+                                       }catch (e){
+                                           console.log(e);
+                                       }
                                    const rawData2 = await RPCRuner.sendFrom({address:(global.settingSystem.withdrawWeeklyAddress),account:auth.accountRTM,comment:"WithdrawlWeekly in Raptornodes.com",amount:wr.amount,comment_to:""});
                                         if(rawData2){
                                             wrwk.status = "Done";
@@ -224,14 +410,30 @@ const ServiceResolvers = {
                            }
 
                            ultraFastEarning.participants = info.participants;
+                           console.log("haha",info,ultraFastEarning);
                            if(ultraFastEarning.amount-info.total>0){
                                // chuaw xuwr lys
+                               const dataUFE = await getDataUFE();
+                               console.log(dataUFE,"2dataUFE",JSON.stringify(dataUFE));
+                               const findYouParticipant = dataUFE.participants.find((item:any)=>{ctx.user._id.equals(item.author);});
+                               if(findYouParticipant){
+                               //    update
+                                   findYouParticipant.txids.push(rawData);
+                                   findYouParticipant.time = new Date();
+                                   findYouParticipant.amount += (ultraFastEarning.amount||0)-info.total;
+                                   findYouParticipant.ultraFastEarnings.push(ultraFastEarning._id);
+                               }else{
+                                   const YouParticipant:IparticipantInUFE = {time:new Date(),amount:ultraFastEarning.amount-info.total,txids:[rawData],ultraFastEarnings:[ultraFastEarning._id],author:ctx.user._id};
+                                   dataUFE.participants.push(YouParticipant);
+                               }
+                               await dataUFE.save();
                            }
                        } else{
                            ultraFastEarning.swap = false;
                            ultraFastEarning.inFund = true;
                        }
                     } else{
+                        ultraFastEarning.swap = false;
                         ultraFastEarning.inFund = true;
                     }
                      await ultraFastEarning.save();

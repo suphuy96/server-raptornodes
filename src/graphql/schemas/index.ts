@@ -15,6 +15,7 @@ import contact from "./contact";
 import system from "./system";
 import reward from "./reward";
 import ultraFastEarning from "./ultraFastEarning";
+import dataUltraFastEarning from "./dataUltraFastEarning";
 
 export default [
     roi,
@@ -33,5 +34,6 @@ export default [
     contact,
     system,
     reward,
-    ultraFastEarning
+    ultraFastEarning,
+    dataUltraFastEarning
 ];

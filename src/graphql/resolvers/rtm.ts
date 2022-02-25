@@ -76,7 +76,6 @@ const ServiceResolvers = {
                 const res:any =  await RPCRuner.listtransactions(params);
                 //
                 // "walletconflicts": null,
-                console.log("vào ayadfasdkflajsdflajsdlfjasd",__);
                 if(args.category){
                     return  res.filter((item:any)=>item.category===args.category);
                 }

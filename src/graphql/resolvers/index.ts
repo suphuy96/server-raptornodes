@@ -16,6 +16,7 @@ import system from "./system";
 import reward from "./reWard";
 import rewardHistory from "./reWardHistory";
 import ultraFastEarning from "./ultraFastEarning";
+import dataUltraFastEarning from "./dataUltraFastEarning";
 
 export default [
     roi,
@@ -35,5 +36,6 @@ export default [
     system,
     reward,
     rewardHistory,
-    ultraFastEarning
+    ultraFastEarning,
+    dataUltraFastEarning
 ];
