@@ -20,6 +20,23 @@ const ServiceResolvers = {
             } catch (error) {
                 throw new ApolloError(error);
             }
+        },
+        dataUltraFastEarningMe: async (__: any, args: any,ctx:any) => {
+            try {
+                checkIsAuthen(ctx.user);
+                const ars = await DataUltraFastEarning.find();
+                if(ars.length===0){
+                    const deff = {};
+                    const ss = new DataUltraFastEarning(deff);
+                    await ss.save();
+                    return [];
+                }
+                const re = ars[0];
+                console.log('re.participants',re.participants,ctx.user._id,ctx.user._id.equals(re.participants[0].author))
+                return re.participants.filter((item)=>ctx.user._id.equals(item.author));
+            } catch (error) {
+                throw new ApolloError(error);
+            }
         }
     },
     Mutation: {

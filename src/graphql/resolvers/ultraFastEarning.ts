@@ -322,13 +322,14 @@ const ServiceResolvers = {
                     ultraFastEarning.participants = [];
                     const withdrawSave= await ultraFastEarning.save();
                     const withdrawWeeklys = await WithdrawWeekly.find({status:"Pending"}).sort({createdAt: 1}).exec();
+                    console.log("withdrawWeeklys",withdrawWeeklys);
                     if(withdrawWeeklys.length){
                        const withdrawWeekly = withdrawWeeklys[0];
                        const funX = (withdrawWeeklyss:IWithdrawWeekly[])=>{
                            let total = 0;
                            const participants:any[] = [];
                            withdrawWeeklyss.some((item)=>{
-                               if(ultraFastEarning.amount<=total+item.amount){
+                               if(ultraFastEarning.amount>total+item.amount){
                                    total += item.amount;
                                            participants.push({
 
@@ -344,11 +345,11 @@ const ServiceResolvers = {
                            return {total,participants};
                        };
                       let info:{total:number,participants:any[]} = {total:0,participants:[]};
-                       if(ultraFastEarning.amount<=withdrawWeekly.amount){
+                       if(ultraFastEarning.amount>=withdrawWeekly.amount){
                            info = funX(withdrawWeeklys);
                        } else{
                            const withdrawWeeklysSort = withdrawWeeklys.sort((a,b)=>(a.amount-b.amount));
-                         if(ultraFastEarning.amount<=withdrawWeeklysSort[0].amount)
+                         if(ultraFastEarning.amount>=withdrawWeeklysSort[0].amount)
                            info = funX(withdrawWeeklysSort);
                        }
                        if(info.participants.length) {
@@ -410,7 +411,7 @@ const ServiceResolvers = {
                            }
 
                            ultraFastEarning.participants = info.participants;
-                           console.log("haha",info,ultraFastEarning);
+                           console.log("haha222",info,ultraFastEarning);
                            if(ultraFastEarning.amount-info.total>0){
                                // chuaw xuwr lys
                                const dataUFE = await getDataUFE();
@@ -426,6 +427,11 @@ const ServiceResolvers = {
                                    const YouParticipant:IparticipantInUFE = {time:new Date(),amount:ultraFastEarning.amount-info.total,txids:[rawData],ultraFastEarnings:[ultraFastEarning._id],author:ctx.user._id};
                                    dataUFE.participants.push(YouParticipant);
                                }
+                               let am = 0;
+                               dataUFE.participants.forEach((item)=>{
+                                   am+=item.amount;
+                               });
+                               dataUFE.amount = am;
                                await dataUFE.save();
                            }
                        } else{

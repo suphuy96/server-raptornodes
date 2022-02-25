@@ -25,6 +25,7 @@ export default gql`
     }
     type Query {
         dataUltraFastEarning:DataUltraFastEarning
+        dataUltraFastEarningMe:[participantInUFE]
     }
     type Mutation {
         updateDataUltraFastEarning(participants:inputParticipantInUFE,description:String,tfa:String):DataUltraFastEarning
