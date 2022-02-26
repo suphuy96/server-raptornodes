@@ -1,3 +1,3 @@
 export default {
-    sc: "YXNoZGZqaGFzc2Zhc2RqZmhhbGtzZGpoZmxha2VramQ="
+    sc: "177712d1ac73c6439e9321dadc8668354fc60452"
 };

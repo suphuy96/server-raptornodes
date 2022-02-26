@@ -23,7 +23,7 @@ interface settingTemplateMail{
      feeReward:number,
      scheduleTime:string,
      scheduleDay:string,
-     scheduleDay2:string,
+     scheduleDay2?:string,
      scheduleValue:number,
      isMaintenance?:boolean;
     mailWellcome: settingTemplateMail;
