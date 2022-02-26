@@ -10,12 +10,11 @@ function reverseString (str) {
 var creDotMatrix = async (secret,name,objDot)=>{
     let data  = JSON.stringify(objDot);
     objDot.CHECK_FH =  "huyquansu hello raptornodes.com " + new Date();
-    data = Base64.encode(data);
     var ciphertext = CryptoJS.AES.encrypt(data, secret).toString();
     console.log(objDot,data);
 // Decrypt
     var bytes  = CryptoJS.AES.decrypt(ciphertext, secret);
-    var decryptedData = JSON.parse(Base64.decode(bytes.toString(CryptoJS.enc.Utf8)));
+    var decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
     console.log("decryptedData",decryptedData);
     var height = parseInt(Math.sqrt(ciphertext.length / 3));
     let width = height + 0;

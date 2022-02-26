@@ -182,6 +182,15 @@ const ServiceResolvers = {
                 if(systemInput.scheduleDay){
                     system.scheduleDay = systemInput.scheduleDay;
                 }
+                if(systemInput.scheduleDay){
+                    system.scheduleDay = systemInput.scheduleDay;
+                    if(system.scheduleDay==="Everyday"){
+                        system.scheduleDay2 = "NoUse";
+                    }
+                }
+                if(systemInput.scheduleDay2){
+                    system.scheduleDay2 = systemInput.scheduleDay2;
+                }
                 if(systemInput.scheduleValue){
                     system.scheduleValue = systemInput.scheduleValue;
                 }

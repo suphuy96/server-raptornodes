@@ -3,6 +3,7 @@ import {UserDocument} from "./User";
 export interface IReWardHistory  {
     description:string;
     smartNode:string;
+    ultraFastEarning:string;
     reward:string;
     paymentsPerDay:number;
     percentOfNode:number;
@@ -23,6 +24,7 @@ const ReWardHistorySchema = new mongoose.Schema<ReWardHistoryDocument>(
     {
         description:String,
         smartNode: String,
+        ultraFastEarning:String,
         reward:String,
         paymentsPerDay:Number,
         feeReward:Number,

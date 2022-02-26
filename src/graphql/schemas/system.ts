@@ -29,6 +29,7 @@ export default gql`
         feeReward:Float,
         scheduleTime:String,
         scheduleDay:String,
+        scheduleDay2:String,
         scheduleValue:Float,
         mailWellcome: settingTemplateMail,
         mailNewSession: settingTemplateMail,
@@ -59,6 +60,7 @@ export default gql`
         testNet:Boolean,
         scheduleTime:String,
         scheduleDay:String,
+        scheduleDay2:String,
         scheduleValue:Int,
     }
     type RewardRTM {
@@ -94,6 +96,6 @@ export default gql`
             withdrawWeeklyConfirm: Boolean,
             withdrawWeeklyScheduleTime:String,
             weeklyFund:Float,
-            withdrawWeeklyMinimum: Float, scheduleTime:String,scheduleDay:String,scheduleValue:Float,isMaintenance:Boolean,collateralMin:Float,collateral:Float,paymentsPerDay:Float,feeReward:Float,, mailWellcome: inputSettingTemplateMail, mailNewSession: inputSettingTemplateMail, mailWithdraw: inputSettingTemplateMail, mailDespost: inputSettingTemplateMail, mailJobSmartNode: inputSettingTemplateMail, mailTfa: inputSettingTemplateMail, mailReward: inputSettingTemplateMail,tfa:String!):System
+            withdrawWeeklyMinimum: Float, scheduleTime:String,scheduleDay:String,scheduleDay2:String,scheduleValue:Float,isMaintenance:Boolean,collateralMin:Float,collateral:Float,paymentsPerDay:Float,feeReward:Float,, mailWellcome: inputSettingTemplateMail, mailNewSession: inputSettingTemplateMail, mailWithdraw: inputSettingTemplateMail, mailDespost: inputSettingTemplateMail, mailJobSmartNode: inputSettingTemplateMail, mailTfa: inputSettingTemplateMail, mailReward: inputSettingTemplateMail,tfa:String!):System
     }
 `;

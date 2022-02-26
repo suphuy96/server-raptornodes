@@ -2,7 +2,7 @@ import { ApolloError } from "apollo-server-express";
 import {ReWard, ReWardDocument, IReWard} from "../../models/Reward";
 import {ReWardHistory} from "../../models/RewardHistory";
 import {WithdrawWeekly, WithdrawWeeklyDocument, IWithdrawWeekly} from "../../models/WithdrawWeekly";
-import {SmartNode} from "../../models/SmartNode";
+import {ISmartNode, SmartNode,SmartNodeDocument} from "../../models/SmartNode";
 import {checkIsAuthen,checkIsAdmin} from "../../util/checkAuthen";
 import {OptionRpcClient} from "../../libs/rpc-raptoreum";
 import RpcRaptoreum from "../../libs/rpc-raptoreum";
@@ -23,10 +23,24 @@ const RPCRuner = new RpcRaptoreum(ODefaults);
 import  {ScheduledTask,schedule,validate} from "node-cron";
 import {System, SystemDocument} from "../../models/System";
 import {WALLET_PASS_PHRASE} from "../../util/secrets";
+import {DataUltraFastEarning, IDataUltraFastEarning,DataUltraFastEarningDocument} from "../../models/dataUltraFastEarning";
+import {IUser,UserDocument} from "../../models/User";
 let rewardTask :ScheduledTask= schedule("59 23 * * *",async () => {
     console.log("schedule-- rewardTask ----nulll");
 });
-
+let rewardTask2 :ScheduledTask= schedule("58 23 * * *",async () => {
+    console.log("schedule-- rewardTask2 ----nulll");
+});
+const getDataUFE = async ()=>{
+    const ars = await DataUltraFastEarning.find().populate("participants.author");
+    if(ars.length===0){
+        const deff = {amount:0,status:"Enough",description:""};
+        const ss = new DataUltraFastEarning(deff);
+        await ss.save();
+        return ss;
+    }
+    return ars[0];
+};
 const funReward = async (reward:ReWardDocument) => {
     try {
         const smartnodes = await SmartNode.find({statusCollateral : "Start Reward" }).populate("participants.userId");
@@ -73,63 +87,84 @@ const funReward = async (reward:ReWardDocument) => {
             });
         }else
         {
+            const funReW = async(userId:UserDocument,collateral:number,percentOfNode:number,smartnode?:SmartNodeDocument)=>{
+                const comment = "ReWard in Raptornodes.com";
+                const amount = global.settingSystem.scheduleValue * (global.settingSystem.paymentsPerDay * percentOfNode * ((100 - global.settingSystem.feeReward) / 100));
+                const feeHost = global.settingSystem.scheduleValue * (global.settingSystem.paymentsPerDay * percentOfNode * ((global.settingSystem.feeReward) / 100));
+                try{
+                    await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,20);
+                }catch (e){
+                    console.log(e);
+                }
+                const rawData = await RPCRuner.sendFrom({
+                    address: userId.addressRTM,
+                    account: global.settingSystem.rewardAccount,
+                    comment: comment,
+                    amount: parseFloat((amount).toFixed(8)),
+                    comment_to: ""
+                }).catch(e => {
+                    sendMail((global.settingSystem.mailReward.cc.length ? (global.settingSystem.mailReward.cc.join()) : ""), "Schedule ReWard User ---Error", "Schedule ReWard User:" + userId.email + "  raptornodes.com. Error" + e.toString()).then(() => {
+                        console.log("");
+                    });
+                });
+                console.log("rawData", rawData);
+                const history = new ReWardHistory();
+                history.description = comment;
+                history.user = userId;
+                history.collateral = collateral;
+                history.percentOfNode = percentOfNode;
+                history.feeReward = global.settingSystem.feeReward;
+                if(smartnode && smartnode._id){
+                    history.smartNode = smartnode._id;
+                }
+                history.feeHost = feeHost;
+                history.amount = parseFloat((amount).toFixed(8));
+                history.reward = reward._id;
+                history.days = reward.days;
+                history.dayEnd = reward.dayEnd || new Date();
+                history.txid = rawData;
+                history.paymentsPerDay = global.settingSystem.paymentsPerDay;
+                history.save();
+                try {
+                    if (global.settingSystem && global.settingSystem.mailReward && global.settingSystem.mailReward.enable) {
+                        sendMail(userId.email + (global.settingSystem.mailReward.cc.length ? ("," + global.settingSystem.mailReward.cc.join()) : ""), _.template(global.settingSystem.mailReward.label)({
+                            name: userId.profile.name,
+                            email: userId.email,
+                            avatar: userId.profile.picture,
+                            data: ""
+                        }), _.template(global.settingSystem.mailReward.template)({
+                            name: userId.profile.name,
+                            email: userId.email,
+                            avatar: userId.profile.picture,
+                            data: ""
+                        })).then(data => {
+                            console.log("đàads");
+                        });
+                    }
+                } catch (e) {
+                    console.log(e);
+                }
+                return rawData;
+            };
 
+                const dataUFE:DataUltraFastEarningDocument = await getDataUFE();
+            //    payment in UltraFastEarning
+            if(dataUFE && dataUFE.amount&&dataUFE.participants.length){
+                for await (const participant of dataUFE.participants){
+                    if(participant){
+                     const txidLastReward =  await funReW(participant.author,participant.amount,(participant.amount/global.settingSystem.collateral));
+                        participant.lastReward = new Date();
+                        participant.txidLastReward = txidLastReward;
+                        await dataUFE.save();
+                    }
+                }
+                 dataUFE.lastReward = new Date();
+                await dataUFE.save();
+            }
+            //    payment in smartnode
             for await (const smartnode of smartnodes) {
                 for await (const participant of smartnode.participants) {
-                    const comment = "ReWard in Raptornodes.com";
-                    const amount = global.settingSystem.scheduleValue * (global.settingSystem.paymentsPerDay * participant.percentOfNode * ((100 - global.settingSystem.feeReward) / 100));
-                    const feeHost = global.settingSystem.scheduleValue * (global.settingSystem.paymentsPerDay * participant.percentOfNode * ((global.settingSystem.feeReward) / 100));
-                    try{
-                        await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,20);
-                    }catch (e){
-                        console.log(e);
-                    }
-                    const rawData = await RPCRuner.sendFrom({
-                        address: participant.userId.addressRTM,
-                        account: global.settingSystem.rewardAccount,
-                        comment: comment,
-                        amount: parseFloat((amount).toFixed(8)),
-                        comment_to: ""
-                    }).catch(e => {
-                        sendMail((global.settingSystem.mailReward.cc.length ? (global.settingSystem.mailReward.cc.join()) : ""), "Schedule ReWard User ---Error", "Schedule ReWard User:" + participant.userId.email + "  raptornodes.com. Error" + e.toString()).then(() => {
-                            console.log("");
-                        });
-                    });
-                    console.log("rawData", rawData);
-                    const history = new ReWardHistory();
-                    history.description = comment;
-                    history.user = participant.userId;
-                    history.collateral = participant.collateral;
-                    history.percentOfNode = participant.percentOfNode;
-                    history.feeReward = global.settingSystem.feeReward;
-                    history.smartNode = smartnode._id;
-                    history.feeHost = feeHost;
-                    history.amount = parseFloat((amount).toFixed(8));
-                    history.reward = reward._id;
-                    history.days = reward.days;
-                    history.dayEnd = reward.dayEnd || new Date();
-                    history.txid = rawData;
-                    history.paymentsPerDay = global.settingSystem.paymentsPerDay;
-                    history.save();
-                    try {
-                        if (global.settingSystem && global.settingSystem.mailReward && global.settingSystem.mailReward.enable) {
-                            sendMail(participant.userId.email + (global.settingSystem.mailReward.cc.length ? ("," + global.settingSystem.mailReward.cc.join()) : ""), _.template(global.settingSystem.mailReward.label)({
-                                name: participant.userId.profile.name,
-                                email: participant.userId.email,
-                                avatar: participant.userId.profile.picture,
-                                data: ""
-                            }), _.template(global.settingSystem.mailReward.template)({
-                                name: participant.userId.profile.name,
-                                email: participant.userId.email,
-                                avatar: participant.userId.profile.picture,
-                                data: ""
-                            })).then(data => {
-                                console.log("đàads");
-                            });
-                        }
-                    } catch (e) {
-                        console.log(e);
-                    }
+                  await  funReW(participant.userId,participant.collateral,participant.percentOfNode,smartnode);
                 }
                 smartnode.lastReward = new Date();
                 smartnode.save();
@@ -159,30 +194,51 @@ const scheduleReward =()=>{
     const hour = global.settingSystem.scheduleTime.split(":")[0];
     console.log("scheduleReward ",`${mi} ${hour} * * ${weekdays}`,global.settingSystem.scheduleDay,global.settingSystem.scheduleTime,global.settingSystem.scheduleValue);
         try {
-            if(hour|| mi)
+            if(hour|| mi){
             rewardTask = schedule(`${mi} ${hour} * * ${weekdays}`, async () => {
                 const reward = new ReWard();
-                console.log("vào đây trả thưởng");
+                console.log("vào đây trả thưởng ");
                 reward.isSchedule = false;
                 reward.paymentsPerDay = global.settingSystem.paymentsPerDay;
                 reward.feeReward = global.settingSystem.feeReward;
-                // reward.days = global.settingSystem.scheduleValue;
-                // reward.dayEnd = new Date();
-                // fix lastReward
                 const lastReward = await ReWard.findOne().sort({createdAt: -1}).exec();
                 reward.dayEnd = new Date();
                 // fix custom day
                 if (lastReward) {
                     reward.days = parseInt("" + ((lastReward.dayEnd.getTime() + 600000 - reward.dayEnd.getTime()) / (1000 * 60 * 60 * 24)));
                 } else {
-                    reward.days = global.settingSystem.scheduleValue;
+                    reward.days = (global.settingSystem.scheduleDay!=="Everyday" && global.settingSystem.scheduleDay2&& global.settingSystem.scheduleDay2!=="NoUse")?4:global.settingSystem.scheduleValue;
                 }
                 const comment = "ReWard in Raptornodes.com";
-
                 reward.description = comment;
                 await reward.save();
                 funReward(reward).then();
             });
+            if(global.settingSystem.scheduleDay!=="Everyday" && global.settingSystem.scheduleDay2&& global.settingSystem.scheduleDay2!=="NoUse") {
+                if(rewardTask2){
+                    rewardTask2.stop();
+                }
+                rewardTask2 = schedule(`${mi} ${hour} * * ${weekdays}`, async () => {
+                    const reward = new ReWard();
+                    console.log("vào đây trả thưởng 2 ");
+                    reward.isSchedule = false;
+                    reward.paymentsPerDay = global.settingSystem.paymentsPerDay;
+                    reward.feeReward = global.settingSystem.feeReward;
+                    const lastReward = await ReWard.findOne().sort({createdAt: -1}).exec();
+                    reward.dayEnd = new Date();
+                    // fix custom day
+                    if (lastReward) {
+                        reward.days = parseInt("" + ((lastReward.dayEnd.getTime() + 600000 - reward.dayEnd.getTime()) / (1000 * 60 * 60 * 24)));
+                    } else {
+                        reward.days = 3;
+                    }
+                    const comment = "ReWard in Raptornodes.com";
+                    reward.description = comment;
+                    await reward.save();
+                    funReward(reward).then();
+                });
+            }
+            }
         }catch (e){
             console.log(e);
         }

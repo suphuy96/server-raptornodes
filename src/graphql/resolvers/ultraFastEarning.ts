@@ -26,7 +26,6 @@ const ODefaults: OptionRpcClient = {
 const RPCRuner = new RpcRaptoreum(ODefaults);
 
 const getDataUFE = async ()=>{
-    console.log("hahahahaha");
     const ars = await DataUltraFastEarning.find();
     if(ars.length===0){
         const deff = {amount:0,status:"Enough",description:""};

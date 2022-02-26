@@ -16,7 +16,7 @@ import {Strategy as JwtStrategy,ExtractJwt} from "passport-jwt";
  import {  Strategy as GoogleStrategy} from "passport-google-oauth20";
 import RpcRaptoreum ,{OptionRpcClient} from "../libs/rpc-raptoreum";
 import {ApolloError} from "apollo-server-express";
-import { SESSION_SECRET,GOOGLE_CLIENT_SECRET } from "../util/secrets";
+import { SESSION_SECRET,GOOGLE_CLIENT_SECRET,ADMINS } from "../util/secrets";
 
 _.templateSettings.interpolate = /{{([\s\S]+?)}}/g;
 const ODefaults: OptionRpcClient = {
@@ -185,7 +185,7 @@ passport.use(new GoogleStrategy({
                         const user: any = new User();
                         user.rules = "User";
                         user.email = profile._json.email;
-                        if(process.env.ADMINS.indexOf(user.email)!==-1){
+                        if(ADMINS.indexOf(user.email+",")!==-1){
                             user.rules = "Admin";
                         }
                         user.google = profile.id;

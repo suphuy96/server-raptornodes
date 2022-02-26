@@ -14,6 +14,7 @@ export interface ISystem  {
     feeReward:number;
     scheduleTime:string,
     scheduleDay:string,
+    scheduleDay2?:string,
     scheduleValue:number,
     rewardAddress:string,
     withdrawWeekly:boolean,
@@ -57,6 +58,7 @@ const SystemSchema = new mongoose.Schema<SystemDocument>(
         feeReward:Number,
         scheduleTime:String,
         scheduleDay:String,
+        scheduleDay2:String,
         scheduleValue:Number,
         isMaintenance:Boolean,
         missingReward:Boolean,

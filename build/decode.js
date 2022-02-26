@@ -31,7 +31,7 @@ var decodeMatrix = async (secret,fileName)=>{
         text += String[tt](data[i], data[i + 1], data[i + 2]);
     }
     var bytes  = CryptoJS.AES.decrypt(text, secret);
-    var decryptedData = JSON.parse(Base64.decode(bytes.toString(CryptoJS.enc.Utf8)));
+    var decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
     console.log("decryptedData",decryptedData);
 };
 
