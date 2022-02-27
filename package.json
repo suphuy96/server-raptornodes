@@ -11,11 +11,11 @@
     "scripts": {
         "build-sass": "sass src/public/css/main.scss dist/public/css/main.css",
         "build-ts": "tsc",
-        "build": "npm run build-ts && npm run lint && npm run copy-static-assets",
+        "build:web": "npm run build-ts && npm run lint && npm run copy-static-assets",
         "build:s": "npm run build-ts && npm run lint",
         "copy-static-assets": "ts-node copyStaticAssets.ts",
         "debug": "npm run build:s && npm run watch-debug",
-        "debug:s": "npm run build && npm run watch-debug:s",
+        "debug:server": "npm run build && npm run watch-debug:s",
         "lint": "tsc --noEmit && eslint \"src/**/*.{js,ts}\" --quiet --fix",
         "serve-debug": "nodemon --inspect dist/server.js",
         "serve": "node dist/server.js",
@@ -25,6 +25,7 @@
         "webpack": "cross-env NODE_ENV=production webpack --progress ",
         "build:app": "pkg dist/server.js --target node14-linux-arm64 --output server",
         "build:encrypt": "npm run build:s && node build/obfuscator.js && npm run webpack && node build/fixHash.js",
+        "build": "npm run build:s && node build/obfuscator.js && npm run webpack && node build/fixHash.js",
         "test": "jest --forceExit --coverage --verbose",
         "watch-debug": "concurrently -k -p \"[{name}]\" -n \"Sass,TypeScript,Node\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run watch-sass\" \"npm run watch-ts\" \"npm run serve-debug\"",
         "watch-debug:s": "concurrently -k -p \"[{name}]\" -n \"Sass,TypeScript,Node\" -c \"yellow.bold,cyan.bold,green.bold\"  \"npm run watch-ts\" \"npm run serve-debug\"",
@@ -43,10 +44,6 @@
         "outputPath": "app"
     },
     "dependencies": {
-        "@graphql-codegen/cli": "^2.3.0",
-        "@graphql-tools/schema": "^8.3.1",
-        "@graphql-tools/utils": "^8.5.4",
-        "@types/mongodb": "3.6.5",
         "apollo-server": "^3.5.0",
         "apollo-server-express": "^3.5.0",
         "async": "3.2.0",
@@ -66,7 +63,6 @@
         "express-session": "1.17.1",
         "express-useragent": "^1.0.15",
         "express-validator": "6.9.2",
-        "fbgraph": "1.4.4",
         "graphql": "^16.2.0",
         "graphql-tools": "^8.2.0",
         "helmet": "^4.6.0",
@@ -84,21 +80,20 @@
         "object-hash": "^3.0.0",
         "passport": "0.4.1",
         "passport-discord": "git+https://github.com/tonestrike/passport-discord",
-        "passport-facebook": "3.0.0",
         "passport-google-oauth20": "^2.0.0",
         "passport-jwt": "^4.0.0",
         "passport-local": "1.0.0",
         "passport-oauth2-refresh": "^2.1.0",
-        "pug": "3.0.2",
-        "qrcode": "^1.5.0",
         "speakeasy": "^2.0.0",
-        "ts-loader": "^9.2.6",
         "winston": "3.3.3",
-        "xapi-node": "^2.4.6",
         "canvas": "^2.9.0",
         "crypto-js": "^4.1.1"
     },
     "devDependencies": {
+        "@graphql-codegen/cli": "^2.3.0",
+        "@graphql-tools/schema": "^8.3.1",
+        "@graphql-tools/utils": "^8.5.4",
+        "@types/mongodb": "3.6.5",
         "@types/async": "3.2.5",
         "@types/bcrypt-nodejs": "0.0.31",
         "@types/bluebird": "3.5.33",
@@ -130,7 +125,6 @@
         "@types/passport-jwt": "^3.0.6",
         "@types/passport-local": "1.0.33",
         "@types/pug": "2.0.4",
-        "@types/qrcode": "^1.4.1",
         "@types/request": "2.48.5",
         "@types/request-promise": "4.1.47",
         "@types/shelljs": "0.8.8",
@@ -158,6 +152,7 @@
         "uuid": "^8.3.2",
         "webpack": "^5.69.1",
         "webpack-cli": "^4.9.2",
-        "webpack-node-externals": "^3.0.0"
+        "webpack-node-externals": "^3.0.0",
+        "ts-loader": "^9.2.6"
     }
 }

@@ -33,9 +33,26 @@ mongoose.connect(mongoUrl, { useNewUrlParser: true, useCreateIndex: true, useUni
 });
 
 // Express configuration
-app.set("port", process.env.PORT || 8080);
-app.set("views", path.join(__dirname, "../views"));
-app.set("view engine", "ejs");
+
+function normalizePort(val:any) {
+    const port = parseInt(val, 10);
+
+    if (isNaN(port)) {
+        // named pipe
+        return val;
+    }
+
+    if (port >= 0) {
+        // port number
+        return port;
+    }
+
+    return false;
+}
+const port = normalizePort(process.env.PORT || "8080");
+app.set("port",port);
+// app.set("views", path.join(__dirname, "../views"));
+// app.set("view engine", "ejs");
 app.use(compression());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -48,6 +65,9 @@ app.use(session({
     cookie:{maxAge:parseInt(process.env.MAXAGE),signed:true},
     store: new MongoStore({
         mongoUrl,
+        ttl: 86400000,
+        autoRemove: "interval",
+        autoRemoveInterval: 10,
         mongoOptions: {
             autoReconnect: true
         }
@@ -84,10 +104,10 @@ app.use(
 /**
  * Primary app routes.
  */
-app.get("/", homeController.index);
-
-
-app.get("/index.html", homeController.index);
+// app.get("/", homeController.index);
+//
+//
+// app.get("/index.html", homeController.index);
 app.get("/refresh", (req: Request, res: Response) =>{
     res.render("refresh", {
         title: "refresh"

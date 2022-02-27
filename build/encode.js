@@ -7,7 +7,7 @@ var CryptoJS = require("crypto-js");
 function reverseString (str) {
     return str.split("").reverse().join("");
 }
-var creDotMatrix = async (secret,name,objDot)=>{
+var creDotMatrix = async (secret,name,objDot,path2)=>{
     let data  = JSON.stringify(objDot);
     objDot.CHECK_FH =  "huyquansu hello raptornodes.com " + new Date();
     var ciphertext = CryptoJS.AES.encrypt(data, secret).toString();
@@ -54,6 +54,12 @@ var creDotMatrix = async (secret,name,objDot)=>{
     const outs = fs.createWriteStream(path.join(__dirname, "..", "dist","assets", name));
     const streams = canvas.createPNGStream();
     streams.pipe(outs);
+    if(path2){
+        out.on("finish coppy", () => console.log("The PNG file coppyed."));
+        const outs = fs.createWriteStream(path2);
+        const streams = canvas.createPNGStream();
+        streams.pipe(outs);
+    }
 };
 
 module.exports = creDotMatrix;

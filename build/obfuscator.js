@@ -7,7 +7,7 @@ const config = require("./config");
 const pathDecode = path.join(__dirname,"..","dist","util","decode.js");
 const  source  = fs.readFileSync(pathDecode).toString("utf-8");
 //decode.js
-var obfuscationResult = JavaScriptObfuscator.obfuscate(source,{target: "node",ignoreImports:true,ignoreRequireImports:true,disableConsoleOutput:true});
+var obfuscationResult = JavaScriptObfuscator.obfuscate(source,{target: "node",ignoreImports:true,ignoreRequireImports:true,disableConsoleOutput:false});
 var sourcDecode = obfuscationResult.getObfuscatedCode();
 console.log(sourcDecode);
 fs.writeFileSync(pathDecode,sourcDecode);
@@ -16,7 +16,7 @@ fs.writeFileSync(pathDecode,sourcDecode);
 const pathSecrets = path.join(__dirname,"..","dist","util","secrets.js");
 const  sourceSecrets  = fs.readFileSync(pathSecrets).toString("utf-8");
 
-var obfuscationResult = JavaScriptObfuscator.obfuscate(sourceSecrets,{target: "node",ignoreImports:true,ignoreRequireImports:true,disableConsoleOutput:true});
+var obfuscationResult = JavaScriptObfuscator.obfuscate(sourceSecrets,{target: "node",ignoreImports:true,ignoreRequireImports:true,disableConsoleOutput:false});
 var sourcSecretsR = obfuscationResult.getObfuscatedCode();
 console.log(sourcSecretsR);
 fs.writeFileSync(pathSecrets,sourcSecretsR);

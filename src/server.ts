@@ -108,56 +108,73 @@ const server = new ApolloServer({
 });
 const loadSystem = async()=>{
     const settingSystem:SystemDocument = await System.findOne();
-    global.settingSystem = settingSystem;
+    if(settingSystem) {
+        global.settingSystem = settingSystem;
+    }
+    else{
+        global.settingSystem = defaultSetting;
+    }
     try{
         const res = await  RPCRuner.getblockchaininfo();
         if(res && res && res.chain){
-            global.settingSystem.testNet = (res.chain!=="main"?true:false);
+            global.settingSystem.testNet = (process.env.TESTNET === "1" || (process.env.TESTNET&&process.env.TESTNET!=="0")?true:false);
         }
 
     }catch (e){
 
     }
+    if(global.settingSystem)
     global.settingSystem.rewardAccount ="Reward";
     if(!global.settingSystem.rewardAddress ||global.settingSystem.rewardAddress==""){
-        const addressReward = await RPCRuner.getAccountAddress("Reward").catch((e) => {
+       RPCRuner.getAccountAddress("Reward").then((addressReward)=>{
+            if(addressReward){
+                global.settingSystem.rewardAddress = addressReward;
+                global.settingSystem.rewardAccount ="Reward";
+                if(settingSystem){
+                    settingSystem.rewardAddress = addressReward;
+                    void settingSystem.save().then();
+                }
+            }
+        }).catch((e) => {
             console.log("không thể kết nối raptoreum", e.toString());
             return false;
         });
-        if(addressReward){
-            global.settingSystem.rewardAddress = addressReward;
-            settingSystem.rewardAddress = addressReward;
-            global.settingSystem.rewardAccount ="Reward";
-            await settingSystem.save();
-        }
+
     }
     global.settingSystem.withdrawlWeeklyAccount = "WithdrawlWeekly";
     if(!global.settingSystem.withdrawWeeklyAddress ||global.settingSystem.withdrawWeeklyAddress==""){
-        const withdrawWeeklyAddress = await RPCRuner.getAccountAddress("WithdrawlWeekly").catch((e) => {
+        const withdrawWeeklyAddress = await RPCRuner.getAccountAddress("WithdrawlWeekly").then((withdrawWeeklyAddress)=>{
+            console.log(withdrawWeeklyAddress,"withdrawWeeklyAddress");
+            if(withdrawWeeklyAddress){
+                global.settingSystem.withdrawWeeklyAddress = withdrawWeeklyAddress;
+                global.settingSystem.withdrawlWeeklyAccount ="WithdrawlWeekly";
+                if(settingSystem){
+                    settingSystem.withdrawWeeklyAddress = withdrawWeeklyAddress;
+                    void settingSystem.save().then();
+                }
+            }
+        }).catch((e) => {
             console.log("không thể kết nối raptoreum", e.toString());
             return false;
         });
-        console.log(withdrawWeeklyAddress,"withdrawWeeklyAddress");
-        if(withdrawWeeklyAddress){
-            global.settingSystem.withdrawWeeklyAddress = withdrawWeeklyAddress;
-            settingSystem.withdrawWeeklyAddress = withdrawWeeklyAddress;
-            global.settingSystem.withdrawlWeeklyAccount ="WithdrawlWeekly";
-            await settingSystem.save();
-        }
-    }
-    const smartnodeCount:{total:number,enabled:number} = await RPCRuner.smartnodeCount();
-    if(smartnodeCount.total){
-        settingSystem.paymentsPerDay = 720000/smartnodeCount.enabled;
-    }
 
+    }
+   RPCRuner.smartnodeCount().then((smartnodeCount:{total:number,enabled:number})=>{
+        if(smartnodeCount && smartnodeCount.total){
+            settingSystem.paymentsPerDay = 720000/smartnodeCount.enabled;
+        }
+    });
+
+        console.log("done load variable System");
 };
 const main = async ()=>{
     await loadSystem();
     await server.start();
     server.applyMiddleware({ app, path: "/graphql" });
     const httpServer = createServer(app);
+    console.debug("start in port ",app.get("port"));
     httpServer.listen({ port: app.get("port") }, (): void =>{
-        console.log(
+        console.debug(
             "  App is running at http://localhost:%d in %s mode",
             app.get("port"),
             app.get("env")

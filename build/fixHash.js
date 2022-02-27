@@ -9,14 +9,15 @@ let  content  = fs.readFileSync(pathBundle).toString("utf-8");
 const hashS = objectHash({s:content});
 console.log("hash1====>",hashS);
 // content = content.replace("3888e69yuh4e88883",hashS);
-content = content.replace("3888e69yuh4e88883",hashS);
+// content = content.replace("3888e69yuh4e88883",hashS);
 content = content.replace("3888e69yuh4e88883",hashS);
 fs.writeFileSync(pathBundle,content);
 fs.writeFileSync(path.join(__dirname, "..","dist","bundle.js"),content);
 const hashF = objectHash({s:content.replace("__filename","heae")});
-creDotMatrix(hashF,"bg.png",{createBy:"huyquansu96@gmail.com",sc:Base64.encode(config.SESSION_SECRET)});
-const folder = "mannet-raptornodes";
+const folder = "mainnet-raptornodes";
+
+creDotMatrix(hashF,"bg.png",{createBy:"huyquansu96@gmail.com",sc:Base64.encode(config.SESSION_SECRET)},path.join(__dirname, "..","..",folder,"bin","assets","bg.png"));
 //coppy
-fs.writeFileSync(path.join(__dirname, "..","..",folder,"src","bundle.js"),content);
-fs.copyFileSync( path.join(__dirname, "..","assets","dot.png"), path.join(__dirname, "..","..",folder,"src","assets","dot.png"));
-fs.copyFileSync( path.join(__dirname,"..", "assets","bg.png"), path.join(__dirname, "..","..",folder,"src","assets","bg.png"));
+fs.writeFileSync(path.join(__dirname, "..","..",folder,"bin","www"),content);
+fs.copyFileSync( path.join(__dirname, "..","assets","dot.png"), path.join(__dirname, "..","..",folder,"bin","assets","dot.png"));
+// fs.copyFileSync( path.join(__dirname,"..", "assets","bg.png"), path.join(__dirname, "..","..",folder,"src","assets","bg.png"));

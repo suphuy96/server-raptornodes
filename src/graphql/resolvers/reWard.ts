@@ -9,6 +9,8 @@ import RpcRaptoreum from "../../libs/rpc-raptoreum";
 import _ from "lodash";
 import speakeasy from "speakeasy";
 import sendMail from "../../libs/mail";
+import defaultSetting from "../../config/settingSystemDefault";
+
 const ODefaults: OptionRpcClient = {
     host: process.env.rpcbind,
     port:  parseInt(process.env.rpcport||"19998"),
@@ -262,11 +264,16 @@ if(!process.env.NODE_APP_INSTANCE||process.env.NODE_APP_INSTANCE === "0"){
   },8000);
 }
 const loadSystem = async()=>{
-    const testNet = global.settingSystem.testNet;
+    const testNet = global.settingSystem?global.settingSystem.testNet:false;
     const paymentsPerDayOld = global.settingSystem.paymentsPerDay;
 
     const settingSystem:SystemDocument = await System.findOne();
-    global.settingSystem = settingSystem;
+    if(settingSystem) {
+        global.settingSystem = settingSystem;
+    }
+    else{
+        global.settingSystem = defaultSetting;
+    }
     global.settingSystem.testNet = testNet;
     const key2 = global.settingSystem.scheduleDay+global.settingSystem.scheduleTime+global.settingSystem.scheduleValue+"fff";
 
@@ -290,13 +297,15 @@ const loadSystem = async()=>{
         });
         if(addressReward){
             global.settingSystem.rewardAddress = addressReward;
-            settingSystem.rewardAddress = addressReward;
             global.settingSystem.rewardAccount ="Reward";
-            await settingSystem.save();
+            if(settingSystem){
+                settingSystem.rewardAddress = addressReward;
+                await settingSystem.save();
+            }
         }
     }
     const smartnodeCount:{total:number,enabled:number} = await RPCRuner.smartnodeCount();
-    if(smartnodeCount.total){
+    if(smartnodeCount && smartnodeCount.total){
         settingSystem.paymentsPerDay = 720000/smartnodeCount.enabled;
     }else if(paymentsPerDayOld){
         settingSystem.paymentsPerDay = paymentsPerDayOld;
@@ -306,7 +315,7 @@ const loadSystem = async()=>{
 setInterval(()=>{
     console.log("setInterval");
     loadSystem();
-},15000);
+},20000);
 const ServiceResolvers = {
     Query: {
         rewards: async (__: any, args: any,ctx:any) => {

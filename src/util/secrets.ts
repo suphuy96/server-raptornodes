@@ -12,8 +12,10 @@ if (fs.existsSync(".env")) {
 }
 export const ENVIRONMENT = process.env.NODE_ENV;
 const prod = ENVIRONMENT === "production"; // Anything else is treated as 'dev'
-
+console.log("xong");
 const objConfig = decode( cnf.sc);
+console.log("xong");
+
 console.log(objConfig);
 export const CHECK_FH = objConfig["CHECK_FH"]||"";
 export const STMP_PASS = objConfig["STMP_PASS"] || process.env["STMP_PASS"];
@@ -23,7 +25,7 @@ export const GOOGLE_CLIENT_SECRET = objConfig["GOOGLE_CLIENT_SECRET"] || process
 export const SESSION_SECRET = objConfig["SESSION_SECRET"] || process.env["SESSION_SECRET"];
 export const ADMINS = objConfig["ADMINS"]||"";
 
-export const MONGODB_URI = prod ? (objConfig["MONGODB_URI"]||process.env["MONGODB_URI"] ): process.env["MONGODB_URI_LOCAL"];
+export const MONGODB_URI = (objConfig["MONGODB_URI"]||process.env["MONGODB_URI"] );
 
 if (!SESSION_SECRET) {
     console.error("No client secret. Set SESSION_SECRET environment variable.");
