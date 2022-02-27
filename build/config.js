@@ -1,7 +1,6 @@
 module.exports = {
     SESSION_SECRET: "ashdfjhassfasdjfhalksdjhflakekjd",
-    // MONGODB_URI: "mongodb://localhost:27017/",
-    MONGODB_URI: "mongodb://mainnet-raptornodes:nLJFsTVAOKo327lQCgbaetbtkKtKUY72ICwwfk5PYV2UrycEywoKaIXU7auKoPvj0RsxvyBvxXHmDd8fwmowYA==@mainnet-raptornodes.mongo.cosmos.azure.com:10255/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@mainnet-raptornodes@",
+    MONGODB_URI: "mongodb://localhost:27017/",
     DB_NAME_MANNET: "raptornodes",
     GOOGLE_CLIENT_SECRET:"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",
     STMP_PASS: "rapTornodes.xyz123",
