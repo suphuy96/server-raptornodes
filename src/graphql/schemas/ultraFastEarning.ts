@@ -31,7 +31,7 @@ export default gql`
         updatedAt:DateTime
     }
     type Query {
-        ultraFastEarnings:[UltraFastEarning]
+        ultraFastEarnings(status:String,author:String,createdAt:InputSearchDate):[UltraFastEarning]
     }
     type Mutation {
         createUltraFastEarning(amount:Float!,description:String,tfa:String):UltraFastEarning

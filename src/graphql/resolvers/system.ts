@@ -2,7 +2,7 @@ import { ApolloError } from "apollo-server-express";
 import {System, SystemDocument, ISystem} from "../../models/System";
 import {WithdrawWeekly, WithdrawWeeklyDocument, IWithdrawWeekly} from "../../models/WithdrawWeekly";
 import {checkIsAdmin,checkIsAuthen} from "../../util/checkAuthen";
-import {mongo} from "mongoose";
+import {mongo,ObjectId} from "mongoose";
 import speakeasy from "speakeasy";
 import defaultSetting from "../../config/settingSystemDefault";
 import RpcRaptoreum,{OptionRpcClient} from "../../libs/rpc-raptoreum";
@@ -34,21 +34,33 @@ const ServiceResolvers = {
         withdrawlWeeklyInfoUser: async (__: any, args: any,ctx:any) => {
             try {
                 checkIsAuthen(ctx.user);
-                const  withdrawWeeklys = await WithdrawWeekly.aggregate([{ $match:{status:"Pending",author:ctx.user._id}},{
+                const matchPe:{status?:string,author?:any,createdAt?:any} = {author:ctx.user._id,status:"Pending"};
+                const matchDone:{status?:string,author?:any,createdAt?:any} = {author:ctx.user._id,status:"Done"};
+                if (args.createdAt){
+                    matchPe.createdAt = {};
+                    matchDone.createdAt = {};
+                    Object.keys(args.createdAt).forEach((keyTr) =>{
+                        if(["eq","neq","ne","in","nin","gte","gt","lt","lte"].includes(keyTr)){
+                            matchPe.createdAt["$" + keyTr] = args.createdAt[keyTr];
+                            matchDone.createdAt["$" + keyTr] = args.createdAt[keyTr];
+                        }
+                    });
+                }
+                const  withdrawWeeklys = await WithdrawWeekly.aggregate([{ $match:matchPe},{
                     $group :{
                         _id : null,
                         count:{ "$sum":1
                         },
                         amount:{ "$sum":"$amount"
                         }}}]).exec();
-                const  withdrawWeeklysPaid = await WithdrawWeekly.aggregate([{ $match:{status:"Done",author:ctx.user._id}},{
+                const  withdrawWeeklysPaid = await WithdrawWeekly.aggregate([{ $match:matchDone},{
                     $group :{
                         _id : null,
                         count:{ "$sum":1
                         },
                         amount:{ "$sum":"$amount"
                         }}}]).exec();
-                console.log("withdrawWeeklys",withdrawWeeklys);
+
                 const withdrawlIsPending = withdrawWeeklys && withdrawWeeklys.length?withdrawWeeklys[0].amount:0;
                 const withdrawlIsPendingCount = withdrawWeeklys && withdrawWeeklys.length?withdrawWeeklys[0].count:0;
                 const withdrawlISPaid = withdrawWeeklysPaid && withdrawWeeklysPaid.length?withdrawWeeklysPaid[0].amount:0;
@@ -61,19 +73,34 @@ const ServiceResolvers = {
 
         withdrawlWeeklyInfo: async (__: any, args: any,ctx:any) => {
             try {
-                checkIsAuthen(ctx.user);
+                checkIsAdmin(ctx.user);
 
-
+                const matchPe:{status?:string,author?:any,createdAt?:any} = {status:"Pending"};
+                const matchDone:{status?:string,author?:any,createdAt?:any} = {status:"Done"};
+                if(args.author){
+                    matchPe.author = new mongo.ObjectId(args.author||"");
+                    matchDone.author = new mongo.ObjectId(args.author||"");
+                }
+                if (args.createdAt){
+                    matchPe.createdAt = {};
+                    matchDone.createdAt = {};
+                    Object.keys(args.createdAt).forEach((keyTr) =>{
+                        if(["eq","neq","ne","in","nin","gte","gt","lt","lte"].includes(keyTr)){
+                            matchPe.createdAt["$" + keyTr] = args.createdAt[keyTr];
+                            matchDone.createdAt["$" + keyTr] = args.createdAt[keyTr];
+                        }
+                    });
+                }
                 const balance = await RPCRuner.getbalance(global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly");
                 const received = await RPCRuner.getreceivedbyaccount(global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly");
-               const  withdrawWeeklys = await WithdrawWeekly.aggregate([{ $match:{status:"Pending"}},{
+               const  withdrawWeeklys = await WithdrawWeekly.aggregate([{ $match:matchPe},{
                        $group :{
                            _id : null,
                            count:{ "$sum":1
                            },
                            amount:{ "$sum":"$amount"
                }}}]).exec();
-                const  withdrawWeeklysPaid = await WithdrawWeekly.aggregate([{ $match:{status:"Done"}},{
+                const  withdrawWeeklysPaid = await WithdrawWeekly.aggregate([{ $match:matchDone},{
                     $group :{
                         _id : null,
                         count:{ "$sum":1

@@ -87,8 +87,8 @@ export default gql`
         variableSystem:VariableSystem
         settingSystem:System
         rewardInfo:RewardRTM
-        withdrawlWeeklyInfoUser:withdrawlWeeklyUserRTM
-        withdrawlWeeklyInfo:withdrawlWeeklyRTM
+        withdrawlWeeklyInfoUser(createdAt:InputSearchDate):withdrawlWeeklyUserRTM
+        withdrawlWeeklyInfo(author:String,createdAt:InputSearchDate):withdrawlWeeklyRTM
     }
     type Mutation {
         sendByAccount(tfa:String,address:String!,account:String!,amount:Float!):String

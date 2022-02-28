@@ -32,7 +32,7 @@ export default gql`
         availability:Float,
     }
     type Query {
-        withdrawWeeklys(smartNode:String,status:String):[WithdrawWeekly]
+        withdrawWeeklys(smartNode:String,status:String,author:String,createdAt:InputSearchDate):[WithdrawWeekly]
         withdrawWeeklyOnboardings:withdrawWeeklyOnboarding
     }
     type Mutation {

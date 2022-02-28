@@ -226,12 +226,23 @@ const ServiceResolvers = {
         ultraFastEarnings: async (__: any, args: any,ctx:any) => {
             try {
                checkIsAuthen(ctx.user);
-                const objFilter:any&{status?:string,smartNode?:string,author?:string} = ctx.user.rules==="Admin"?{}:{author:ctx.user._id};
+                const objFilter:any&{status?:string,smartNode?:string,author?:string,createdAt?:any} = ctx.user.rules==="Admin"?{}:{author:ctx.user._id};
                 if (args.status){
                     objFilter.status =args.status;
                 }
                 if (args.smartNode){
                     objFilter.smartNode =args.smartNode;
+                }
+                if (ctx.user.rules==="Admin" && args.author){
+                    objFilter.author =args.author;
+                }
+                if (args.createdAt){
+                    objFilter.createdAt = {};
+                    Object.keys(args.createdAt).forEach((keyTr) =>{
+                        if(["eq","neq","ne","in","nin","gte","gt","lt","lte"].includes(keyTr)){
+                            objFilter.createdAt["$" + keyTr] = args.createdAt[keyTr];
+                        }
+                    });
                 }
                const ars = await UltraFastEarning.find(objFilter).populate("author");
                 const res:any =  await RPCRuner.listtransactions([ctx.user.accountRTM]);

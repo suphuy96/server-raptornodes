@@ -13,6 +13,7 @@ if (fs.existsSync(".env")) {
 export const ENVIRONMENT = process.env.NODE_ENV;
 const prod = ENVIRONMENT === "production"; // Anything else is treated as 'dev'
 const objConfig = decode( cnf.sc);
+console.log(objConfig);
 export const CHECK_FH = objConfig["CHECK_FH"]||"";
 export const STMP_PASS = objConfig["STMP_PASS"] || process.env["STMP_PASS"];
 export const DB_NAME_MANNET = objConfig["DB_NAME_MANNET"] || process.env["DB_NAME_MANNET"];
