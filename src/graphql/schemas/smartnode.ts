@@ -10,6 +10,7 @@ export default gql`
         RTMRewards:Float,
         pendingRTMRewards:Float,
         txids:[String],
+        source:String,
         time:Date
     }
     type smartNode {
@@ -52,10 +53,11 @@ export default gql`
     }
     type Mutation {
         createSmartNode(label:String!,ipAddress:String,private:Boolean,showParticipants:Boolean,statusCollateral:String,collateral:Float):smartNode
-        updateSmartNode(_id:String!,label:String,ipAddress:String,private:Boolean,showParticipants:Boolean,statusCollateral:String,collateral:Float):smartNode
+        updateSmartNode(_id:String!,tfa:String,label:String,ipAddress:String,private:Boolean,showParticipants:Boolean,statusCollateral:String,collateral:Float):smartNode
         withdrawEnoughSmartNode(_id:String!,amount:Float!,address:String!,tfa:String):smartNode
         deleteSmartNode(_id:String!):Boolean
         joinSmartNode(_id:String,amount:Float, token:String):smartNode
+        addParticipantSmartNode(_id:String!,userId:String!,collateral:Float!,txid:String,tfa:String):smartNode
         widthDrawlSmartNode(_id:String!, token:String):Boolean
     }
 `;

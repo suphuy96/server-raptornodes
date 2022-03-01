@@ -3,11 +3,13 @@ import {OptionRpcClient} from "../../libs/rpc-raptoreum";
 import RpcRaptoreum from "../../libs/rpc-raptoreum";
 import speakeasy from "speakeasy";
 import sendMail from "../../libs/mail";
+import {History} from "../../models/History";
 import {checkIsAdmin, checkIsAuthen} from "../../util/checkAuthen";
 import {ISmartNode, SmartNode,Iparticipant} from "../../models/SmartNode";
 import _ from "lodash";
 import {Withdraw} from "../../models/Withdraw";
 import {WALLET_PASS_PHRASE} from "../../util/secrets";
+import {User, UserDocument} from "../../models/User";
 
 const ODefaults: OptionRpcClient = {
     host: process.env.rpcbind,
@@ -152,6 +154,7 @@ const ServiceResolvers = {
         createSmartNode:  async(__: any, args: ISmartNode,ctx:any) => {
             checkIsAdmin(ctx.user);
             const smartNode = new SmartNode();
+            // const cloneData = JSON.parse(JSON.stringify(smartNode));
             smartNode.label = args.label;
             smartNode.ipAddress = args.ipAddress||"";
             if(global.settingSystem.isMaintenance){
@@ -198,12 +201,111 @@ const ServiceResolvers = {
             if(args.statusCollateral){
                 smartNode.statusCollateral = args.statusCollateral;
             }
+            // const history = new History();
+            // history.action = "create";
+            // history.author = ctx.user._id;
+            // history.data = smartNode;
+            // history.dataOld = cloneData;
             smartNode.save();
             return smartNode;
         },
-        updateSmartNode: async (__: any, args:ISmartNode&{_id:string},ctx:any) => {
+        addParticipantSmartNode:async (__: any, args:{_id:string,userId:string,collateral:number,txid:string ,tfa:string},ctx:any) => {
             checkIsAdmin(ctx.user);
+            if(ctx.user.enableTfa){
+                if(!args.tfa||args.tfa===""){
+                    throw new ApolloError("undefined code 2fa");
+                }
+                const isVerified = speakeasy.totp.verify({
+                    secret: ctx.user.tfa.secret,
+                    encoding: "base32",
+                    token: args.tfa
+                });
+                if(!isVerified){
+                    throw new ApolloError("2fa is not correct");
+                }
+            }
             const smartNode = await SmartNode.findById(args._id);
+            const cloneData = JSON.parse(JSON.stringify(smartNode));
+            if(!smartNode){
+                throw new ApolloError("Not found document");
+            }
+            const user = await User.findById(args.userId);
+            if(!user){
+                throw new ApolloError("Not found user");
+            }
+            let collateral = 0;
+            smartNode.participants.forEach((ii:Iparticipant)=>{
+                collateral +=ii.collateral;
+            });
+           if(collateral>=smartNode.collateral){
+               throw new ApolloError("smartNode is Enough");
+            }
+            if(!args.collateral){
+                throw new ApolloError("collateral >0");
+            }
+            const participantF = smartNode.participants.find(it=>user._id.equals(it.userId));
+            if(participantF){
+                participantF.collateral+=args.collateral;
+                participantF.percentOfNode=participantF.collateral / smartNode.collateral;
+                if(args.txid&&args.txid!==""){
+                    participantF.txids.push(args.txid);
+                }
+                participantF.time = new Date();
+                participantF.source =  (participantF.source==="Add Manual"?"":((participantF.source||"")+"-"))+ "Add Manual";
+            }else {
+                const participant: Iparticipant = {
+                    userId: user,
+                    collateral: args.collateral,
+                    percentOfNode: args.collateral / smartNode.collateral,
+                    RTMRewards: 0,
+                    exchange: 0,
+                    pendingRTMRewards: 0,
+                    txids: args.txid&&args.txid!==""?[args.txid]:[],
+                    source: "Add Manual",
+                    time: new Date(),
+                };
+                const collateral2 = 0;
+                smartNode.participants.push(participant);
+            }
+           let collateral2 = 0;
+            smartNode.participants.forEach((ii:Iparticipant)=>{
+                collateral2 +=ii.collateral;
+            });
+            if(smartNode.statusCollateral ==="Not Enough"&&collateral2>=global.settingSystem.collateral){
+                smartNode.statusCollateral = "Enough";
+            }
+
+
+            await smartNode.save();
+            try{
+                const history = new History();
+                history.action = "addParticipantSmartNode";
+                history.author = ctx.user._id;
+                history.data = smartNode;
+                history.dataOld = cloneData;
+                await history.save();
+            }catch{
+            }
+
+            return smartNode;
+        },
+        updateSmartNode: async (__: any, args:ISmartNode&{_id:string,tfa:string},ctx:any) => {
+            checkIsAdmin(ctx.user);
+            if(ctx.user.enableTfa){
+                if(!args.tfa||args.tfa===""){
+                    throw new ApolloError("undefined code 2fa");
+                }
+                const isVerified = speakeasy.totp.verify({
+                    secret: ctx.user.tfa.secret,
+                    encoding: "base32",
+                    token: args.tfa
+                });
+                if(!isVerified){
+                    throw new ApolloError("2fa is not correct");
+                }
+            }
+            const smartNode = await SmartNode.findById(args._id);
+            const cloneData = JSON.parse(JSON.stringify(smartNode));
             if(!smartNode){
                 throw new ApolloError("Not found document");
             }
@@ -216,7 +318,7 @@ const ServiceResolvers = {
             if(args.collateral&&smartNode.collateral!==args.collateral){
                 let collateral = 0;
                 smartNode.collateral = args.collateral;
-                smartNode.participants.find((ii:Iparticipant)=>{
+                smartNode.participants.forEach((ii:Iparticipant)=>{
                     collateral +=ii.collateral;
                     ii.percentOfNode = ii.collateral/args.collateral;
                 });
@@ -241,11 +343,21 @@ const ServiceResolvers = {
                 }
             }
             await smartNode.save();
+            try{
+                const history = new History();
+                history.action = "updateSmartNode";
+                history.author = ctx.user._id;
+                history.data = smartNode;
+                history.dataOld = cloneData;
+                await history.save();
+            }catch{
+            }
             return smartNode;
         },
         withdrawEnoughSmartNode: async (__: any, args:{_id:string,amount:number,address:string,tfa:string},ctx:any) => {
             checkIsAdmin(ctx.user);
             const smartNode = await SmartNode.findById(args._id);
+
             if(!smartNode){
                 throw new ApolloError("Not found document");
             }
@@ -284,6 +396,15 @@ const ServiceResolvers = {
             const rawData:string = await RPCRuner.sendFrom({address:args.address,account: account,comment,amount:args.amount,comment_to:""});
 
             await smartNode.save();
+            try{
+                const history = new History();
+                history.action = "withdrawEnoughSmartNode";
+                history.author = ctx.user._id;
+                history.data = rawData;
+                history.dataOld = smartNode;
+                await history.save();
+            }catch{
+            }
             return smartNode;
         },
         deleteSmartNode: async (__: any, args:ISmartNode&{_id:string},ctx:any) => {
@@ -331,6 +452,7 @@ const ServiceResolvers = {
                 }
             }
             const smartNode = await SmartNode.findById(args._id);
+            const cloneData = JSON.parse(JSON.stringify(smartNode));
             if(!smartNode){
                 throw new ApolloError("Not Found SmartNode _id"+args._id);
             }
@@ -375,6 +497,15 @@ const ServiceResolvers = {
                         smartNode.statusCollateral ="Enough";
                     }
                     await smartNode.save();
+                    try{
+                        const history = new History();
+                        history.action = "joinSmartNode";
+                        history.author = ctx.user._id;
+                        history.data = cloneData;
+                        history.dataOld = smartNode;
+                        await history.save();
+                    }catch{
+                    }
                     return smartNode;
                 }else{
                     throw new ApolloError("Error 1234567");

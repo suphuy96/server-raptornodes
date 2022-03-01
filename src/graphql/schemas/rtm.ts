@@ -72,7 +72,7 @@ export default gql`
         reWardBalancePending:Float
         getBalance:balance
         getBalanceByAddress(address:String!):balance
-        transactions(category:String,count:Int,skip:Int):[Transaction]
+        transactions(category:String,count:Int,skip:Int,account:String,time:InputSearchDate):[Transaction]
         listaccounts:[accountBalance]
         listaddressgroupings:[[String]]
         lastTxid:String

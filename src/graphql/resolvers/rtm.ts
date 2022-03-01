@@ -72,10 +72,10 @@ const ServiceResolvers = {
                 checkIsAuthen(ctx.user);
                 const count = args.count;
                 const skip = args.skip;
-                const params = ctx.user.rules==="Admin"?[null,count,skip]:[ctx.user.accountRTM,count,skip];
+                const params = ctx.user.rules==="Admin"?[args.account?args.account:null,count,skip]:[ctx.user.accountRTM,count,skip];
                 const res:any =  await RPCRuner.listtransactions(params);
-                //
                 // "walletconflicts": null,
+                console.log(args.time);
                 if(args.category){
                     return  res.filter((item:any)=>item.category===args.category);
                 }

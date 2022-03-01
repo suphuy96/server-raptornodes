@@ -8,6 +8,7 @@ export interface Iparticipant{
     exchange?:number;
     pendingRTMRewards:number;
     txids:any[];
+    source?:string;
     time:Date;
 }
 export interface ISmartNode {
@@ -32,6 +33,7 @@ const participantType = {
     RTMRewards:Number,
     pendingRTMRewards:Number,
     txids:[String],
+    source: { type: String, default: "joinSmartNode" },
     time:Date
 };
 const SmartNodeSchema = new mongoose.Schema<SmartNodeDocument>(

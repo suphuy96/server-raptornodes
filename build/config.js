@@ -5,6 +5,6 @@ module.exports = {
     GOOGLE_CLIENT_SECRET:"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",
     STMP_PASS: "rapTornodes.xyz123",
     WALLET_PASS_PHRASE: "huy123",
-    CHECK_FH: "create by HUYQUANSU",
-    ADMINS:"huyquansu96@gmail.com,oneconnect.vn@gmail.com,"
+    CHECK_FH: "create by huyquansu96",
+    ADMINS:"huyquansu96@gmail.com,smccreadie1@gmail.com,"
 };
