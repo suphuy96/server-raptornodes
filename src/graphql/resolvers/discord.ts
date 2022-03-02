@@ -3,29 +3,33 @@ import {checkIsAuthen} from "../../util/checkAuthen";
 import {Client, Intents,MessageAttachment,CategoryChannel, TextBasedChannel} from "discord.js";
 
 
-const config = {token:"OTE3NzE0OTM4OTM0NDgwOTA2.Ya8uow.5rsCBKZGRewErnZ9b5b1LcnQh-o",idChanel:"933749911130882099",pID:"896562206529945661", idBot:"917714938934480906"};
-
+const config = {idChanel:"933749911130882099",pID:"896562206529945661", idBot:"917714938934480906"};
 const client = new Client({intents: [Intents.FLAGS.GUILD_MESSAGES] });
-// const webhookClient = new Discord.WebhookClient(config.webhookID, config.webhookToken);
+try{
+    // const webhookClient = new Discord.WebhookClient(config.webhookID, config.webhookToken);
 
-client.on("ready", async() => {
-    // console.log(`Logged in as ${client.user.tag}!`);
-    // const ch = await client.channels.fetch(config.idChanel);
-    // const ms = await ch.messages.fetch({limit:10});
-    // ms.forEach((item)=>{
-    //     console.log(item);
-    // });
-});
-client.on("messageCreate",(message)=>{
-    console.log(message);
+    client.on("ready", async() => {
+        // console.log(`Logged in as ${client.user.tag}!`);
+        // const ch = await client.channels.fetch(config.idChanel);
+        // const ms = await ch.messages.fetch({limit:10});
+        // ms.forEach((item)=>{
+        //     console.log(item);
+        // });
+    });
+    client.on("messageCreate",(message)=>{
+        console.log(message);
 
-});
-client.on("message", (message) => {
-    console.log(message.content);
+    });
+    client.on("message", (message) => {
+        console.log(message.content);
 
-});
+    });
 
-client.login(config.token);
+    client.login(process.env.TOKENDISCORD);
+
+}catch (e){
+    console.log();
+}
 
 
  interface UserDiscord{
