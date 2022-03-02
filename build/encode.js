@@ -9,14 +9,18 @@ function reverseString (str) {
 }
 var creDotMatrix = async (secret,name,objDot,path2)=>{
     let data  = JSON.stringify(objDot);
-    objDot.CHECK_FH =  "huyquansu hello raptornodes.com " + new Date();
+    // objDot.CHECK_FH =  "huyquansu hello raptornodes.com " + new Date();
+    data +="       ";
     var ciphertext = CryptoJS.AES.encrypt(data, secret).toString();
-    console.log(objDot,data);
+    console.log(data.length,ciphertext.length,ciphertext.length/3,ciphertext.length%3);
+    console.log(data.length,ciphertext.length,ciphertext.length/3,ciphertext.length%3);
 // Decrypt
     var bytes  = CryptoJS.AES.decrypt(ciphertext, secret);
+    console.log(bytes.toString(CryptoJS.enc.Utf8))
     var decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
     console.log("decryptedData",decryptedData);
-    var height = parseInt(Math.sqrt(ciphertext.length / 3));
+    console.log(ciphertext)
+    var height = parseInt(Math.sqrt(ciphertext.length /3));
     let width = height + 0;
     let nehuyk = 0;
     if (ciphertext.length != (height * height * 3)) {
@@ -41,11 +45,12 @@ var creDotMatrix = async (secret,name,objDot,path2)=>{
         dataIMG[i + 3] = 255; // blue
         j += 3;
     }
+    console.log(ciphertext.substring(0,j))
     ctx.putImageData(imageData, 0, 0);
     const out = fs.createWriteStream(path.join(__dirname, "..","assets", name));
     const stream = canvas.createPNGStream();
     stream.pipe(out);
-
+        if(!objDot.sc)
     fs.writeFileSync(path.join(__dirname,  "..", "src","util","config.ts"),`export default {
     sc: "${secret}"
 };
