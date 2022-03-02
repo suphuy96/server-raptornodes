@@ -50,8 +50,8 @@ c.on("ready", async ()=> {
                 resolve(true) ;
             },1000);
         });
-        console.log("/site/wwwroot/bin/public/"+(fi.replace(path.join(__dirname,"..","azure","bin","public"),"")));
-        c.put(fi,"/site/wwwroot/bin/public/"+(fi.replace(path.join(__dirname,"..","azure","bin","public"),"")),(e)=>{
+        console.log("/site/wwwroot/bin/public"+(fi.replace(path.join(__dirname,"..","azure","bin","public"),"")));
+        c.put(fi,"/site/wwwroot/bin/public"+(fi.replace(path.join(__dirname,"..","azure","bin","public"),"")),(e)=>{
             console.log(e);
         });
     }
