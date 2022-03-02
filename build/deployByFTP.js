@@ -48,7 +48,7 @@ c.on("ready", async ()=> {
         await new Promise((resolve, reject)=>{
             setTimeout(()=>{
                 resolve(true) ;
-            },1100);
+            },1000);
         });
         c.put(fi,"/site/wwwroot/bin/public/"+(fi.replace(path.join(__dirname,"..","azure","bin","public"),"")),(e)=>{
             console.log(e);
