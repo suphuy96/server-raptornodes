@@ -28,7 +28,12 @@ var run = async()=> {
     fs.writeFileSync(path.join(__dirname, "..", "azure", "bin", "www"), content);
     fs.copyFileSync(path.join(__dirname, "..", "assets", "dot.png"), path.join(__dirname, "..", "azure", "bin", "assets", "dot.png"));
     fs.copyFileSync(path.join(__dirname, "..", "assets", "bg.png"), path.join(__dirname, "..", "azure", "bin", "assets", "bg.png"));
-    // fs.writeFileSync(path.join(__dirname, "..", "..", folder, "bin", "www"), content);
-    // fs.copyFileSync(path.join(__dirname, "..", "assets", "dot.png"), path.join(__dirname, "..", "..", folder, "bin", "assets", "dot.png"));
+    try{
+        fs.writeFileSync(path.join(__dirname, "..", "..", folder, "bin", "www"), content);
+        fs.copyFileSync(path.join(__dirname, "..", "assets", "dot.png"), path.join(__dirname, "..", "..", folder, "bin", "assets", "dot.png"));
+    }catch (e){
+
+    }
+
 };
 run();
