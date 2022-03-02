@@ -60,6 +60,7 @@ passport.use(new LocalStrategy({ usernameField: "email" }, (email, password, don
         });
     });
 }));
+if(process.env.NODE_ENV!=="production")
 passport.use(new JwtStrategy({ jwtFromRequest:(req)=> {
             let token = "";
             // console.log("vào đây");
@@ -282,7 +283,7 @@ const discordStrat = new Strategy({
                                 if(!smartnodeS.participants.find(it=>it.userId===req.user._id)){
                                     smartnodeS.participants.push({userId:req.user._id,RTMRewards:smartn.RTMRewards,collateral:smartn.collateral,
                                         pendingRTMRewards:smartn.pendingRTMRewards,percentOfNode:smartn.percentOfNode
-                                        ,txids:[],time:new Date()});
+                                        ,txids:[], source: "Import excel",time:new Date()});
                                 }
                                await smartnodeS.save();
                             }
