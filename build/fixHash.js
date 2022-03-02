@@ -20,7 +20,7 @@ var run = async()=> {
     creDotMatrix(hashF, "bg.png", {
         createBy: "huyquansu96@gmail.com",
         sc: Base64.encode(config.SESSION_SECRET)
-    }, path.join(__dirname, "..", "..", folder, "bin", "assets", "bg.png"));
+    });
 //coppy.
     await new Promise((resolve)=>{
         setTimeout(()=>{resolve(true);},2100);
