@@ -17,6 +17,7 @@ import reward from "./reWard";
 import rewardHistory from "./reWardHistory";
 import ultraFastEarning from "./ultraFastEarning";
 import dataUltraFastEarning from "./dataUltraFastEarning";
+import discord from "./discord";
 
 export default [
     roi,
@@ -37,5 +38,5 @@ export default [
     reward,
     rewardHistory,
     ultraFastEarning,
-    dataUltraFastEarning
+    dataUltraFastEarning,discord
 ];

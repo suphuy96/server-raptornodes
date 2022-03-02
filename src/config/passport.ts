@@ -183,6 +183,10 @@ passport.use(new GoogleStrategy({
                             return  done(new Error("System is Maintenance"));
 
                         }
+                        // if(global.settingSystem.isMaintenance){
+                        //     req.flash("errors", { msg: "System is Maintenance" });
+                        //     return  done(new Error("System is Maintenance"));
+                        // }
                         const user: any = new User();
                         user.rules = "User";
                         user.email = profile._json.email;

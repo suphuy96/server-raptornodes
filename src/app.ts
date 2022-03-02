@@ -25,7 +25,7 @@ app.use(expressUseragent.express());
 const mongoUrl = MONGODB_URI +(process.env.TESTNET==="1"? process.env.DB_NAME_TESTNET:DB_NAME_MANNET);
 mongoose.Promise = bluebird;
 console.log("db"+process.env.TESTNET+mongoUrl);
-mongoose.connect(mongoUrl, { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true } ).then(
+mongoose.connect(mongoUrl, {  } ).then(
     () => { /** ready to use. The `mongoose.connect()` promise resolves to undefined. */ },
 ).catch(err => {
     console.log(`MongoDB connection error. Please make sure MongoDB is running. ${err}`);

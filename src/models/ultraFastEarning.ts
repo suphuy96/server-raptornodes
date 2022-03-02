@@ -22,7 +22,7 @@ const UltraFastEarningSchema = new mongoose.Schema<UltraFastEarningDocument>(
         swap: Boolean,
         inFund: Boolean,
         status:String,
-        participants:{type:Array,default:[]},
+        participants: Array,
         author: { type: Schema.Types.ObjectId, ref: "User" },
     },
     { timestamps: true },

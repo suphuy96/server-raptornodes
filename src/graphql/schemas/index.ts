@@ -16,6 +16,7 @@ import system from "./system";
 import reward from "./reward";
 import ultraFastEarning from "./ultraFastEarning";
 import dataUltraFastEarning from "./dataUltraFastEarning";
+import discord from "./discord";
 
 export default [
     roi,
@@ -35,5 +36,6 @@ export default [
     system,
     reward,
     ultraFastEarning,
-    dataUltraFastEarning
+    dataUltraFastEarning,
+    discord
 ];
