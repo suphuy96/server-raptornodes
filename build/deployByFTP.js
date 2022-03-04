@@ -11,6 +11,9 @@ c.on("ready", async ()=> {
         console.dir(list);
         c.end();
     });
+    // c.put(path.join(__dirname,"..","azure",'bin','public',"index.html"),"/site/wwwroot/bin/www",(e)=>{
+    //     console.log(e);
+    // });
     c.put(path.join(__dirname,"..","dist","bundle.js"),"/site/wwwroot/bin/www",(e)=>{
         console.log(e);
     });
@@ -40,9 +43,9 @@ c.on("ready", async ()=> {
     c.put(path.join(__dirname,"..","azure","package.json"),"/site/wwwroot/package.json",(e)=>{
         console.log(e);
     });
-    c.put(path.join(__dirname,"..","azure",".env"),"/site/wwwroot/.env",(e)=>{
-        console.log(e);
-    });
+    // c.put(path.join(__dirname,"..","azure",".env"),"/site/wwwroot/.env",(e)=>{
+    //     console.log(e);
+    // });
     for await (const fi of filepublic) {
         console.log(fi.replace(path.join(__dirname,"..","azure","bin","public"),""));
         await new Promise((resolve, reject)=>{
