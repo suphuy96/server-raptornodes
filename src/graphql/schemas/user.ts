@@ -45,6 +45,7 @@ export default gql`
     }
     type Mutation {
         updateUser(_id:String,discord:String,enableTfa:Boolean,status:Boolean,tfa:String):User
+        updateProfileUser(autoCompounding:Boolean,tfa:String):User
         removeUser(_id:String,tfa:String):Boolean
     }
 `;

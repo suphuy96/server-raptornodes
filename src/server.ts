@@ -126,6 +126,7 @@ const loadSystem = async()=>{
     if(global.settingSystem)
     global.settingSystem.rewardAccount ="Reward";
     if(!global.settingSystem.rewardAddress ||global.settingSystem.rewardAddress==""){
+        try{
        RPCRuner.getAccountAddress("Reward").then((addressReward)=>{
             if(addressReward){
                 global.settingSystem.rewardAddress = addressReward;
@@ -139,10 +140,13 @@ const loadSystem = async()=>{
             console.log("không thể kết nối raptoreum", e.toString());
             return false;
         });
+    }catch (e){
 
+    }
     }
     global.settingSystem.withdrawlWeeklyAccount = "WithdrawlWeekly";
     if(!global.settingSystem.withdrawWeeklyAddress ||global.settingSystem.withdrawWeeklyAddress==""){
+        try{
         const withdrawWeeklyAddress = await RPCRuner.getAccountAddress("WithdrawlWeekly").then((withdrawWeeklyAddress)=>{
             console.log(withdrawWeeklyAddress,"withdrawWeeklyAddress");
             if(withdrawWeeklyAddress){
@@ -157,18 +161,28 @@ const loadSystem = async()=>{
             console.log("không thể kết nối raptoreum", e.toString());
             return false;
         });
+        }catch (e){
+
+        }
+    }
+    try{
+        RPCRuner.smartnodeCount().then((smartnodeCount:{total:number,enabled:number})=>{
+            if(smartnodeCount && smartnodeCount.total){
+                settingSystem.paymentsPerDay = 720000/smartnodeCount.enabled;
+            }
+        });
+    }catch (e){
 
     }
-   RPCRuner.smartnodeCount().then((smartnodeCount:{total:number,enabled:number})=>{
-        if(smartnodeCount && smartnodeCount.total){
-            settingSystem.paymentsPerDay = 720000/smartnodeCount.enabled;
-        }
-    });
+
 
         console.log("done load variable System");
 };
+process.on("unhandledRejection", (reason) => {
+    console.log(reason); // log the reason including the stack trace
+});
 const main = async ()=>{
-    await loadSystem();
+   void loadSystem().then();
     await server.start();
     server.applyMiddleware({ app, path: "/graphql" });
     const httpServer = createServer(app);

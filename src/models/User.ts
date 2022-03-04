@@ -21,6 +21,7 @@ export interface IUser {
     accountRTM:string;
     addressRTM:string;
     enableTfa:boolean;
+    autoCompounding:boolean;
     balance?:number;
     collateral?:number;
     portfolio?:number;
@@ -69,6 +70,7 @@ const userSchema = new mongoose.Schema<UserDocument>(
             done:Date,
             tfaURL: String
         },
+        autoCompounding: Boolean,
         enableTfa:Boolean,
         facebook: String,
         google: String,

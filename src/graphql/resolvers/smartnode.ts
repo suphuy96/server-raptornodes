@@ -174,11 +174,11 @@ const ServiceResolvers = {
             if(smartNodes && smartNodes.length){
                 throw new ApolloError("Label not unique");
             }
-            let accountAddress ="User#"+ smartNode.label;
+            let accountAddress ="SmartNode#"+ smartNode.label;
             const datas = await RPCRuner.getAddressesByAccount(accountAddress);
             //check used account
             if(datas && datas.length){
-                accountAddress ="User#"+ smartNode.label+"_"+new Date().getTime();
+                accountAddress ="SmartNode#"+ smartNode.label+"_"+new Date().getTime();
             }
             // const privateAddress: any = await RPCRuner.getAccountAddress("SmartNode#"+smartNode.label).catch((e) => {
             //     console.log("không thể kết nối raptoreum", e.toString());
@@ -206,7 +206,17 @@ const ServiceResolvers = {
             // history.author = ctx.user._id;
             // history.data = smartNode;
             // history.dataOld = cloneData;
+
             smartNode.save();
+            try{
+                const history = new History();
+                history.action = "createSmartNode";
+                history.author = ctx.user._id;
+                history.data = smartNode;
+                history.dataOld = {};
+                await history.save();
+            }catch{
+            }
             return smartNode;
         },
         addParticipantSmartNode:async (__: any, args:{_id:string,userId:string,collateral:number,txid:string ,tfa:string},ctx:any) => {
@@ -225,10 +235,10 @@ const ServiceResolvers = {
                 }
             }
             const smartNode = await SmartNode.findById(args._id);
-            const cloneData = JSON.parse(JSON.stringify(smartNode));
             if(!smartNode){
                 throw new ApolloError("Not found document");
             }
+            const cloneData = JSON.parse(JSON.stringify(smartNode));
             const user = await User.findById(args.userId);
             if(!user){
                 throw new ApolloError("Not found user");
@@ -305,10 +315,10 @@ const ServiceResolvers = {
                 }
             }
             const smartNode = await SmartNode.findById(args._id);
-            const cloneData = JSON.parse(JSON.stringify(smartNode));
             if(!smartNode){
                 throw new ApolloError("Not found document");
             }
+            const cloneData = JSON.parse(JSON.stringify(smartNode));
             if(args.label){
                 smartNode.label = args.label;
             }
@@ -452,11 +462,10 @@ const ServiceResolvers = {
                 }
             }
             const smartNode = await SmartNode.findById(args._id);
-            const cloneData = JSON.parse(JSON.stringify(smartNode));
             if(!smartNode){
                 throw new ApolloError("Not Found SmartNode _id"+args._id);
             }
-
+            const cloneData = JSON.parse(JSON.stringify(smartNode));
             if( smartNode.statusCollateral !=="Not Enough"){
                 throw new ApolloError("SmartNode:"+smartNode.label+" is "+smartNode.statusCollateral);
 

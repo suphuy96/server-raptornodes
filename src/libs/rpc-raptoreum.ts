@@ -79,6 +79,7 @@ export default class RpcRaptoreum {
             payload.method = payload.method.toLowerCase();
         }
         return new Promise<any>((resolve,reject)=>{
+            try{
             this.requestJsonRpcCallBack(method,params,options).then((response)=>{
                 if (response.status !== 200) {
                     reject(response);
@@ -98,6 +99,9 @@ export default class RpcRaptoreum {
                 }
                 reject(error);
             });
+            }catch (e){
+                reject(e);
+            }
         });
 
     }

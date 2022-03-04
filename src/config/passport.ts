@@ -17,6 +17,7 @@ import {Strategy as JwtStrategy,ExtractJwt} from "passport-jwt";
 import RpcRaptoreum ,{OptionRpcClient} from "../libs/rpc-raptoreum";
 import {ApolloError} from "apollo-server-express";
 import { SESSION_SECRET,GOOGLE_CLIENT_SECRET,ADMINS } from "../util/secrets";
+import {History} from "../models/History";
 
 _.templateSettings.interpolate = /{{([\s\S]+?)}}/g;
 const ODefaults: OptionRpcClient = {
@@ -243,6 +244,15 @@ passport.use(new GoogleStrategy({
                                     sendMail(user.email+( global.settingSystem.mailWellcome.cc.length?(","+global.settingSystem.mailWellcome.cc.join()):""),_.template(global.settingSystem.mailWellcome.label)({name:user.profile.name,email:user.email,avatar:user.profile.picture,data:""}),_.template(global.settingSystem.mailWellcome.template)({name:user.profile.name,email:user.email,avatar:user.profile.picture,data:""})).then(data=>{
                                         console.log("đàads");
                                     });
+                                }
+                                try{
+                                    const history = new History();
+                                    history.action = "createUser";
+                                    history.author = user._id;
+                                    history.data = user;
+                                    history.dataOld = {};
+                                     history.save().then();
+                                }catch{
                                 }
 
                             }catch (e){

@@ -7,6 +7,7 @@ import _ from "lodash";
 import speakeasy from "speakeasy";
 import sendMail from "../../libs/mail";
 import {WALLET_PASS_PHRASE} from "../../util/secrets";
+import {History} from "../../models/History";
 const ODefaults: OptionRpcClient = {
     host: process.env.rpcbind,
     port:  parseInt(process.env.rpcport||"19998"),
@@ -101,6 +102,15 @@ const ServiceResolvers = {
                         }
                     }catch(e){
                         console.log(e);
+                    }
+                    try{
+                        const history = new History();
+                        history.action = "createWithdraw";
+                        history.author = ctx.user._id;
+                        history.data = withdrawSave;
+                        history.dataOld =  {};
+                        await history.save();
+                    }catch{
                     }
                     return withdrawSave;
                 }catch (e){

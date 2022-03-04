@@ -15,7 +15,7 @@
         "build:s": "npm run build-ts",
         "copy-static-assets": "ts-node copyStaticAssets.ts",
         "debug": "npm run build:s && npm run watch-debug",
-        "debug:server": "npm run build:s && npm run watch-debug:s",
+        "debug:server": "cross-env NODE_OPTIONS=\"--experimental-vm-modules --unhandled-rejections=warn-with-error-code\" npm run build:s && npm run watch-debug:s",
         "lint": "tsc --noEmit && eslint \"src/**/*.{js,ts}\" --quiet --fix",
         "serve-debug": "nodemon --inspect dist/server.js",
         "serve": "node dist/server.js",

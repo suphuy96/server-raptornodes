@@ -291,6 +291,7 @@ const loadSystem = async()=>{
     }
     global.settingSystem.rewardAccount ="Reward";
     if(!global.settingSystem.rewardAddress ||global.settingSystem.rewardAddress==""){
+        try{
         const addressReward = await RPCRuner.getAccountAddress("Reward").catch((e) => {
             console.log("không thể kết nối raptoreum", e.toString());
             return false;
@@ -303,14 +304,20 @@ const loadSystem = async()=>{
                 await settingSystem.save();
             }
         }
-    }
-    const smartnodeCount:{total:number,enabled:number} = await RPCRuner.smartnodeCount();
-    if(smartnodeCount && smartnodeCount.total){
-        settingSystem.paymentsPerDay = 720000/smartnodeCount.enabled;
-    }else if(paymentsPerDayOld){
-        settingSystem.paymentsPerDay = paymentsPerDayOld;
-    }
+        }catch (e){
 
+        }
+    }
+    try{
+        const smartnodeCount:{total:number,enabled:number} = await RPCRuner.smartnodeCount();
+        if(smartnodeCount && smartnodeCount.total){
+            settingSystem.paymentsPerDay = 720000/smartnodeCount.enabled;
+        }else if(paymentsPerDayOld){
+            settingSystem.paymentsPerDay = paymentsPerDayOld;
+        }
+    }catch (e){
+
+    }
 };
 setInterval(()=>{
     console.log("setInterval");

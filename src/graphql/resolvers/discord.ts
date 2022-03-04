@@ -24,11 +24,10 @@ try{
         console.log(message.content);
 
     });
-
     client.login(process.env.TOKENDISCORD);
 
 }catch (e){
-    console.log();
+    console.log(e);
 }
 
 

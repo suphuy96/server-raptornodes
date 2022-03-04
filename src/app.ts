@@ -19,6 +19,10 @@ import {getPathFile} from "./helper/backup/mongodb";
 import * as passportConfig from "./config/passport";
 import {exec} from "child_process";
 // Create Express server
+bluebird.config({
+    cancellation: true
+});
+
 const app = express();
 app.use(expressUseragent.express());
 // Connect to MongoDB

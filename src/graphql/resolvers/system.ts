@@ -7,6 +7,7 @@ import speakeasy from "speakeasy";
 import defaultSetting from "../../config/settingSystemDefault";
 import RpcRaptoreum,{OptionRpcClient} from "../../libs/rpc-raptoreum";
 import {WALLET_PASS_PHRASE} from "../../util/secrets";
+import {History} from "../../models/History";
 const ODefaults: OptionRpcClient = {
     host: process.env.rpcbind,
     port:  parseInt(process.env.rpcport||"19998"),
@@ -199,6 +200,8 @@ const ServiceResolvers = {
                 if(!system){
                      system = new System();
                 }
+                const cloneData = JSON.parse(JSON.stringify(system));
+
 
                 if(systemInput.enableWithdraw||systemInput.enableWithdraw===false){
                     system.enableWithdraw = systemInput.enableWithdraw;
@@ -228,7 +231,7 @@ const ServiceResolvers = {
                 if(systemInput.collateralMin||systemInput.collateralMin){
                     system.collateralMin = systemInput.collateralMin;
                 }
-                if(systemInput.feeReward||systemInput.feeReward){
+                if(systemInput.feeReward||systemInput.feeReward===0){
                     system.feeReward = systemInput.feeReward;
                 }
                 if(systemInput.paymentsPerDay||systemInput.paymentsPerDay){
@@ -301,7 +304,15 @@ const ServiceResolvers = {
                 } else{
                     global.settingSystem.rewardAddress = rewardAddress;
                 }
-
+                try{
+                    const history = new History();
+                    history.action = "updateSystem";
+                    history.author = ctx.user._id;
+                    history.data = cloneData;
+                    history.dataOld = {};
+                    await history.save();
+                }catch{
+                }
                 return system;
             } catch (error) {
                 throw new ApolloError(error);

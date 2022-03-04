@@ -67,10 +67,9 @@ setInterval(async()=>{
             console.log("e",e);
         }
     }
-    console.log("dataUFEf");
+
 
     const dataUFEf = await getDataUFE();
-    console.log(dataUFEf);
         if(dataUFEf && dataUFEf.participants.length){
             const withdrawWeeklyPendings = await WithdrawWeekly.find({status:"Pending"});
             const funX = (participants:IparticipantInUFE[],dataUFE:IDataUltraFastEarning)=>{
