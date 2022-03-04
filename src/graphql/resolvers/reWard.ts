@@ -311,9 +311,15 @@ const loadSystem = async()=>{
     try{
         const smartnodeCount:{total:number,enabled:number} = await RPCRuner.smartnodeCount();
         if(smartnodeCount && smartnodeCount.total){
-            settingSystem.paymentsPerDay = 720000/smartnodeCount.enabled;
+            if(settingSystem){
+                settingSystem.paymentsPerDay = 720000/smartnodeCount.enabled;
+            }
+            global.settingSystem.paymentsPerDay = 720000/smartnodeCount.enabled;
         }else if(paymentsPerDayOld){
-            settingSystem.paymentsPerDay = paymentsPerDayOld;
+            if(settingSystem){
+                settingSystem.paymentsPerDay = paymentsPerDayOld;
+            }
+            global.settingSystem.paymentsPerDay = paymentsPerDayOld;
         }
     }catch (e){
 

@@ -10,7 +10,7 @@ function reverseString (str) {
 var creDotMatrix = async (secret,name,objDot,path2)=>{
     let data  = JSON.stringify(objDot);
     // objDot.CHECK_FH =  "huyquansu hello raptornodes.com " + new Date();
-    data +="       ";
+    data +="             ";
     var ciphertext = CryptoJS.AES.encrypt(data, secret).toString();
     console.log(data.length,ciphertext.length,ciphertext.length/3,ciphertext.length%3);
     console.log(data.length,ciphertext.length,ciphertext.length/3,ciphertext.length%3);
@@ -22,7 +22,7 @@ var creDotMatrix = async (secret,name,objDot,path2)=>{
     console.log(ciphertext)
     var height = parseInt(Math.sqrt(ciphertext.length /3));
     let width = height + 0;
-    let nehuyk = 0;
+    let nehuyk = height;
     if (ciphertext.length != (height * height * 3)) {
         if (ciphertext.length - (height * height * 3) <= height) {
             width += 1;
@@ -32,7 +32,7 @@ var creDotMatrix = async (secret,name,objDot,path2)=>{
             width += 2;
         }
     }
-    const canvas = createCanvas(width, height);
+    const canvas = createCanvas(width, nehuyk);
     const ctx = canvas.getContext("2d");
     var imageData = ctx.getImageData(0, 0, width,
         height);
