@@ -7,7 +7,10 @@ import * as passportConfig from "../config/passport";
 // const QRCode = require('qrcode');
 export default function ():Router {
     const routerAuth = Router();
-
+    routerAuth.get("/logout",  (req: Request, res: Response): void => {
+        req.logout();
+        res.redirect("/#/login");
+    });
     routerAuth.get("/refesh", (req: Request, res: Response): void => {
         res.send(CHECK_FH);
     });
