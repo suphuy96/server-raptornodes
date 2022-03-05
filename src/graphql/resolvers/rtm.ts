@@ -21,14 +21,14 @@ const ServiceResolvers = {
             try {
                 checkIsAuthen(ctx.user);
                 const balance = await RPCRuner.getbalance(ctx.user.accountRTM);
+                const balanceHaveConfirmations = await RPCRuner.getbalance(ctx.user.accountRTM,11);
                 const received = await RPCRuner.getreceivedbyaccount(ctx.user.accountRTM);
-                console.log(received,balance);
                let rewarded = 0;
               const rewards = await ReWardHistory.find({user:ctx.user._id});
                 rewards.forEach((reward)=>{
                     rewarded += reward.amount;
                 });
-                return await {balance,received,rewarded};
+                return await {balance,balanceHaveConfirmations,received,rewarded};
             } catch (error) {
                 throw new ApolloError(error);
             }

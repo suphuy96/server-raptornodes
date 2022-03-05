@@ -124,8 +124,8 @@ export default class RpcRaptoreum {
     getAddressBalance(address:string,opts?:OptionRequestJsonRpc):Promise<any>{
         return this.requestJsonRpc("getaddressbalance",[{addresses:[address||""]}],opts);
     }
-    getbalance(account:string,opts?:OptionRequestJsonRpc):Promise<any>{
-        return this.requestJsonRpc("getbalance",[account],opts);
+    getbalance(account:string,minConf?:number,opts?:OptionRequestJsonRpc):Promise<any>{
+        return this.requestJsonRpc("getbalance",[account,minConf],opts);
     }
     walletpassphrase(passphrase:string, timeout:number,opts?:OptionRequestJsonRpc):Promise<any>{
         return this.requestJsonRpc("walletpassphrase",[passphrase,timeout],opts);

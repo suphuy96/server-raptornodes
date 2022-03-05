@@ -37,6 +37,7 @@ export default gql`
     }
     type balance{
         balance:Float,
+        balanceHaveConfirmations:Float,
         received:Float
         rewarded:Float
     }
