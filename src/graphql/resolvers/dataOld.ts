@@ -1,6 +1,7 @@
 import { ApolloError } from "apollo-server-express";
 import {DataOld, DataOldDocument, IDataOld} from "../../models/DataOld";
 import {checkIsAdmin} from "../../util/checkAuthen";
+import {Iparticipant, SmartNode} from "../../models/SmartNode";
 
 const ServiceResolvers = {
     Query: {
@@ -14,11 +15,32 @@ const ServiceResolvers = {
         }
     },
     Mutation: {
-        importDataOld: async (__: any,arg: {dataOlds: IDataOld[]},ctx:any) => {
+        importDataOld: async (__: any,arg: {dataOlds: IDataOld[],importNow?:boolean},ctx:any) => {
             try {
                 checkIsAdmin(ctx.user);
                 await DataOld.deleteMany({});
-                await DataOld.insertMany(arg.dataOlds);
+                if(arg.importNow){
+                    if(arg.dataOlds && arg.dataOlds.length){
+                        const list = [];
+                        for await (const smartn of arg.dataOlds){
+                            const smartnodeS = await SmartNode.findOne({label:smartn.smartNode});
+                            if(smartnodeS){
+                            if(!smartnodeS.participants.find((it:any)=>it.userId&&it.userId===smartn.discordId)){
+                                smartnodeS.participants.push({userId:smartn.discordId,RTMRewards:smartn.RTMRewards,collateral:smartn.collateral,
+                                    pendingRTMRewards:smartn.pendingRTMRewards,percentOfNode:smartnodeS.collateral/smartn.collateral
+                                    ,txids:[], source: "Import excel",time:new Date()});
+                                await smartnodeS.save();
+                            } else{
+                                list.push(smartn);
+                            }
+                            }
+                        }
+                        await DataOld.insertMany(list);
+                    }
+                }else{
+                    await DataOld.insertMany(arg.dataOlds);
+                }
+
                 return true;
             } catch (error) {
                 throw new ApolloError(error);

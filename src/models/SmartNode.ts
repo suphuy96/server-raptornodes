@@ -1,7 +1,7 @@
 import mongoose,{Schema} from "mongoose";
 import {IUser, UserDocument} from "./User";
 export interface Iparticipant{
-    userId: UserDocument ;
+    userId: any ;
     collateral:number;
     percentOfNode:number;
     RTMRewards:number;

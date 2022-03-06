@@ -293,12 +293,28 @@ const discordStrat = new Strategy({
                         if(allSmartNode && allSmartNode.length){
                             for await (const smartn of allSmartNode){
                                const smartnodeS = await SmartNode.findOne({label:smartn.smartNode});
-                                if(!smartnodeS.participants.find(it=>it.userId===req.user._id)){
-                                    smartnodeS.participants.push({userId:req.user._id,RTMRewards:smartn.RTMRewards,collateral:smartn.collateral,
-                                        pendingRTMRewards:smartn.pendingRTMRewards,percentOfNode:smartn.percentOfNode
-                                        ,txids:[], source: "Import excel",time:new Date()});
-                                }
-                               await smartnodeS.save();
+                               if(smartnodeS) {
+                                   if (!smartnodeS.participants.find(it => it.userId === req.user._id)) {
+                                       smartnodeS.participants.push({
+                                           userId: req.user._id,
+                                           RTMRewards: smartn.RTMRewards,
+                                           collateral: smartn.collateral,
+                                           pendingRTMRewards: smartn.pendingRTMRewards,
+                                           percentOfNode: smartn.collateral / smartnodeS.collateral
+                                           ,
+                                           txids: [],
+                                           source: "Import excel",
+                                           time: new Date()
+                                       });
+                                       try {
+                                           smartn.done = true;
+                                           await smartn.save();
+                                       } catch (e) {
+
+                                       }
+                                   }
+                                   await smartnodeS.save();
+                               }
                             }
                         }
                         user.tokens.push({ kind: "discord", accessToken });

@@ -33,6 +33,7 @@ export default gql`
         rules: String,
         balance:Float,
         collateral:Float,
+        autoCompounding:Boolean,
         portfolio:Float,
         status:Boolean,
         enableTfa:Boolean,

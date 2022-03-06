@@ -1,6 +1,7 @@
 import mongoose,{Schema} from "mongoose";
 export interface IDataOld  {
     discordId:string;
+    done?:boolean;
     discordName: string;
     address:string;
     collateral:number;
@@ -15,6 +16,7 @@ export type DataOldDocument = mongoose.Document & IDataOld
 const DataOldSchema = new mongoose.Schema<DataOldDocument>(
     {
         discordId: String,
+        done:Boolean,
         discordName: String,
         address: String,
         collateral:Number,
