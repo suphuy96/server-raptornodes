@@ -158,17 +158,6 @@ passport.use(new GoogleStrategy({
             User.findOne({ google: profile.id }, (err: NativeError, existingUser: UserDocument) => {
                 if (err) { return done(err); }
                 if (existingUser) {
-                    try{
-                        console.log("vào đây");
-                        if(global.settingSystem.mailNewSession.enable) {
-                            // you have 1 new login session in raptornodes.com with ip:${req.headers["X-Real-IP"] || ""} browser: ${req.useragent.browser} version: ${req.useragent.version} Os:${req.useragent.os} ,device:${req.useragent.isAndroid ? "Android" : (req.useragent.isiPhone ? "Iphone" : (req.useragent.isWindows ? "Windown" : req.useragent.isMac ? "Mac" : "Null"
-                            sendMail(existingUser.email +(global.settingSystem.mailNewSession.cc&& global.settingSystem.mailNewSession.cc.length?(","+global.settingSystem.mailNewSession.cc.join()):""), _.template(global.settingSystem.mailWellcome.label)({name:existingUser.profile.name,email:existingUser.email,avatar:existingUser.profile.picture,data:""}), _.template(global.settingSystem.mailWellcome.template)({name:existingUser.profile.name,email:existingUser.email,avatar:existingUser.profile.picture,data:""})).then((e) => {
-                                console.log("data", e);
-                            });
-                        }
-                    }catch (e){
-                     console.log(e);
-                    }
                     return done(undefined, existingUser);
                 }
                 User.findOne({ email: profile._json.email }, async(err: NativeError, existingEmailUser: UserDocument) => {
