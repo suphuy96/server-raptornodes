@@ -158,6 +158,16 @@ passport.use(new GoogleStrategy({
             User.findOne({ google: profile.id }, (err: NativeError, existingUser: UserDocument) => {
                 if (err) { return done(err); }
                 if (existingUser) {
+                    // try{
+                    //     if(global.settingSystem.mailNewSession.enable){
+                    //         sendMail(req.user.email+(global.settingSystem.mailNewSession.cc&& global.settingSystem.mailNewSession.cc.length?(","+global.settingSystem.mailNewSession.cc.join()):""),_.template(global.settingSystem.mailNewSession.label)({name:req.user.name,email:req.user.email,avatar:req.user.profile.picture,data:""}),_.template(global.settingSystem.mailNewSession.template)({name:req.user.name,email:req.user.email,avatar:req.user.profile.picture,data:""})).then((data)=>{
+                    //             console.log(data);
+                    //         });
+                    //     }
+                    //
+                    // }catch (e){
+                    //     console.log(e);
+                    // }
                     return done(undefined, existingUser);
                 }
                 User.findOne({ email: profile._json.email }, async(err: NativeError, existingEmailUser: UserDocument) => {
