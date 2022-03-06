@@ -47,7 +47,7 @@ setInterval(async()=>{
                 await new Promise((resolve) => {
                     setTimeout(()=>{resolve(true),2000;});
                 });
-                const balance = await RPCRuner.getbalance(global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly");
+                const balance = await RPCRuner.getbalance(global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly",2);
                 if(balance>=withdrawWeekly.amount){
                     const auth = await User.findById(withdrawWeekly.author);
                     try{
@@ -115,7 +115,7 @@ setInterval(async()=>{
                             });
                         });
                         const dataUFE = await getDataUFE();
-                        const balance = await RPCRuner.getbalance(global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly");
+                        const balance = await RPCRuner.getbalance(global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly",2);
                         if(balance>=withdrawWeekly.amount){
                             let info:{total:number,participants:any[]} = {total:0,participants:[]};
                             if(withdrawWeekly.amount>=dataUFE.participants[0].amount){
@@ -267,8 +267,8 @@ const ServiceResolvers = {
             try {
                 //check authen
                 checkIsAuthen(ctx.user);
-                const balance = await RPCRuner.getbalance(global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly");
-                const youBalance = await RPCRuner.getbalance(ctx.user.accountRTM);
+                const balance = await RPCRuner.getbalance(global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly",2);
+                const youBalance = await RPCRuner.getbalance(ctx.user.accountRTM,2);
 
                 const  withdrawWeeklys = await WithdrawWeekly.aggregate([{ $match:{status:"Pending"}},{
                     $group :{
@@ -398,7 +398,7 @@ const ServiceResolvers = {
                               wrwk.status = "waitForPayment";
                                wrwk.ultraFastEarning = ultraFastEarning._id;
                               await wrwk.save();
-                               const balancec = await RPCRuner.getbalance(global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly");
+                               const balancec = await RPCRuner.getbalance(global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly",2);
                                if(balancec>=wrwk.amount){
                                    const auth = await User.findById(participant.author);
                                    if(auth){

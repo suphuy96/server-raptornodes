@@ -92,7 +92,7 @@ const ServiceResolvers = {
                         }
                     });
                 }
-                const balance = await RPCRuner.getbalance(global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly");
+                const balance = await RPCRuner.getbalance(global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly",2);
                 const received = await RPCRuner.getreceivedbyaccount(global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly");
                const  withdrawWeeklys = await WithdrawWeekly.aggregate([{ $match:matchPe},{
                        $group :{

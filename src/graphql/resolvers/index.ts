@@ -7,6 +7,7 @@ import infoHome from "./infoHome";
 import userAddress from "./userAddress";
 import faq from "./faq";
 import date from "./Date/index";
+import json from "./JSON/index";
 import backup from "./backup";
 import withdraw from "./withdraw";
 import withdrawlWeekly from "./withdrawlWeekly";
@@ -18,8 +19,11 @@ import rewardHistory from "./reWardHistory";
 import ultraFastEarning from "./ultraFastEarning";
 import dataUltraFastEarning from "./dataUltraFastEarning";
 import discord from "./discord";
+import history from "./history";
 
 export default [
+    date,
+    json,
     roi,
     smartnode,
     rtm,
@@ -27,7 +31,6 @@ export default [
     infoHome,
     userAddress,
     tfa,
-    date,
     faq,
     backup,
     withdraw,
@@ -38,5 +41,6 @@ export default [
     reward,
     rewardHistory,
     ultraFastEarning,
-    dataUltraFastEarning,discord
+    dataUltraFastEarning,discord,
+    history,
 ];

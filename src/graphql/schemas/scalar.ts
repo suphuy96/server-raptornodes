@@ -4,7 +4,8 @@ export default gql`
     scalar Date
     scalar DateTime
     scalar Time
-
+    scalar JSON
+    scalar JSONObject
     input InputSearchDateTime {
         lt :DateTime
         """Bé hơn hoặc bằng giá trị"""

@@ -66,7 +66,7 @@ const ServiceResolvers = {
         withdrawWeeklyOnboardings: async (__: any, args: { status:string },ctx:any) => {
             try {
                 checkIsAuthen(ctx.user);
-                const balance = await RPCRuner.getbalance(global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly");
+                const balance = await RPCRuner.getbalance(global.settingSystem.withdrawlWeeklyAccount||"WithdrawlWeekly",2);
 
                 const  withdrawWeeklys = await WithdrawWeekly.aggregate([{ $match:{status:"Pending"}},{
                     $group :{

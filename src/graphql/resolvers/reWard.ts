@@ -47,7 +47,7 @@ const funReward = async (reward:ReWardDocument) => {
     try {
         const smartnodes = await SmartNode.find({statusCollateral : "Start Reward" }).populate("participants.userId");
 
-        const reWardBalance = await RPCRuner.getbalance(global.settingSystem.rewardAccount);
+        const reWardBalance = await RPCRuner.getbalance(global.settingSystem.rewardAccount,2);
         const res:any[] =  await RPCRuner.listtransactions([global.settingSystem.rewardAccount,null,null]);
         const arrs = res.filter((it:any)=>it &&it.amount && it.confirmations<101);
         let balancePending = 0;

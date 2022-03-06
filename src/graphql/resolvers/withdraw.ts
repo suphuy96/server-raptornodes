@@ -61,6 +61,11 @@ const ServiceResolvers = {
                 if(global.settingSystem.isMaintenance){
                     throw new ApolloError("System is Maintenance");
                 }
+                const youBalance = await RPCRuner.getbalance(ctx.user.accountRTM,2);
+                if(wr.amount>youBalance){
+                    throw new ApolloError(
+                        "Your balance is not enough." +youBalance+"RTM");
+                }
                 const withdraw = new Withdraw();
                 withdraw.address = wr.address;
                 withdraw.amount = wr.amount;
