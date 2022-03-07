@@ -3,6 +3,7 @@ import {DataOld, DataOldDocument, IDataOld} from "../../models/DataOld";
 import {checkIsAdmin} from "../../util/checkAuthen";
 import {Iparticipant, SmartNode} from "../../models/SmartNode";
 import {IUser, User} from "../../models/User";
+import {History} from "../../models/History";
 
 const ServiceResolvers = {
     Query: {
@@ -26,12 +27,22 @@ const ServiceResolvers = {
                         for await (const smartn of arg.dataOlds){
                             const smartnodeS = await SmartNode.findOne({label:smartn.smartNode});
                             if(smartnodeS){
-                             const usr  = await User.findOne({discord:smartn.discordId});
+                                const cloneData = JSON.parse(JSON.stringify(smartnodeS));
+                                const usr  = await User.findOne({discord:smartn.discordId});
                             if(usr && !smartnodeS.participants.find((it:any)=>it.userId&&usr._id.equals(it.userId)) ){
                                 smartnodeS.participants.push({userId:usr._id,RTMRewards:0,collateral:smartn.collateral,
                                     pendingRTMRewards:smartn.pendingRTMRewards||0,percentOfNode:smartnodeS.collateral/smartn.collateral
                                     ,txids:[], source: "Import excel",time:new Date()});
                                 await smartnodeS.save();
+                                try{
+                                    const history = new History();
+                                    history.action = "ImportExcelSmartNode";
+                                    history.author = ctx.user._id;
+                                    history.data = smartnodeS;
+                                    history.dataOld = cloneData;
+                                    await history.save();
+                                }catch{
+                                }
                             } else{
                                 list.push(smartn);
                             }
