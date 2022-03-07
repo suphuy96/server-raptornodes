@@ -17,12 +17,9 @@ try{
         // });
     });
     client.on("messageCreate",(message)=>{
-        console.log(message);
 
     });
     client.on("message", (message) => {
-        console.log(message.content);
-
     });
     client.login(process.env.TOKENDISCORD);
 
@@ -74,8 +71,6 @@ const ServiceResolvers = {
                     clone.embeds =  JSON.parse(JSON.stringify(item.embeds));
                     clone.attachments =  JSON.parse(JSON.stringify(item.attachments));
                     ars.unshift(clone);
-                    console.log(item.attachments);
-
                 });
                 return ars;
             } catch (error) {

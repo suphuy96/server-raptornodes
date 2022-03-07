@@ -61,7 +61,7 @@ passport.use(new LocalStrategy({ usernameField: "email" }, (email, password, don
         });
     });
 }));
-if(process.env.NODE_ENV!=="production")
+ if(process.env.NODE_ENV!=="production")
 passport.use(new JwtStrategy({ jwtFromRequest:(req)=> {
             let token = "";
             // console.log("vào đây");

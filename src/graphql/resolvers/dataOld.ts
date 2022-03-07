@@ -2,6 +2,7 @@ import { ApolloError } from "apollo-server-express";
 import {DataOld, DataOldDocument, IDataOld} from "../../models/DataOld";
 import {checkIsAdmin} from "../../util/checkAuthen";
 import {Iparticipant, SmartNode} from "../../models/SmartNode";
+import {IUser, User} from "../../models/User";
 
 const ServiceResolvers = {
     Query: {
@@ -25,9 +26,10 @@ const ServiceResolvers = {
                         for await (const smartn of arg.dataOlds){
                             const smartnodeS = await SmartNode.findOne({label:smartn.smartNode});
                             if(smartnodeS){
-                            if(!smartnodeS.participants.find((it:any)=>it.userId&&it.userId===smartn.discordId)){
-                                smartnodeS.participants.push({userId:smartn.discordId,RTMRewards:smartn.RTMRewards,collateral:smartn.collateral,
-                                    pendingRTMRewards:smartn.pendingRTMRewards,percentOfNode:smartnodeS.collateral/smartn.collateral
+                             const usr  = await User.findOne({discord:smartn.discordId});
+                            if(usr && !smartnodeS.participants.find((it:any)=>it.userId&&usr._id.equals(it.userId)) ){
+                                smartnodeS.participants.push({userId:usr._id,RTMRewards:0,collateral:smartn.collateral,
+                                    pendingRTMRewards:smartn.pendingRTMRewards||0,percentOfNode:smartnodeS.collateral/smartn.collateral
                                     ,txids:[], source: "Import excel",time:new Date()});
                                 await smartnodeS.save();
                             } else{
