@@ -7,6 +7,7 @@ export default gql`
         paymentsPerDay: Float,
         feeReward: Float,
         days: Int,
+        smartNode:String,
         isSchedule:Boolean,
         dayEnd: Date,
         missingReward:Boolean,

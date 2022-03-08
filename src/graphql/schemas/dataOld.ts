@@ -29,7 +29,7 @@ export default gql`
     type Mutation {
         updateDataOld(_id:String,discordId:String,discordName:String,address:String,collateral:Float,percentOfNode:Float,RTMRewards:Float,pendingRTMRewards:Float,smartNode:String):DataOld
         deleteDataOld(_id:String!):DataOld
-        createDataOld(discordId:String!,discordName:String,address:String,collateral:Float,percentOfNode:Float,RTMRewards:Float,pendingRTMRewards:Float,smartNode:String):DataOld
+        createDataOld(discordId:String!,discordName:String,address:String,collateral:Float,percentOfNode:Float,RTMRewards:Float,pendingRTMRewards:Float,smartNode:String,importNow:Boolean):DataOld
         importDataOld(dataOlds:[inputDataOld]!,importNow:Boolean):Boolean
     }
 `;

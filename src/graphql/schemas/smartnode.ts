@@ -57,6 +57,7 @@ export default gql`
         withdrawEnoughSmartNode(_id:String!,amount:Float!,address:String!,tfa:String):smartNode
         deleteSmartNode(_id:String!):Boolean
         joinSmartNode(_id:String,amount:Float, token:String):smartNode
+        deleteParticipantSmartNode(_id:String!,userId:String!,collateral:Float!,txid:String,tfa:String):smartNode
         addParticipantSmartNode(_id:String!,userId:String!,collateral:Float!,txid:String,tfa:String):smartNode
         widthDrawlSmartNode(_id:String!, token:String):Boolean
     }

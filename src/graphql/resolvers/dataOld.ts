@@ -59,7 +59,7 @@ const ServiceResolvers = {
                 throw new ApolloError(error);
             }
         },
-        createDataOld: async (__: any, dataOldInput: IDataOld,ctx:any) => {
+        createDataOld: async (__: any, dataOldInput: IDataOld&{importNow?:boolean},ctx:any) => {
             try {
                 checkIsAdmin(ctx.user);
                 const dataOld = new DataOld();

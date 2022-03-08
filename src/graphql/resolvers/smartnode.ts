@@ -243,12 +243,15 @@ const ServiceResolvers = {
             if(!user){
                 throw new ApolloError("Not found user");
             }
+            if(args.collateral<0){
+                throw new ApolloError("collateral must be greater than 0");
+            }
             let collateral = 0;
             smartNode.participants.forEach((ii:Iparticipant)=>{
                 collateral +=ii.collateral;
             });
-           if(collateral>=smartNode.collateral){
-               throw new ApolloError("smartNode is Enough");
+            if(collateral>=smartNode.collateral){
+                throw new ApolloError("smartNode is Enough");
             }
             if(!args.collateral){
                 throw new ApolloError("collateral >0");
@@ -277,7 +280,7 @@ const ServiceResolvers = {
                 const collateral2 = 0;
                 smartNode.participants.push(participant);
             }
-           let collateral2 = 0;
+            let collateral2 = 0;
             smartNode.participants.forEach((ii:Iparticipant)=>{
                 collateral2 +=ii.collateral;
             });
@@ -290,6 +293,68 @@ const ServiceResolvers = {
             try{
                 const history = new History();
                 history.action = "addParticipantSmartNode";
+                history.author = ctx.user._id;
+                history.data = smartNode;
+                history.dataOld = cloneData;
+                await history.save();
+            }catch{
+            }
+
+            return smartNode;
+        },
+        deleteParticipantSmartNode:async (__: any, args:{_id:string,userId:string,collateral:number,txid:string ,tfa:string},ctx:any) => {
+            checkIsAdmin(ctx.user);
+            if(ctx.user.enableTfa){
+                if(!args.tfa||args.tfa===""){
+                    throw new ApolloError("undefined code 2fa");
+                }
+                const isVerified = speakeasy.totp.verify({
+                    secret: ctx.user.tfa.secret,
+                    encoding: "base32",
+                    token: args.tfa
+                });
+                if(!isVerified){
+                    throw new ApolloError("2fa is not correct");
+                }
+            }
+            const smartNode = await SmartNode.findById(args._id);
+            if(!smartNode){
+                throw new ApolloError("Not found document");
+            }
+            const cloneData = JSON.parse(JSON.stringify(smartNode));
+            const user = await User.findById(args.userId);
+            if(!user){
+                throw new ApolloError("Not found user");
+            }
+
+            const participantF = smartNode.participants.find(it=>user._id.equals(it.userId));
+            if(args.collateral>participantF.collateral){
+                throw new ApolloError("collateral Not have:"+args.collateral+">"+participantF.collateral);
+            }
+            if(args.collateral<0){
+                throw new ApolloError("collateral must be greater than 0");
+            }
+            if(participantF){
+                if(args.collateral===participantF.collateral){
+                    smartNode.participants = smartNode.participants.filter(it=>!user._id.equals(it.userId));
+                }else {
+                    participantF.collateral -= args.collateral;
+                    participantF.percentOfNode = participantF.collateral / smartNode.collateral;
+                    if (args.txid && args.txid !== "") {
+                        participantF.txids.push(args.txid);
+                    }
+                    participantF.time = new Date();
+                    participantF.source = (participantF.source === "Delete Manual" ? "" : ((participantF.source || "") + "-")) + "Delete Manual";
+                }
+            }else {
+                throw new ApolloError("Not found your participant");
+            }
+
+
+            await smartNode.save();
+            try{
+                const history = new History();
+                history.action = "deleteParticipantSmartNode";
                 history.author = ctx.user._id;
                 history.data = smartNode;
                 history.dataOld = cloneData;
