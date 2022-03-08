@@ -210,6 +210,7 @@ const scheduleReward =()=>{
                         reward.days = parseInt("" + ((reward.dayEnd.getTime() - lastReward.dayEnd.getTime() + 600000 ) / (1000 * 60 * 60 * 24)));
                     } else {
                         if (smartnode.timeStartReward){
+                            console.log(( reward.dayEnd.getTime() - smartnode.timeStartReward.getTime() + 600000),'-----');
                             reward.days = parseInt("" + (( reward.dayEnd.getTime() - smartnode.timeStartReward.getTime() + 600000) / (1000 * 60 * 60 * 24)));
                         }else{
                             reward.days = (global.settingSystem.scheduleDay !== "Everyday" && global.settingSystem.scheduleDay2 && global.settingSystem.scheduleDay2 !== "NoUse") ? 4 : global.settingSystem.scheduleValue;
@@ -219,7 +220,7 @@ const scheduleReward =()=>{
                     reward.description = comment;
 
                     if(reward.days<=0){
-                    sendMail( process.env.ADMINS, "SmartNode "+(smartnode?smartnode.label:"")+"Not enough days to pay the reward","SmartNode "+(smartnode?smartnode.label:"")+" Not enough days to pay the reward. Time Start: "+smartnode.timeStartReward+", Time ReWard: "+reward.dayEnd).then(()=>{
+                    sendMail( process.env.ADMINS, "SmartNode "+(smartnode?smartnode.label:"")+"Not enough days to pay the reward","SmartNode "+(smartnode?smartnode.label:"")+" Not enough days to pay the reward. Time Start: "+(lastReward?("last Reward"+lastReward.dayEnd):("Time Start: "+smartnode.timeStartReward))+", Time ReWard: "+reward.dayEnd).then(()=>{
                         console.log("");
                     }); }else{
                     await reward.save();
@@ -258,7 +259,7 @@ const scheduleReward =()=>{
                         const comment = "ReWard in Raptornodes.com";
                         reward.description = comment;
                         if(reward.days<=0){
-                            sendMail( process.env.ADMINS, "SmartNode "+(smartnode?smartnode.label:"")+" Not enough days to pay the reward ","SmartNode "+(smartnode?smartnode.label:"")+" Not enough days to pay the reward. Time Start: "+smartnode.timeStartReward+", Time ReWard: "+reward.dayEnd).then(()=>{
+                            sendMail( process.env.ADMINS, "SmartNode "+(smartnode?smartnode.label:"")+" Not enough days to pay the reward ","SmartNode "+(smartnode?smartnode.label:"")+" Not enough days to pay the reward. "+(lastReward?("last Reward"+lastReward.dayEnd):("Time Start: "+smartnode.timeStartReward))+", Time ReWard: "+reward.dayEnd).then(()=>{
                                 console.log("");
                             }); }else{
                         await reward.save();
