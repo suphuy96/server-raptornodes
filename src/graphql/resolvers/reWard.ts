@@ -53,8 +53,8 @@ const funReward = async (reward:ReWardDocument,sNode?:SmartNodeDocument) => {
         if(sNode)
             for await (const participant of sNode.participants) {
                 const comment = "ReWard in Raptornodes.com";
-                const amount = global.settingSystem.scheduleValue*(global.settingSystem.paymentsPerDay * participant.percentOfNode * ((100 - global.settingSystem.feeReward) / 100));
-                const feeHost = global.settingSystem.scheduleValue*(global.settingSystem.paymentsPerDay * participant.percentOfNode * (( global.settingSystem.feeReward) / 100));
+                const amount = reward.days*(global.settingSystem.paymentsPerDay * participant.percentOfNode * ((100 - global.settingSystem.feeReward) / 100));
+                const feeHost = reward.days*(global.settingSystem.paymentsPerDay * participant.percentOfNode * (( global.settingSystem.feeReward) / 100));
                 totalReward+=amount;
 
             }
@@ -83,8 +83,8 @@ const funReward = async (reward:ReWardDocument,sNode?:SmartNodeDocument) => {
         {
             const funReW = async(userId:UserDocument,collateral:number,percentOfNode:number,smartnode?:SmartNodeDocument)=>{
                 const comment = "ReWard in Raptornodes.com";
-                const amount = global.settingSystem.scheduleValue * (global.settingSystem.paymentsPerDay * percentOfNode * ((100 - global.settingSystem.feeReward) / 100));
-                const feeHost = global.settingSystem.scheduleValue * (global.settingSystem.paymentsPerDay * percentOfNode * ((global.settingSystem.feeReward) / 100));
+                const amount = reward.days * (global.settingSystem.paymentsPerDay * percentOfNode * ((100 - global.settingSystem.feeReward) / 100));
+                const feeHost = reward.days * (global.settingSystem.paymentsPerDay * percentOfNode * ((global.settingSystem.feeReward) / 100));
                 try{
                     await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,20);
                 }catch (e){
@@ -194,6 +194,7 @@ const scheduleReward =()=>{
             rewardTask = schedule(`${mi} ${hour} * * ${weekdays}`, async () => {
 
                 const smartnodes = await SmartNode.find({statusCollateral : "Start Reward" }).populate("participants.userId");
+                console.log("vào đây trả thưởng=====> ");
                 for  await (const smartnode of smartnodes) {
                     const reward = new ReWard();
                     console.log("vào đây trả thưởng ",smartnode.label);
@@ -206,23 +207,29 @@ const scheduleReward =()=>{
                     reward.dayEnd = new Date();
                     // fix custom day
                     if (lastReward) {
-                        reward.days = parseInt("" + ((lastReward.dayEnd.getTime() + 600000 - reward.dayEnd.getTime()) / (1000 * 60 * 60 * 24)));
+                        reward.days = parseInt("" + ((reward.dayEnd.getTime() - lastReward.dayEnd.getTime() + 600000 ) / (1000 * 60 * 60 * 24)));
                     } else {
                         if (smartnode.timeStartReward){
-                            reward.days = parseInt("" + ((smartnode.timeStartReward.getTime() + 600000 - reward.dayEnd.getTime()) / (1000 * 60 * 60 * 24)));
+                            reward.days = parseInt("" + (( reward.dayEnd.getTime() - smartnode.timeStartReward.getTime() + 600000) / (1000 * 60 * 60 * 24)));
                         }else{
                             reward.days = (global.settingSystem.scheduleDay !== "Everyday" && global.settingSystem.scheduleDay2 && global.settingSystem.scheduleDay2 !== "NoUse") ? 4 : global.settingSystem.scheduleValue;
                         }
                     }
                     const comment = "ReWard in Raptornodes.com";
                     reward.description = comment;
+
+                    if(reward.days<=0){
+                    sendMail( process.env.ADMINS, "SmartNode "+(smartnode?smartnode.label:"")+"Not enough days to pay the reward","SmartNode "+(smartnode?smartnode.label:"")+"Not enough days to pay the reward. Time Start"+smartnode.timeStartReward+", Time ReWard"+reward.dayEnd).then(()=>{
+                        console.log("");
+                    }); }else{
                     await reward.save();
-                   await funReward(reward,smartnode);
-                   await new Promise((resolve)=>{
-                       setTimeout(()=>{
-                           resolve(true);
-                       },5000);
-                   });
+                        await funReward(reward,smartnode);
+                        await new Promise((resolve)=>{
+                            setTimeout(()=>{
+                                resolve(true);
+                            },5000);
+                        });
+                      }
                 }
             });
             if(global.settingSystem.scheduleDay!=="Everyday" && global.settingSystem.scheduleDay2 && global.settingSystem.scheduleDay2!=="" && global.settingSystem.scheduleDay2!=="NoUse") {
@@ -241,15 +248,19 @@ const scheduleReward =()=>{
                         reward.dayEnd = new Date();
                         // fix custom day
                         if (lastReward) {
-                            reward.days = parseInt("" + ((lastReward.dayEnd.getTime() + 600000 - reward.dayEnd.getTime()) / (1000 * 60 * 60 * 24)));
+                            reward.days = parseInt("" + (( reward.dayEnd.getTime() -lastReward.dayEnd.getTime() + 600000 ) / (1000 * 60 * 60 * 24)));
                         } else {
                             if (smartnode.timeStartReward){
-                                reward.days = parseInt("" + ((smartnode.timeStartReward.getTime() + 600000 - reward.dayEnd.getTime()) / (1000 * 60 * 60 * 24)));
+                                reward.days = parseInt("" + ( reward.dayEnd.getTime() -(smartnode.timeStartReward.getTime() + 600000) / (1000 * 60 * 60 * 24)));
                             }else
                             reward.days = 3;
                         }
                         const comment = "ReWard in Raptornodes.com";
                         reward.description = comment;
+                        if(reward.days<=0){
+                            sendMail( process.env.ADMINS, "SmartNode "+(smartnode?smartnode.label:"")+"Not enough days to pay the reward","SmartNode "+(smartnode?smartnode.label:"")+"Not enough days to pay the reward. Time Start"+smartnode.timeStartReward+", Time ReWard"+reward.dayEnd).then(()=>{
+                                console.log("");
+                            }); }else{
                         await reward.save();
                         await funReward(reward, smartnode);
                         await new Promise((resolve)=>{
@@ -257,6 +268,7 @@ const scheduleReward =()=>{
                                 resolve(true);
                             },5000);
                         });
+                        }
                     }
                 });
             }
@@ -279,7 +291,7 @@ const funWithdrawWeekly = async  ()=>{
 };
 if(!process.env.NODE_APP_INSTANCE||process.env.NODE_APP_INSTANCE === "0"){
   setTimeout(()=>{
-      keyCheck = global.settingSystem.scheduleDay+global.settingSystem.scheduleTime+global.settingSystem.scheduleValue+"fff";
+      keyCheck = global.settingSystem.scheduleDay+global.settingSystem.scheduleTime+global.settingSystem.scheduleValue+"fff"+global.settingSystem.scheduleDay2;
           scheduleReward();
   },8000);
 }
@@ -295,7 +307,7 @@ const loadSystem = async()=>{
         global.settingSystem = defaultSetting;
     }
     global.settingSystem.testNet = testNet;
-    const key2 = global.settingSystem.scheduleDay+global.settingSystem.scheduleTime+global.settingSystem.scheduleValue+"fff";
+    const key2 = global.settingSystem.scheduleDay+global.settingSystem.scheduleTime+global.settingSystem.scheduleValue+"fff"+global.settingSystem.scheduleDay2;
 
     if(keyCheck!==key2){
         console.log("Có thay đổi cần xử lý lại");
