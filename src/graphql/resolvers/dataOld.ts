@@ -72,6 +72,30 @@ const ServiceResolvers = {
                 dataOld.RTMRewards = dataOldInput.RTMRewards;
                 dataOld.pendingRTMRewards = dataOldInput.pendingRTMRewards;
                 dataOld.smartNode = dataOldInput.smartNode;
+                if(dataOldInput.importNow){
+                        const smartnodeS = await SmartNode.findOne({label:dataOld.smartNode});
+                        if(smartnodeS){
+                            const cloneData = JSON.parse(JSON.stringify(smartnodeS));
+                            const usr  = await User.findOne({discord:dataOld.discordId});
+                            if(usr && !smartnodeS.participants.find((it:any)=>it.userId&&usr._id.equals(it.userId)) ){
+                                smartnodeS.participants.push({userId:usr._id,RTMRewards:0,collateral:dataOld.collateral,
+                                    pendingRTMRewards:dataOld.pendingRTMRewards||0,percentOfNode:dataOld.collateral/smartnodeS.collateral
+                                    ,txids:[], source: "Import excel",time:new Date()});
+                                await smartnodeS.save();
+                                try{
+                                    const history = new History();
+                                    history.action = "ImportExcelSmartNode";
+                                    history.author = ctx.user._id;
+                                    history.data = smartnodeS;
+                                    history.dataOld = cloneData;
+                                    await history.save();
+                                }catch{
+                                }
+                                dataOld.done = true;
+                            } else{
+                            }
+                        }
+                }
                 const dataOldSave= await dataOld.save();
                 return dataOldSave;
             } catch (error) {
