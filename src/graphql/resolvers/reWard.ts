@@ -406,7 +406,9 @@ const ServiceResolvers = {
                 const lastReward = await ReWard.findOne({smartNode:smartNode._id}).sort({createdAt: -1}).exec();
                 reward.dayEnd = wr.dayEnd ||new Date();
                 if(lastReward){
-                    reward.days = parseInt(""+((lastReward.dayEnd.getTime()-reward.dayEnd.getTime())/(1000*60*60*24)));
+                    reward.days = parseInt(""+((lastReward.dayEnd.getTime()-reward.dayEnd.getTime()+600000)/(1000*60*60*24)));
+                } else{
+                    reward.days = parseInt("" + (( reward.dayEnd.getTime() - smartNode.timeStartReward.getTime() + 600000) / (1000 * 60 * 60 * 24)));
                 }
                 const comment = "ReWard in Raptornodes.com";
                 reward.description = wr.description||comment;
