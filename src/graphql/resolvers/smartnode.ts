@@ -10,6 +10,8 @@ import _ from "lodash";
 import {Withdraw} from "../../models/Withdraw";
 import {WALLET_PASS_PHRASE} from "../../util/secrets";
 import {User, UserDocument} from "../../models/User";
+import {mongo} from "mongoose";
+import {ReWardHistory} from "../../models/RewardHistory";
 
 const ODefaults: OptionRpcClient = {
     host: process.env.rpcbind,
@@ -31,6 +33,49 @@ const ServiceResolvers = {
                 return smartNode;
             } catch (error) {
                 throw new ApolloError(error);
+            }
+        },
+        statisticalUser: async (__: any, args: any,ctx:any) => {
+            try {
+                checkIsAuthen(ctx.user);
+                const user = new mongo.ObjectId(args.user);
+                const statisticalNodes = await SmartNode.aggregate([
+                    { $project : { "participants" : 1 } },
+                    {  $unwind:"$participants"},
+                    {
+                        $match:{"participants.userId":{ $eq: user} }},
+
+                   {
+              $group :{
+                    _id : "$_id",
+                        count:{ "$sum":1
+                    },
+                  participant: { "$mergeObjects":"$participants"},
+                    collateral:{ "$sum":"$participants.collateral"
+                    }},},
+                    {$lookup: {
+                    from: "smartnodes",
+                        localField: "_id",
+                        foreignField: "_id",
+                        as: "smartnodes"
+                }},
+                    {  $unwind:"$smartnodes"},
+                   ]).exec();
+
+                const dataReward = await ReWardHistory.aggregate([{ $match:{user:user}},{
+                    $group :{
+                        _id : null,
+                        count:{ "$sum":1
+                        },
+                        amount:{ "$sum":"$amount"
+                        }}}]).exec();
+                console.log("dataReward",dataReward);
+                if(dataReward&&dataReward.length){
+                    return {statisticalNodes,rewardCount:dataReward[0].cound,rewardAmount:dataReward[0].amount};
+                }
+                return {statisticalNodes,rewardCount:0,rewardAmount:0};
+            }catch (e){
+                console.log(e);
             }
         },
         smartNodes: async (__: any, args: any,ctx:any) => {

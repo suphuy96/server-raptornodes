@@ -1,12 +1,19 @@
 import { ApolloError } from "apollo-server-express";
 import pick from "lodash/pick";
-import {IUser, User} from "../../models/User";
+import {IUser, User, UserDocument} from "../../models/User";
 import {checkIsAdmin, checkIsAuthen} from "../../util/checkAuthen";
 import speakeasy from "speakeasy";
+import sendMail from "../../libs/mail";
 import RpcRaptoreum, {OptionRpcClient} from "../../libs/rpc-raptoreum";
 import {SmartNode} from "../../models/SmartNode";
 import {History} from "../../models/History";
 import user from "../schemas/user";
+import crypto from "crypto";
+import jwt from "jsonwebtoken";
+import {v4 as uuidv4} from "uuid";
+import {SESSION_SECRET} from "../../util/secrets";
+import {NativeError} from "mongoose";
+
 const ODefaults: OptionRpcClient = {
     host: process.env.rpcbind,
     port:  parseInt(process.env.rpcport||"19998"),
@@ -63,6 +70,282 @@ const ServiceResolvers = {
         },
     },
     Mutation:{
+        signupUser: async (__: any, args: {email:string,password:string,confirmPassword:string},ctx:any) => {
+            try {
+                if(ctx.user){
+                    throw new ApolloError("You need to log out");
+                }
+                if(args.password!==args.confirmPassword){
+                    throw new ApolloError("Passwords do not match");
+                }
+                if(!args.password||args.password.length<6){
+                    throw new ApolloError("Password must be at least 6 characters long");
+                }
+                const emailRegexp = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+                if(!emailRegexp.test(args.email)){
+                    throw new ApolloError("Email is not valid");
+                }
+                const code  = crypto.randomInt(10000,90000);
+                const user = new User({
+                    email: args.email,
+                    password: args.password,
+                    verified:false,
+                    verificationToken:code,
+                    verificationExpires:Date.now()+3600000,
+                    profile:{
+                        name:args.email.substring(0,args.email.indexOf("@"))
+                    }
+                });
+
+                const existingUser = await  User.findOne({ email: args.email });
+                if (existingUser) {
+                    throw new ApolloError("Account with that email address already exists." );
+                }
+                await user.save();
+               await sendMail(user.email,"verify account on raptornodes.com","your verification code is: "+code);
+                try{
+                    const history = new History();
+                    history.action = "createUser";
+                    history.author = user._id;
+                    history.data = user;
+                    history.dataOld = {};
+                    history.save().then();
+                }catch{
+                }
+                return pick(user,["email","_id","profile","discord","createdAt","rules","updatedAt","addressRTM", "enableTfa"]);
+            } catch (error) {
+                throw new ApolloError(error);
+            }
+        },
+        verifiLogin:async (__: any, args: {email:string,password:string,token:string},ctx:any) => {
+            try {
+                if(ctx.user){
+                    throw new ApolloError("You need to log out");
+                }
+                if(!args.token ||args.token===""){
+                    throw new ApolloError("Token is not valid");
+                }
+                if(!args.password||args.password.length<6){
+                    throw new ApolloError("Password must be at least 6 characters long");
+                }
+                const emailRegexp = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+                if(!emailRegexp.test(args.email)){
+                    throw new ApolloError("Email is not valid");
+                }
+                const user = await  User.findOne({ email: args.email.toLowerCase() });
+                if (!user) {
+                    throw new ApolloError("Does not exist with email." );
+                }
+                const isMatch = new Promise(resolve =>{
+                    user.comparePassword(args.password, async(err: Error, isMatch: boolean) => {
+                        resolve(isMatch);
+                    }) ;
+                } );
+                if (isMatch) {
+                    if(user.enableTfa){
+                        if(!args.token||args.token===""){
+                            throw new ApolloError("undefined code 2fa");
+                        }
+                        const isVerified = speakeasy.totp.verify({
+                            secret: ctx.user.tfa.secret,
+                            encoding: "base32",
+                            token: args.token
+                        });
+                        if(!isVerified){
+                            throw new ApolloError("2fa is not correct");
+                        }
+                    }else{
+                        if(!user.verificationExpires){
+                            throw new ApolloError("Session has expired, please reload the page and try again");
+                        }
+                        console.log("Date.now()>user.verificationExpires",Date.now()>user.verificationExpires);
+                        if(Date.now()>(user.verificationExpires||0)){
+                            throw new ApolloError("Verification code Expired");
+                        }
+                        if( args.token!==(user.verificationToken||"")){
+                            throw new ApolloError("token is invalid");
+                        }
+                        user.verificationToken = null;
+                        user.verificationExpires = null;
+
+                    }
+                    if(!user.verified&& (!user.accountRTM||user.accountRTM==="")){
+                        let uid ="User#"+ user.email;
+                        const datas = await RPCRuner.getAddressesByAccount(uid);
+                        if(datas && datas.length){
+                            const existingUserUseAddressRTM = await  User.findOne({ accountRTM: uid });
+                            if(existingUserUseAddressRTM){
+                                uid ="User#"+ user.email+"_"+new Date().getTime();
+                            }
+                        }
+                        try {
+                            let addressRTM: any = await RPCRuner.getAccountAddress(uid).catch((e) => {
+                                console.log("không thể kết nối raptoreum", e.toString());
+                                return false;
+                            });
+                            const addressRTMExist = await User.findOne({addressRTM:addressRTM});
+                            if(addressRTMExist){
+                                // get another wallet address
+                                addressRTM = await RPCRuner.getAccountAddress(uid).catch((e) => {
+                                    console.log("không thể kết nối raptoreum", e.toString());
+                                    return false;
+                                });
+                            }
+                            if (addressRTM) {
+                                user.accountRTM = uid;
+                                user.addressRTM = addressRTM;
+                            } else {
+                                user.accountRTMError = true;
+                            }
+                        }catch (e){
+                            user.accountRTMError = true;
+                        }
+                    }
+                    const token = jwt.sign({email: user.email, tokenJWT: uuidv4()}, SESSION_SECRET, {
+                        expiresIn: 10000000,
+                    });
+                    user.tokenJWT = token;
+                    user.verified = true;
+                    await user.save();
+                    await new Promise((resolve)=>{
+                        ctx.req.logIn(user,()=>{
+                            resolve(true)
+                        });
+                    });
+                    if(process.env.NODE_ENV!=="production"){
+                        return token;
+                    } else{
+                        return "";
+                    }
+                }else{
+                    throw new ApolloError("Invalid email or password");
+                }
+                try{
+                    const history = new History();
+                    history.action = "createUser";
+                    history.author = user._id;
+                    history.data = user;
+                    history.dataOld = {};
+                    history.save().then();
+                }catch{
+                }
+            } catch (error) {
+                throw new ApolloError(error);
+            }
+        },
+        verifiForGot:async (__: any, args: {email:string,password:string,token:string},ctx:any) => {
+            try {
+                if(ctx.user){
+                    throw new ApolloError("You need to log out");
+                }
+                if(!args.token ||args.token===""){
+                    throw new ApolloError("Token is not valid");
+                }
+                if(!args.password||args.password.length<6){
+                    throw new ApolloError("Password must be at least 6 characters long");
+                }
+                const user = await  User.findOne({ email: args.email.toLowerCase() });
+                if (!user) {
+                    throw new ApolloError("Does not exist account with email." );
+                }
+                     if(!user.passwordResetExpires){
+                            throw new ApolloError("Session has expired, please reload the page and try again");
+                        }
+                        if(Date.now()>(user.passwordResetExpires||0)){
+                            throw new ApolloError("Verification code Expired");
+                        }
+                        if( args.token!==(user.passwordResetToken||"")){
+                            throw new ApolloError("token is invalid");
+                        }
+                        user.passwordResetToken = null;
+                        user.passwordResetExpires = null;
+                    const token = jwt.sign({email: user.email, tokenJWT: uuidv4()}, SESSION_SECRET, {
+                        expiresIn: 10000000,
+                    });
+                    user.password = args.password;
+                    user.tokenJWT = token;
+                    user.verified = true;
+                    await user.save();
+                    await new Promise((resolve)=>{
+                        ctx.req.logIn(user,()=>{
+                            resolve(true)
+                        });
+                    });
+
+                if(process.env.NODE_ENV!=="production"){
+                        return token;
+                    } else{
+                        return "";
+                    }
+
+                try{
+                    const history = new History();
+                    history.action = "createUser";
+                    history.author = user._id;
+                    history.data = user;
+                    history.dataOld = {};
+                    history.save().then();
+                }catch{
+                }
+            } catch (error) {
+                throw new ApolloError(error);
+            }
+        },
+        newPasswordResetToken:async (__: any, args: {email:string},ctx:any) =>{
+            if(ctx.user){
+                throw new ApolloError("You need to log out");
+            }
+            if(!args.email){
+                throw new ApolloError("Email is not valid");
+            }
+            const user = await User.findOne({email:args.email});
+            if(!user){
+                throw new ApolloError("Not found User");
+            }
+            let code  = "4423456";
+            if(user.verificationToken){
+                if(Date.now()+3540000<(user.passwordResetExpires||1)){
+                    code =user.passwordResetToken;
+                    return true;
+                }
+            }else{
+                 code  = crypto.randomInt(10000000,90000000) +"";
+                user.passwordResetToken = code+"";
+                user.passwordResetExpires = Date.now() + 3600000; // 1 hour
+            }
+
+            await sendMail(user.email,"Reset your password on Raptornodes.com","You are receiving this email because you (or someone else) have requested the reset of the password for your account. your \n" +
+                " confirmation code is: "+code);
+            await user.save();
+            return true;
+        },
+        newVerificationToken:async (__: any, args: {email:string},ctx:any) =>{
+            if(ctx.user){
+                throw new ApolloError("You need to log out");
+            }
+            if(!args.email){
+                throw new ApolloError("Email is not valid");
+            }
+            const user = await User.findOne({email:args.email});
+            if(!user){
+                throw new ApolloError("Not found User");
+            }
+            if(user.enableTfa){
+                return {tfa:true,status:true};
+            }
+            if(user.verificationToken){
+                if(Date.now()+3540000<(user.verificationExpires||1)){
+                    await sendMail(user.email,"verify account on raptornodes.com","your verification code is: "+user.verificationToken);
+                    return  {tfa:false,status:true};
+                }
+            }
+            const code  = crypto.randomInt(100000,900000);
+            user.verificationToken = code+"";
+            await sendMail(user.email,"verify account on raptornodes.com","your verification code is: "+code);
+            user.verificationExpires = Date.now()+3600000;
+            await user.save();
+            return {tfa:false,status:true};
+        },
         updateProfileUser: async (__: any, args: IUser&{autoCompounding:boolean,tfa:string},ctx:any) => {
             try {
                 if(!ctx.user){

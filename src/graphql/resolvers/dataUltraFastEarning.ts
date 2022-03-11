@@ -32,7 +32,6 @@ const ServiceResolvers = {
                     return [];
                 }
                 const re = ars[0];
-                console.log("re.participants",re.participants,ctx.user._id,ctx.user._id.equals(re.participants[0].author));
                 return re.participants.filter((item)=>ctx.user._id.equals(item.author));
             } catch (error) {
                 throw new ApolloError(error);

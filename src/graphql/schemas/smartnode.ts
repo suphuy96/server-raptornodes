@@ -44,12 +44,24 @@ export default gql`
     total: Int,
     enabled: Int
     }
+    type StatisticalNodes{
+        count: Float,
+        participant:participant
+        collateral: Float
+        smartnodes:smartNode
+    }
+    type Statistical{
+        statisticalNodes:[StatisticalNodes]
+        rewardCount: Float
+        rewardAmount: Float
+    }
     type Query {
         smartnodeCount:countSN
         myNodes:[smartNode]
         getSmartNodes:[smartNode]
         smartNodes:[smartNode]
         smartNodeEnough:smartNode
+        statisticalUser(user:String!):Statistical
     }
     type Mutation {
         createSmartNode(label:String!,ipAddress:String,private:Boolean,showParticipants:Boolean,statusCollateral:String,collateral:Float):smartNode

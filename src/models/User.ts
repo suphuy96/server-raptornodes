@@ -12,7 +12,7 @@ export interface IUser {
     email: string;
     password: string;
     passwordResetToken: string;
-    passwordResetExpires: Date;
+    passwordResetExpires: number;
     facebook?: string;
     google?:string;
     tfa?:TFA;
@@ -26,6 +26,9 @@ export interface IUser {
     collateral?:number;
     portfolio?:number;
     status:boolean;
+    verified?:boolean;
+    verificationToken?:string;
+    verificationExpires:number;
     accountRTMError?:boolean;
     tokenJWT?: string;
     tokens: AuthToken[];
@@ -56,13 +59,16 @@ const userSchema = new mongoose.Schema<UserDocument>(
         email: { type: String, unique: true },
         password: String,
         passwordResetToken: String,
-        passwordResetExpires: Date,
+        passwordResetExpires: Number,
         accountRTM:String,
         addressRTM:String,
         accountRTMError:Boolean,
         tokenJWT:String,
         status:{ type: Boolean, default: true },
         rules:{ type: String, default: "User" },
+        verified:{ type: Boolean, default: true },
+        verificationToken:String,
+        verificationExpires:Date,
         tfa:{
             secret: String,
             tempSecret: String,

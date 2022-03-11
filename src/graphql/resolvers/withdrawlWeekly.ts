@@ -75,7 +75,6 @@ const ServiceResolvers = {
                         },
                         amount:{ "$sum":"$amount"
                         }}}]).exec();
-                console.log("withdrawWeeklys",withdrawWeeklys);
                const withdrawlIsPending = withdrawWeeklys.length?withdrawWeeklys[0].amount:0;
                 return {
                     balance,

@@ -1,6 +1,6 @@
 import { ApolloError } from "apollo-server-express";
 import {ReWardHistory} from "../../models/RewardHistory";
-import {checkIsAuthen} from "../../util/checkAuthen";
+import {checkIsAdmin, checkIsAuthen} from "../../util/checkAuthen";
 import {OptionRpcClient} from "../../libs/rpc-raptoreum";
 import RpcRaptoreum from "../../libs/rpc-raptoreum";
 import {mongo} from "mongoose";
@@ -18,6 +18,18 @@ const RPCRuner = new RpcRaptoreum(ODefaults);
 
 const ServiceResolvers = {
     Query: {
+        dataRewardUser: async (__: any, args: any,ctx:any) => {
+
+            checkIsAdmin(ctx.user);
+            const dataGroup = ReWardHistory.aggregate([{ $match:{smartNode:args.smartNode}},{
+                $group :{
+                    _id : "user",
+                    count:{ "$sum":1
+                    },
+                    amount:{ "$sum":"$amount"
+                    }}}]).exec();
+            return dataGroup;
+        },
         rewardHistorys: async (__: any, args: any,ctx:any) => {
             try {
                 checkIsAuthen(ctx.user);

@@ -37,6 +37,7 @@ export default gql`
     }
     type Query {
         rewards:[Reward]
+        dataRewardUser(smartNode:String):[JSONObject]
         rewardHistorys(reward:String,smartNode:String,user:String):[RewardHistory]
     }
     type Mutation {

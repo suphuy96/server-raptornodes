@@ -40,11 +40,19 @@ export default gql`
         createdAt:DateTime,
         updatedAt:DateTime
     }
+    type ReNewVe{
+        tfa:Boolean,status:Boolean
+    }
     type Query {
         me:User
         users: [User]
     }
     type Mutation {
+        newPasswordResetToken(email:String!):Boolean
+        newVerificationToken(email:String!):ReNewVe
+        verifiForGot(email:String!,password:String!,token:String!):String
+        verifiLogin(email:String!,password:String!,token:String!):String
+        signupUser(email:String!,password:String!,confirmPassword:String!):User
         updateUser(_id:String,discord:String,enableTfa:Boolean,status:Boolean,tfa:String):User
         updateProfileUser(autoCompounding:Boolean,tfa:String):User
         removeUser(_id:String,tfa:String):Boolean
