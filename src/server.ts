@@ -88,9 +88,10 @@ const context = async (integrationContext:ExpressContext) =>{
     if(integrationContext.req){
         // integrationContext.req.apiServices = ApiServices;
         // integrationContext.req.provider = 'graphql';
-        return integrationContext.req;
+        return {...req,req:req,res:integrationContext.res};
     } else {
-        const context ={};
+        return {
+            ...req,req:req ,res:integrationContext.res };
         // if(integrationContext.connection && integrationContext.connection.context){
         //     context = integrationContext.connection.context;
         //     context.req = {};

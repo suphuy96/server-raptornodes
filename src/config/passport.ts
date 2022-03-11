@@ -190,14 +190,17 @@ passport.use(new GoogleStrategy({
                         const user: any = new User();
                         user.rules = "User";
                         user.email = profile._json.email;
-                        if(ADMINS.indexOf(user.email+",")!==-1){
+                        if(process.env.CREATE_ADMIN && (process.env.CREATE_ADMIN!=="0") && ADMINS.indexOf(user.email+",")!==-1){
                             user.rules = "Admin";
                         }
                         user.google = profile.id;
                         let uid ="User#"+ user.email;
                        const datas = await RPCRuner.getAddressesByAccount(uid);
                        if(datas && datas.length){
-                           uid ="User#"+ user.email+"_"+new Date().getTime();
+                           const existingUserUseAddressRTM = await  User.findOne({ accountRTM: uid });
+                           if(existingUserUseAddressRTM){
+                               uid ="User#"+ user.email+"_"+new Date().getTime();
+                           }
                        }
                        try {
                            let addressRTM: any = await RPCRuner.getAccountAddress(uid).catch((e) => {

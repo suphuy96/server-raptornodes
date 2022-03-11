@@ -55,8 +55,8 @@ function normalizePort(val:any) {
 }
 const port = normalizePort(process.env.PORT || "8080");
 app.set("port",port);
-// app.set("views", path.join(__dirname, "../views"));
-// app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "../views"));
+app.set("view engine", "ejs");
 app.use(compression());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -77,6 +77,16 @@ app.use(session({
         }
     })
 }));
+if(process.env.NODE_ENV!=="production")
+app.use(function (req, res, next) {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE ,OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "X-Requested-With,content-type,Authorization ,Accept,render");
+    res.setHeader("Access-Control-Expose-Headers", "Content-Type, Accept, Authorization, other_header");
+    return  next();
+} );
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
