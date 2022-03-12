@@ -204,13 +204,14 @@ const scheduleReward =()=>{
                         reward.paymentsPerDay = global.settingSystem.paymentsPerDay;
                     reward.feeReward = global.settingSystem.feeReward;
                     const lastReward = await ReWard.findOne({smartNode:smartnode._id}).sort({createdAt: -1}).exec();
+                    console.log("lastReward",lastReward);
                     reward.dayEnd = new Date();
                     // fix custom day
                     if (lastReward) {
                         reward.days = parseInt("" + ((reward.dayEnd.getTime() - lastReward.dayEnd.getTime() + 600000 ) / (1000 * 60 * 60 * 24)));
                     } else {
                         if (smartnode.timeStartReward){
-                            console.log(( reward.dayEnd.getTime() - smartnode.timeStartReward.getTime() + 600000),'-----');
+                            console.log(( reward.dayEnd.getTime() - smartnode.timeStartReward.getTime() + 600000),"-----");
                             reward.days = parseInt("" + (( reward.dayEnd.getTime() - smartnode.timeStartReward.getTime() + 600000) / (1000 * 60 * 60 * 24)));
                         }else{
                             reward.days = (global.settingSystem.scheduleDay !== "Everyday" && global.settingSystem.scheduleDay2 && global.settingSystem.scheduleDay2 !== "NoUse") ? 4 : global.settingSystem.scheduleValue;

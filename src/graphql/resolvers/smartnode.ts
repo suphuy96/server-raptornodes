@@ -37,7 +37,7 @@ const ServiceResolvers = {
         },
         statisticalUser: async (__: any, args: any,ctx:any) => {
             try {
-                checkIsAuthen(ctx.user);
+                checkIsAdmin(ctx.user);
                 const user = new mongo.ObjectId(args.user);
                 const statisticalNodes = await SmartNode.aggregate([
                     { $project : { "participants" : 1 } },
@@ -81,7 +81,8 @@ const ServiceResolvers = {
         smartNodes: async (__: any, args: any,ctx:any) => {
             try {
                 checkIsAuthen(ctx.user);
-                const smartNodes = await SmartNode.find().populate("participants.userId");
+                console.log('args',args)
+                const smartNodes = await SmartNode.find(args).populate("participants.userId");
 
                 const res:any = await RPCRuner.smartnodelist();
                 const objSmartnode:any = {};

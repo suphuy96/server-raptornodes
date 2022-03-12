@@ -29,6 +29,7 @@ export default gql`
         yourParticipant:participant,
         showParticipants:Boolean,
         lastReward:DateTime,
+        timeStartReward:DateTime,
         createdAt:DateTime,
         updatedAt:DateTime
     payee: String,
@@ -59,7 +60,7 @@ export default gql`
         smartnodeCount:countSN
         myNodes:[smartNode]
         getSmartNodes:[smartNode]
-        smartNodes:[smartNode]
+        smartNodes(statusCollateral:String):[smartNode]
         smartNodeEnough:smartNode
         statisticalUser(user:String!):Statistical
     }
