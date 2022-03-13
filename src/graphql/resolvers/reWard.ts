@@ -211,8 +211,7 @@ const scheduleReward =()=>{
                         reward.days = parseInt("" + ((reward.dayEnd.getTime() - lastReward.dayEnd.getTime() + 600000 ) / (1000 * 60 * 60 * 24)));
                     } else {
                         if (smartnode.timeStartReward){
-                            console.log(( reward.dayEnd.getTime() - smartnode.timeStartReward.getTime() + 600000),"-----");
-                            reward.days = parseInt("" + (( reward.dayEnd.getTime() - smartnode.timeStartReward.getTime() + 600000) / (1000 * 60 * 60 * 24)));
+                            reward.days = parseInt("" + (( reward.dayEnd.getTime() - (smartnode.timeStartReward||smartnode.updatedAt).getTime() + 600000) / (1000 * 60 * 60 * 24)));
                         }else{
                             reward.days = (global.settingSystem.scheduleDay !== "Everyday" && global.settingSystem.scheduleDay2 && global.settingSystem.scheduleDay2 !== "NoUse") ? 4 : global.settingSystem.scheduleValue;
                         }
@@ -253,7 +252,7 @@ const scheduleReward =()=>{
                             reward.days = parseInt("" + (( reward.dayEnd.getTime() -lastReward.dayEnd.getTime() + 600000 ) / (1000 * 60 * 60 * 24)));
                         } else {
                             if (smartnode.timeStartReward){
-                                reward.days = parseInt("" + ( reward.dayEnd.getTime() -(smartnode.timeStartReward.getTime() + 600000) / (1000 * 60 * 60 * 24)));
+                                reward.days = parseInt("" + ( reward.dayEnd.getTime() -((smartnode.timeStartReward||smartnode.updatedAt).getTime() + 600000) / (1000 * 60 * 60 * 24)));
                             }else
                             reward.days = 3;
                         }
@@ -410,7 +409,7 @@ const ServiceResolvers = {
                 if(lastReward){
                     reward.days = parseInt(""+((lastReward.dayEnd.getTime()-reward.dayEnd.getTime()+600000)/(1000*60*60*24)));
                 } else{
-                    reward.days = parseInt("" + (( reward.dayEnd.getTime() - smartNode.timeStartReward.getTime() + 600000) / (1000 * 60 * 60 * 24)));
+                    reward.days = parseInt("" + (( reward.dayEnd.getTime() - (smartNode.timeStartReward||smartNode.updatedAt).getTime() + 600000) / (1000 * 60 * 60 * 24)));
                 }
                 const comment = "ReWard in Raptornodes.com";
                 reward.description = wr.description||comment;

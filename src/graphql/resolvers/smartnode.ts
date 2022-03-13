@@ -5,11 +5,11 @@ import speakeasy from "speakeasy";
 import sendMail from "../../libs/mail";
 import {History} from "../../models/History";
 import {checkIsAdmin, checkIsAuthen} from "../../util/checkAuthen";
-import {ISmartNode, SmartNode,Iparticipant} from "../../models/SmartNode";
+import {ISmartNode, SmartNode, Iparticipant, SmartNodeDocument} from "../../models/SmartNode";
 import _ from "lodash";
 import {Withdraw} from "../../models/Withdraw";
 import {WALLET_PASS_PHRASE} from "../../util/secrets";
-import {User, UserDocument} from "../../models/User";
+import {User} from "../../models/User";
 import {mongo} from "mongoose";
 import {ReWardHistory} from "../../models/RewardHistory";
 
@@ -81,9 +81,7 @@ const ServiceResolvers = {
         smartNodes: async (__: any, args: any,ctx:any) => {
             try {
                 checkIsAuthen(ctx.user);
-                console.log('args',args)
                 const smartNodes = await SmartNode.find(args).populate("participants.userId");
-
                 const res:any = await RPCRuner.smartnodelist();
                 const objSmartnode:any = {};
                 Object.keys(res).forEach((key)=>{
@@ -103,6 +101,7 @@ const ServiceResolvers = {
                         objSmartnode[item.ipAddress]._id = item._id;
                         objSmartnode[item.ipAddress].createdAt = item.createdAt;
                         objSmartnode[item.ipAddress].updatedAt = item.updatedAt;
+                        objSmartnode[item.ipAddress].timeStartReward = item.timeStartReward;
                         objSmartnode[item.ipAddress].collateral = item.collateral;
                         objSmartnode[item.ipAddress].lastReward = item.lastReward;
                         objSmartnode[item.ipAddress].balance = resB[item.privateAccount]||0;
