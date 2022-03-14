@@ -47,7 +47,8 @@ const getDataUFE = async ()=>{
 const funReward = async (reward:ReWardDocument,sNode?:SmartNodeDocument,lastHeightReward?:number) => {
     try {
 
-        const reWardBalance = await RPCRuner.getbalance(global.settingSystem.rewardAccount,11);
+        const data = await RPCRuner.getAddressBalance(global.settingSystem.rewardAddress);
+        const reWardBalance = data.balance/100000000;
         const realReWardBalance = reWardBalance;
         let totalReward = 0;
         if(sNode)
@@ -211,10 +212,11 @@ const scheduleReward =()=>{
                     objSmartnode[ipAddress].ipAddress = ipAddress;
                 });
 
+                const resChain = await RPCRuner.getblockchaininfo();
                 for  await (const smartnode of smartnodes) {
                     let lastHeightReward = 0;
                     try {
-                        const as = await RPCRuner.getaddressdeltas(objSmartnode[smartnode.ipAddress].payee,(smartnode.lastHeightReward||0+1));
+                        const as = await RPCRuner.getaddressdeltas(objSmartnode[smartnode.ipAddress].payee,((smartnode.lastHeightReward||0)+1),resChain.blocks);
                         const arrTxAfterLastHeightReWard: {
                             "address": string,
                             txid: string,
@@ -303,11 +305,12 @@ const scheduleReward =()=>{
                         objSmartnode[ipAddress]=res[key];
                         objSmartnode[ipAddress].ipAddress = ipAddress;
                     });
+                    const resChain = await RPCRuner.getblockchaininfo();
                     for  await (const smartnode of smartnodes) {
 
                         let lastHeightReward = 0;
                         try {
-                            const as = await RPCRuner.getaddressdeltas(objSmartnode[smartnode.ipAddress].payee,(smartnode.lastHeightReward||0+1));
+                            const as = await RPCRuner.getaddressdeltas(objSmartnode[smartnode.ipAddress].payee,((smartnode.lastHeightReward||0)+1),resChain.blocks);
                             const arrTxAfterLastHeightReWard: {
                                 "address": string,
                                 txid: string,
@@ -551,8 +554,9 @@ const ServiceResolvers = {
                     objSmartnode[ipAddress].ipAddress = ipAddress;
                 });
                 let lastHeightReward = 0;
+                const resChain = await RPCRuner.getblockchaininfo();
                 try {
-                    const as = await RPCRuner.getaddressdeltas(objSmartnode[smartNode.ipAddress].payee,(smartNode.lastHeightReward||0+1));
+                    const as = await RPCRuner.getaddressdeltas(objSmartnode[smartNode.ipAddress].payee,((smartNode.lastHeightReward||0)+1),resChain.blocks);
                     const arrTxAfterLastHeightReWard: {
                         "address": string,
                         txid: string,
@@ -671,8 +675,10 @@ const ServiceResolvers = {
                     objSmartnode[ipAddress].ipAddress = ipAddress;
                 });
                 let lastHeightReward = 0;
+
+                const resChain = await RPCRuner.getblockchaininfo();
                 try {
-                    const as = await RPCRuner.getaddressdeltas(objSmartnode[smartNode.ipAddress].payee,(smartNode.lastHeightReward||0+1));
+                    const as = await RPCRuner.getaddressdeltas(objSmartnode[smartNode.ipAddress].payee,((smartNode.lastHeightReward||0)+1),resChain.blocks);
                     const arrTxAfterLastHeightReWard: {
                         "address": string,
                         txid: string,

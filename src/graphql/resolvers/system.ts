@@ -25,9 +25,9 @@ const ServiceResolvers = {
             try {
                 checkIsAdmin(ctx.user);
                 const  address = global.settingSystem.rewardAddress;
-                const balance = await RPCRuner.getbalance(global.settingSystem.rewardAccount);
+                const data = await RPCRuner.getAddressBalance(global.settingSystem.rewardAddress);
                 const received = await RPCRuner.getreceivedbyaccount(global.settingSystem.rewardAccount);
-                return {balance:balance?(balance):0,received:received?(received):0,rewardAddress:global.settingSystem.rewardAddress};
+                return {balance:data.balance?(data.balance/100000000):0,received:data.received?(data.received/100000000):0,rewardAddress:global.settingSystem.rewardAddress};
             } catch (error) {
                 throw new ApolloError(error);
             }

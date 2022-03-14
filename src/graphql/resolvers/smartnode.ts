@@ -114,10 +114,12 @@ const ServiceResolvers = {
 
                     return item;
                 });
+                const resChain = await RPCRuner.getblockchaininfo();
                 for await (const smartN of smartnodesr){
                     if(smartN.ipAddress && smartN.ipAddress!=="" && smartN.statusCollateral ==="Start Reward" && smartN.payee){
                         try {
-                            const as = await RPCRuner.getaddressdeltas(smartN.payee,(smartN.lastHeightReward||0+1));
+                            const as = await RPCRuner.getaddressdeltas(smartN.payee,((smartN.lastHeightReward||0)+1),resChain.blocks);
+                            console.log("smartN.lastHeightReward",smartN.lastHeightReward);
                             const arrTxAfterLastHeightReWard: {
                                 "address": string,
                                 txid: string,

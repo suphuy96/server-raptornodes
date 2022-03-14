@@ -121,7 +121,7 @@ export default class RpcRaptoreum {
     getAddressDeltas(params:{addresses:string[],start ? : number,end ? : number;}[],opts?:OptionRequestJsonRpc):Promise<any>{
         return this.requestJsonRpc("getaddressdeltas",params,opts);
     }
-    getAddressBalance(address:string,opts?:OptionRequestJsonRpc):Promise<any>{
+    getAddressBalance(address:string,opts?:OptionRequestJsonRpc):Promise<{balance:number,received:number}>{
         return this.requestJsonRpc("getaddressbalance",[{addresses:[address||""]}],opts);
     }
     getbalance(account:string,minConf?:number,opts?:OptionRequestJsonRpc):Promise<any>{
@@ -138,6 +138,9 @@ export default class RpcRaptoreum {
         return this.requestJsonRpc("listaccounts",null,opts);
     }
     sendFrom(params:{account:string,address:string,amount:number,comment:string,comment_to:string},opts?:OptionRequestJsonRpc):Promise<any>{
+        // return new Promise((resolve)=>{
+        //     resolve('')
+        // })
         return this.requestJsonRpc("sendfrom",[params.account,params.address,(params.amount),6,false,params.comment,params.comment_to],opts);
     }
 //    smartnode info
@@ -161,6 +164,33 @@ export default class RpcRaptoreum {
     }
     listaccounts( opts?:OptionRequestJsonRpc):Promise<any>{
         return this.requestJsonRpc("listaccounts",null,opts);
+    }
+
+    getaddressdeltas( address:string,start:number,end:number,opts?:OptionRequestJsonRpc):Promise<[{
+        txid:string,
+        confirmations?:number,
+        time?:number,
+        outputIndex: number,
+        script :string,
+        height:number,
+        address:string,
+        satoshis:number}]>{
+        return this.requestJsonRpc("getaddressdeltas",[{"addresses": [address],start:start,end:end}],opts);
+    }
+    getrawtransaction( address:string,opts?:OptionRequestJsonRpc):Promise<{
+        txid:string,
+        confirmations:number,
+        time:number,
+        height:number}>{
+        return this.requestJsonRpc("getrawtransaction",[address,true],opts);
+    }
+    getaddressutxos( address:string,opts?:OptionRequestJsonRpc):Promise<[{ "address" :string,
+        txid:string,
+        outputIndex: number,
+        script :string,
+        satoshis:number,
+        height:number}]>{
+        return this.requestJsonRpc("getaddressutxos",[{"addresses": [address]}],opts);
     }
 
     listaddressgroupings( opts?:OptionRequestJsonRpc):Promise<any>{
