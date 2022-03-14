@@ -4,6 +4,9 @@ export interface Iparticipant{
     userId: any ;
     collateral:number;
     percentOfNode:number;
+    fullName?:string;
+    isManual?:boolean;
+    addressReward?:string;
     RTMRewards:number;
     exchange?:number;
     pendingRTMRewards:number;
@@ -23,6 +26,20 @@ export interface ISmartNode {
     showParticipants:boolean;
     lastReward:Date,
     timeStartReward:Date,
+    heightStartReward: number,
+    lastHeightReward:number,
+    payee?:string,
+    totalImMatureInNextReward?:number,
+    totalMatureInNextReward?:number,
+    utxosNextReward?:{ "address" :string,
+        txid:string,
+        outputIndex: number,
+        script :string,
+        satoshis:number,
+        time?:number,
+        height:number}[],
+
+    updatedAt?:Date
 }
 export type SmartNodeDocument = mongoose.Document & ISmartNode
 
@@ -47,6 +64,8 @@ const SmartNodeSchema = new mongoose.Schema<SmartNodeDocument>(
         collateral:Number,
         lastReward:Date,
         timeStartReward:Date,
+        heightStartReward:Number,
+        lastHeightReward:Number,
         participants:{type:[participantType],default:[]},
         showParticipants:{type:Boolean,default:false}
     },

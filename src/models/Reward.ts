@@ -6,6 +6,7 @@ export interface IReWard  {
     days:number;
     isSchedule:boolean;
     smartNode:string;
+    lastHeightReward?:number;
     missingReward?:boolean,
     timeReTry?:Date,
     dayStart?:Date;
@@ -19,6 +20,7 @@ const ReWardSchema = new mongoose.Schema<ReWardDocument>(
         paymentsPerDay:Number,
         feeReward:Number,
         days:Number,
+        lastHeightReward:Number,
         isSchedule:Boolean,
         smartNode:String,
         missingReward:Boolean,

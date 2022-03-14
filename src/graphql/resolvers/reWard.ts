@@ -44,7 +44,7 @@ const getDataUFE = async ()=>{
     }
     return ars[0];
 };
-const funReward = async (reward:ReWardDocument,sNode?:SmartNodeDocument) => {
+const funReward = async (reward:ReWardDocument,sNode?:SmartNodeDocument,lastHeightReward?:number) => {
     try {
 
         const reWardBalance = await RPCRuner.getbalance(global.settingSystem.rewardAccount,11);
@@ -53,11 +53,12 @@ const funReward = async (reward:ReWardDocument,sNode?:SmartNodeDocument) => {
         if(sNode)
             for await (const participant of sNode.participants) {
                 const comment = "ReWard in Raptornodes.com";
-                const amount = reward.days*(global.settingSystem.paymentsPerDay * participant.percentOfNode * ((100 - global.settingSystem.feeReward) / 100));
-                const feeHost = reward.days*(global.settingSystem.paymentsPerDay * participant.percentOfNode * (( global.settingSystem.feeReward) / 100));
+                const amount = participant.percentOfNode * sNode.totalMatureInNextReward*((100-global.settingSystem.feeReward) / 100);
+                const feeHost = sNode.totalMatureInNextReward*((global.settingSystem.feeReward) / 100);
                 totalReward+=amount;
 
             }
+        console.log("tới đây00000");
 
         if(global.settingSystem.mailReward.cc.length){
             sendMail( (global.settingSystem.mailReward.cc.length ? ( global.settingSystem.mailReward.cc.join()) : ""), "Schedule ReWard  Smartnode: "+(sNode?sNode.label:""),"Schedule ReWard  Smartnode "+(sNode?sNode.label:"")+" in raptornodes.com, totalReward:" +totalReward.toFixed(8)+"RTM, reWardBalance:"+reWardBalance+"RTM").then(()=>{
@@ -83,8 +84,9 @@ const funReward = async (reward:ReWardDocument,sNode?:SmartNodeDocument) => {
         {
             const funReW = async(userId:UserDocument,collateral:number,percentOfNode:number,smartnode?:SmartNodeDocument)=>{
                 const comment = "ReWard in Raptornodes.com";
-                const amount = reward.days * (global.settingSystem.paymentsPerDay * percentOfNode * ((100 - global.settingSystem.feeReward) / 100));
-                const feeHost = reward.days * (global.settingSystem.paymentsPerDay * percentOfNode * ((global.settingSystem.feeReward) / 100));
+                const amount = sNode.totalMatureInNextReward *( percentOfNode * ((100 - global.settingSystem.feeReward) / 100));
+                const feeHost = sNode.totalMatureInNextReward * ( percentOfNode * ((global.settingSystem.feeReward) / 100));
+                console.log("name:",userId.profile.name,"discord:",userId.discord,"email:",userId.email,"amount:",amount);
                 try{
                     await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,20);
                 }catch (e){
@@ -140,30 +142,36 @@ const funReward = async (reward:ReWardDocument,sNode?:SmartNodeDocument) => {
                 }
                 return rawData;
             };
+            console.log("vào aydadfasdlfjasldjfasd");
 
-                const dataUFE:DataUltraFastEarningDocument = await getDataUFE();
+            //    payment in smartnode
+            // for await (const smartnode of smartnodes) {
+            if(sNode){
+                for await (const participant of sNode.participants) {
+                    console.log("tới đây00000",participant);
+
+                    await  funReW(participant.userId,participant.collateral,participant.percentOfNode,sNode);
+                }
+                sNode.lastReward = new Date();
+                sNode.lastHeightReward = lastHeightReward;
+            sNode.save();
+            }
+        if(global.settingSystem.withdrawlWeekly) {
+            const dataUFE: DataUltraFastEarningDocument = await getDataUFE();
             //    payment in UltraFastEarning
-            if(dataUFE && dataUFE.amount&&dataUFE.participants.length){
-                for await (const participant of dataUFE.participants){
-                    if(participant){
-                     const txidLastReward =  await funReW(participant.author,participant.amount,(participant.amount/global.settingSystem.collateral));
+            if (dataUFE && dataUFE.amount && dataUFE.participants.length) {
+                for await (const participant of dataUFE.participants) {
+                    if (participant) {
+                        const txidLastReward = await funReW(participant.author, participant.amount, (participant.amount / global.settingSystem.collateral));
                         participant.lastReward = new Date();
                         participant.txidLastReward = txidLastReward;
                         await dataUFE.save();
                     }
                 }
-                 dataUFE.lastReward = new Date();
+                dataUFE.lastReward = new Date();
                 await dataUFE.save();
             }
-            //    payment in smartnode
-            // for await (const smartnode of smartnodes) {
-            if(sNode){
-                for await (const participant of sNode.participants) {
-                  await  funReW(participant.userId,participant.collateral,participant.percentOfNode,sNode);
-                }
-            sNode.lastReward = new Date();
-            sNode.save();
-            }
+        }
             // }
             try{
                 const settingSystem:SystemDocument = await System.findOne();
@@ -195,12 +203,59 @@ const scheduleReward =()=>{
 
                 const smartnodes = await SmartNode.find({statusCollateral : "Start Reward" }).populate("participants.userId");
                 console.log("vào đây trả thưởng=====> ");
+                const res:any = await RPCRuner.smartnodelist();
+                const objSmartnode:any = {};
+                Object.keys(res).forEach((key)=>{
+                    const ipAddress =res[key].address.replace(":10227","").replace(":10226","");
+                    objSmartnode[ipAddress]=res[key];
+                    objSmartnode[ipAddress].ipAddress = ipAddress;
+                });
+
                 for  await (const smartnode of smartnodes) {
+                    let lastHeightReward = 0;
+                    try {
+                        const as = await RPCRuner.getaddressdeltas(objSmartnode[smartnode.ipAddress].payee,(smartnode.lastHeightReward||0+1));
+                        const arrTxAfterLastHeightReWard: {
+                            "address": string,
+                            txid: string,
+                            outputIndex: number,
+                            script: string,
+                            satoshis: number,
+                            height: number,
+                            isNomal?:boolean,
+                            time?:number
+                        }[] = as.filter(item => item.satoshis > 0);
+                        let totalMatureInNextReward = 0;
+                        let totalImMatureInNextReward = 0;
+                        let index = 0;
+                        for await (const txos of arrTxAfterLastHeightReWard) {
+                            try {
+                                lastHeightReward = txos.height;
+                                const infoTran = await RPCRuner.getrawtransaction(txos.txid);
+                                txos.time = (infoTran.time||0)*1000;
+                                if (infoTran && infoTran.confirmations > 101) {
+                                    txos.isNomal = true;
+                                    totalMatureInNextReward += txos.satoshis / 100000000;
+                                } else {
+                                    totalImMatureInNextReward += txos.satoshis / 100000000;
+                                }
+                            } catch (e) {
+                                console.log("e2", e);
+                            }
+                            index++;
+                        }
+                        smartnode.utxosNextReward = arrTxAfterLastHeightReWard;
+                        smartnode.totalImMatureInNextReward = totalImMatureInNextReward;
+                        smartnode.totalMatureInNextReward = totalMatureInNextReward;
+                    }catch (e){
+                        console.log("haha",e);
+                    }
                     const reward = new ReWard();
                     console.log("vào đây trả thưởng ",smartnode.label);
 
                     reward.isSchedule = false;
                     reward.smartNode = smartnode._id;
+                    reward.lastHeightReward = lastHeightReward;
                         reward.paymentsPerDay = global.settingSystem.paymentsPerDay;
                     reward.feeReward = global.settingSystem.feeReward;
                     const lastReward = await ReWard.findOne({smartNode:smartnode._id}).sort({createdAt: -1}).exec();
@@ -219,12 +274,14 @@ const scheduleReward =()=>{
                     const comment = "ReWard in Raptornodes.com";
                     reward.description = comment;
 
-                    if(reward.days<=0){
+                    if(smartnode.totalMatureInNextReward<=0){
                     sendMail( process.env.ADMINS, "SmartNode "+(smartnode?smartnode.label:"")+"Not enough days to pay the reward","SmartNode "+(smartnode?smartnode.label:"")+" Not enough days to pay the reward. Time Start: "+(lastReward?("last Reward"+lastReward.dayEnd):("Time Start: "+smartnode.timeStartReward))+", Time ReWard: "+reward.dayEnd).then(()=>{
                         console.log("");
                     }); }else{
                     await reward.save();
-                        await funReward(reward,smartnode);
+                        await funReward(reward,smartnode,lastHeightReward);
+                        smartnode.lastHeightReward = lastHeightReward;
+                        await smartnode.save();
                         await new Promise((resolve)=>{
                             setTimeout(()=>{
                                 resolve(true);
@@ -239,7 +296,54 @@ const scheduleReward =()=>{
                 }
                 rewardTask2 = schedule(`${mi} ${hour} * * ${weekdays}`, async () => {
                     const smartnodes = await SmartNode.find({statusCollateral : "Start Reward" }).populate("participants.userId");
+                    const res:any = await RPCRuner.smartnodelist();
+                    const objSmartnode:any = {};
+                    Object.keys(res).forEach((key)=>{
+                        const ipAddress =res[key].address.replace(":10227","").replace(":10226","");
+                        objSmartnode[ipAddress]=res[key];
+                        objSmartnode[ipAddress].ipAddress = ipAddress;
+                    });
                     for  await (const smartnode of smartnodes) {
+
+                        let lastHeightReward = 0;
+                        try {
+                            const as = await RPCRuner.getaddressdeltas(objSmartnode[smartnode.ipAddress].payee,(smartnode.lastHeightReward||0+1));
+                            const arrTxAfterLastHeightReWard: {
+                                "address": string,
+                                txid: string,
+                                outputIndex: number,
+                                script: string,
+                                satoshis: number,
+                                height: number,
+                                isNomal?:boolean,
+                                time?:number
+                            }[] = as.filter(item => item.satoshis > 0);
+                            let totalMatureInNextReward = 0;
+                            let totalImMatureInNextReward = 0;
+                            let index = 0;
+                            for await (const txos of arrTxAfterLastHeightReWard) {
+                                try {
+                                    lastHeightReward = txos.height;
+                                    const infoTran = await RPCRuner.getrawtransaction(txos.txid);
+                                    txos.time = (infoTran.time||0)*1000;
+                                    if (infoTran && infoTran.confirmations > 101) {
+                                        txos.isNomal = true;
+                                        totalMatureInNextReward += txos.satoshis / 100000000;
+                                    } else {
+                                        totalImMatureInNextReward += txos.satoshis / 100000000;
+                                    }
+                                } catch (e) {
+                                    console.log("e2", e);
+                                }
+                                index++;
+                            }
+                            smartnode.lastHeightReward = lastHeightReward;
+                            smartnode.utxosNextReward = arrTxAfterLastHeightReWard;
+                            smartnode.totalImMatureInNextReward = totalImMatureInNextReward;
+                            smartnode.totalMatureInNextReward = totalMatureInNextReward;
+                        }catch (e){
+                            console.log("haha",e);
+                        }
                         const reward = new ReWard();
                         console.log("vào đây trả thưởng 2 ",smartnode.label);
                         reward.isSchedule = false;
@@ -258,12 +362,12 @@ const scheduleReward =()=>{
                         }
                         const comment = "ReWard in Raptornodes.com";
                         reward.description = comment;
-                        if(reward.days<=0){
+                        if(lastHeightReward<=0){
                             sendMail( process.env.ADMINS, "SmartNode "+(smartnode?smartnode.label:"")+" Not enough days to pay the reward ","SmartNode "+(smartnode?smartnode.label:"")+" Not enough days to pay the reward. "+(lastReward?("last Reward"+lastReward.dayEnd):("Time Start: "+smartnode.timeStartReward))+", Time ReWard: "+reward.dayEnd).then(()=>{
                                 console.log("");
                             }); }else{
                         await reward.save();
-                        await funReward(reward, smartnode);
+                        await funReward(reward, smartnode,lastHeightReward);
                         await new Promise((resolve)=>{
                             setTimeout(()=>{
                                 resolve(true);
@@ -388,6 +492,40 @@ const ServiceResolvers = {
             } catch (error) {
                 throw new ApolloError(error);
             }
+        },
+        inforRewardSmartNodes: async (__: any, args: any,ctx:any) => {
+            checkIsAdmin(ctx.user);
+            const smartNodes = await SmartNode.find(args).populate("participants.userId");
+            const res:any = await RPCRuner.smartnodelist();
+            const objSmartnode:any = {};
+            Object.keys(res).forEach((key)=>{
+                const ipAddress =res[key].address.replace(":10227","").replace(":10226","");
+                objSmartnode[ipAddress]=res[key];
+                objSmartnode[ipAddress].ipAddress = ipAddress;
+            });
+            const resB = await RPCRuner.listaccounts().catch(()=>{
+                return {};
+            });
+            return smartNodes.map((item:any)=>{
+                if(objSmartnode[item.ipAddress]){
+                    objSmartnode[item.ipAddress].label = item.label;
+                    objSmartnode[item.ipAddress]._id = item._id;
+                    objSmartnode[item.ipAddress].createdAt = item.createdAt;
+                    objSmartnode[item.ipAddress].updatedAt = item.updatedAt;
+                    objSmartnode[item.ipAddress].timeStartReward = item.timeStartReward;
+                    objSmartnode[item.ipAddress].collateral = item.collateral;
+                    objSmartnode[item.ipAddress].lastReward = item.lastReward;
+                    objSmartnode[item.ipAddress].balance = resB[item.privateAccount]||0;
+                    objSmartnode[item.ipAddress].privateAccount = item.privateAccount;
+                    objSmartnode[item.ipAddress].privateAddress = item.privateAddress;
+                    objSmartnode[item.ipAddress].statusCollateral = item.statusCollateral;
+                    objSmartnode[item.ipAddress].participants = item.participants;
+
+                    return {...objSmartnode[item.ipAddress],...item};
+                }
+                item.balance = resB[item.privateAccount]||0;
+
+            });
         }
     },
     Mutation: {
@@ -404,13 +542,63 @@ const ServiceResolvers = {
                     throw new ApolloError("not found SmartNode");
                 }
                 reward.smartNode = smartNode._id;
+
+                const res:any = await RPCRuner.smartnodelist();
+                const objSmartnode:any = {};
+                Object.keys(res).forEach((key)=>{
+                    const ipAddress =res[key].address.replace(":10227","").replace(":10226","");
+                    objSmartnode[ipAddress]=res[key];
+                    objSmartnode[ipAddress].ipAddress = ipAddress;
+                });
+                let lastHeightReward = 0;
+                try {
+                    const as = await RPCRuner.getaddressdeltas(objSmartnode[smartNode.ipAddress].payee,(smartNode.lastHeightReward||0+1));
+                    const arrTxAfterLastHeightReWard: {
+                        "address": string,
+                        txid: string,
+                        outputIndex: number,
+                        script: string,
+                        satoshis: number,
+                        height: number,
+                        isNomal?:boolean,
+                        time?:number
+                    }[] = as.filter(item => item.satoshis > 0);
+                    let totalMatureInNextReward = 0;
+                    let totalImMatureInNextReward = 0;
+                    let index = 0;
+                    for await (const txos of arrTxAfterLastHeightReWard) {
+                        try {
+                            lastHeightReward = txos.height;
+                            const infoTran = await RPCRuner.getrawtransaction(txos.txid);
+                            txos.time = (infoTran.time||0)*1000;
+                            if (infoTran && infoTran.confirmations > 101) {
+                                txos.isNomal = true;
+                                totalMatureInNextReward += txos.satoshis / 100000000;
+                            } else {
+                                totalImMatureInNextReward += txos.satoshis / 100000000;
+                            }
+                        } catch (e) {
+                            console.log("e2", e);
+                        }
+                        index++;
+                    }
+                    smartNode.utxosNextReward = arrTxAfterLastHeightReWard;
+                    smartNode.totalImMatureInNextReward = totalImMatureInNextReward;
+                    smartNode.totalMatureInNextReward = totalMatureInNextReward;
+                }catch (e){
+                    console.log("haha",e);
+                }
+                reward.lastHeightReward = lastHeightReward;
                 const lastReward = await ReWard.findOne({smartNode:smartNode._id}).sort({createdAt: -1}).exec();
                 reward.dayEnd = wr.dayEnd ||new Date();
-                if(lastReward){
-                    reward.days = parseInt(""+((lastReward.dayEnd.getTime()-reward.dayEnd.getTime()+600000)/(1000*60*60*24)));
-                } else{
-                    reward.days = parseInt("" + (( reward.dayEnd.getTime() - (smartNode.timeStartReward||smartNode.updatedAt).getTime() + 600000) / (1000 * 60 * 60 * 24)));
-                }
+                try{
+                    if(lastReward){
+                        reward.days = parseInt(""+((lastReward.dayEnd.getTime()-reward.dayEnd.getTime()+600000)/(1000*60*60*24)));
+                    } else{
+                        reward.days = parseInt("" + (( reward.dayEnd.getTime() - (smartNode.timeStartReward||smartNode.updatedAt).getTime() + 600000) / (1000 * 60 * 60 * 24)));
+                    }
+                }catch{}
+
                 const comment = "ReWard in Raptornodes.com";
                 reward.description = wr.description||comment;
                 if(ctx.user.enableTfa){
@@ -427,7 +615,9 @@ const ServiceResolvers = {
                     }
                 }
                 reward.save();
-                await funReward(reward,smartNode);
+                await funReward(reward,smartNode,lastHeightReward);
+                smartNode.lastHeightReward = lastHeightReward;
+                smartNode.save();
                 try{
                     const history = new History();
                     history.action = "createReward";
@@ -473,7 +663,53 @@ const ServiceResolvers = {
                 if(!smartNode){
                     throw new ApolloError("not found SmartNode");
                 }
-                await funReward(reward,smartNode);
+                const res:any = await RPCRuner.smartnodelist();
+                const objSmartnode:any = {};
+                Object.keys(res).forEach((key)=>{
+                    const ipAddress =res[key].address.replace(":10227","").replace(":10226","");
+                    objSmartnode[ipAddress]=res[key];
+                    objSmartnode[ipAddress].ipAddress = ipAddress;
+                });
+                let lastHeightReward = 0;
+                try {
+                    const as = await RPCRuner.getaddressdeltas(objSmartnode[smartNode.ipAddress].payee,(smartNode.lastHeightReward||0+1));
+                    const arrTxAfterLastHeightReWard: {
+                        "address": string,
+                        txid: string,
+                        outputIndex: number,
+                        script: string,
+                        satoshis: number,
+                        height: number,
+                        isNomal?:boolean,
+                        time?:number
+                    }[] = as.filter(item => item.satoshis > 0);
+                    let totalMatureInNextReward = 0;
+                    let totalImMatureInNextReward = 0;
+                    let index = 0;
+                    for await (const txos of arrTxAfterLastHeightReWard) {
+                        try {
+                            lastHeightReward = txos.height;
+                            const infoTran = await RPCRuner.getrawtransaction(txos.txid);
+                            txos.time = (infoTran.time||0)*1000;
+                            if (infoTran && infoTran.confirmations > 101) {
+                                txos.isNomal = true;
+                                totalMatureInNextReward += txos.satoshis / 100000000;
+                            } else {
+                                totalImMatureInNextReward += txos.satoshis / 100000000;
+                            }
+                        } catch (e) {
+                            console.log("e2", e);
+                        }
+                        index++;
+                    }
+                    smartNode.utxosNextReward = arrTxAfterLastHeightReWard;
+                    smartNode.totalImMatureInNextReward = totalImMatureInNextReward;
+                    smartNode.totalMatureInNextReward = totalMatureInNextReward;
+                }catch (e){
+                    console.log("haha",e);
+                }
+console.log("vào đây xhuwr lý",smartNode);
+                await funReward(reward,smartNode,lastHeightReward);
                 return reward;
 
             } catch (error) {

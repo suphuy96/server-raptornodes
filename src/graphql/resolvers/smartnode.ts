@@ -80,7 +80,7 @@ const ServiceResolvers = {
         },
         smartNodes: async (__: any, args: any,ctx:any) => {
             try {
-                checkIsAuthen(ctx.user);
+                // checkIsAuthen(ctx.user);
                 const smartNodes = await SmartNode.find(args).populate("participants.userId");
                 const res:any = await RPCRuner.smartnodelist();
                 const objSmartnode:any = {};
@@ -89,13 +89,10 @@ const ServiceResolvers = {
                     objSmartnode[ipAddress]=res[key];
                     objSmartnode[ipAddress].ipAddress = ipAddress;
                 });
-                // const resB = await RPCRuner.listaddressbalances().catch(()=>{
-                //     return {};
-                // });
                 const resB = await RPCRuner.listaccounts().catch(()=>{
                     return {};
                 });
-                return smartNodes.map((item:any)=>{
+                const smartnodesr:ISmartNode[] = smartNodes.map((item:any)=>{
                     if(objSmartnode[item.ipAddress]){
                         objSmartnode[item.ipAddress].label = item.label;
                         objSmartnode[item.ipAddress]._id = item._id;
@@ -104,6 +101,7 @@ const ServiceResolvers = {
                         objSmartnode[item.ipAddress].timeStartReward = item.timeStartReward;
                         objSmartnode[item.ipAddress].collateral = item.collateral;
                         objSmartnode[item.ipAddress].lastReward = item.lastReward;
+                        objSmartnode[item.ipAddress].lastHeightReward = item.lastHeightReward;
                         objSmartnode[item.ipAddress].balance = resB[item.privateAccount]||0;
                         objSmartnode[item.ipAddress].privateAccount = item.privateAccount;
                         objSmartnode[item.ipAddress].privateAddress = item.privateAddress;
@@ -116,6 +114,48 @@ const ServiceResolvers = {
 
                     return item;
                 });
+                for await (const smartN of smartnodesr){
+                    if(smartN.ipAddress && smartN.ipAddress!=="" && smartN.statusCollateral ==="Start Reward" && smartN.payee){
+                        try {
+                            const as = await RPCRuner.getaddressdeltas(smartN.payee,(smartN.lastHeightReward||0+1));
+                            const arrTxAfterLastHeightReWard: {
+                                "address": string,
+                                txid: string,
+                                outputIndex: number,
+                                script: string,
+                                satoshis: number,
+                                height: number,
+                                isNomal?:boolean,
+                                time?:number
+                            }[] = as.filter((item) => item.satoshis > 0);
+                            let totalMatureInNextReward = 0;
+                            let totalImMatureInNextReward = 0;
+                            let index = 0;
+                            for await (const txos of arrTxAfterLastHeightReWard) {
+                                try {
+                                    const infoTran = await RPCRuner.getrawtransaction(txos.txid);
+                                    txos.time = (infoTran.time||0)*1000;
+                                    if (infoTran && infoTran.confirmations > 101) {
+                                        txos.isNomal = true;
+                                        totalMatureInNextReward += txos.satoshis / 100000000;
+                                    } else {
+                                        totalImMatureInNextReward += txos.satoshis / 100000000;
+                                    }
+                                } catch (e) {
+                                    console.log("e2", e);
+                                }
+                                index++;
+                            }
+                            smartN.utxosNextReward = arrTxAfterLastHeightReWard;
+                            smartN.totalImMatureInNextReward = totalImMatureInNextReward;
+                            smartN.totalMatureInNextReward = totalMatureInNextReward;
+                        }catch (e){
+                           console.log("haha",e);
+                        }
+
+                    }
+                }
+                return smartnodesr;
             } catch (error) {
                 console.log("dddd",error);
                 throw new ApolloError(error);
@@ -140,6 +180,7 @@ const ServiceResolvers = {
                         objSmartnode[item.ipAddress].updatedAt = item.updatedAt;
                         objSmartnode[item.ipAddress].collateral = item.collateral;
                         objSmartnode[item.ipAddress].lastReward = item.lastReward;
+                        objSmartnode[item.ipAddress].lastHeightReward = item.lastHeightReward;
                         objSmartnode[item.ipAddress].privateAddress = item.privateAddress;
                         objSmartnode[item.ipAddress].privateAccount = item.privateAccount;
                         objSmartnode[item.ipAddress].statusCollateral = item.statusCollateral;
@@ -435,6 +476,9 @@ const ServiceResolvers = {
             if(args.ipAddress){
                 smartNode.ipAddress = args.ipAddress;
             }
+            if(args.lastHeightReward){
+                smartNode.lastHeightReward = args.lastHeightReward;
+            }
             if(args.collateral&&smartNode.collateral!==args.collateral){
                 let collateral = 0;
                 smartNode.collateral = args.collateral;
@@ -460,6 +504,11 @@ const ServiceResolvers = {
                 smartNode.statusCollateral = args.statusCollateral;
                 if(args.statusCollateral ==="Start Reward"&&!smartNode.timeStartReward){
                     smartNode.timeStartReward = new Date();
+                    if(!smartNode.lastHeightReward){
+                        const res = await RPCRuner.getblockchaininfo();
+                        smartNode.heightStartReward =res.blocks ;
+                        smartNode.lastHeightReward =res.blocks ;
+                    }
                 }
             }
             await smartNode.save();

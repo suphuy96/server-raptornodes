@@ -15,6 +15,16 @@ export default gql`
         source:String,
         time:Date
     }
+    type UtxosNextReward {
+    address: String,
+    txid: String,
+    outputIndex: Int,
+    script: String,
+    satoshis: Float,
+    height: Float,
+    time:DateTime,
+    isNomal:Boolean
+    }
     type smartNode {
         _id:String,
     proTxHash: String,
@@ -32,6 +42,11 @@ export default gql`
         showParticipants:Boolean,
         lastReward:DateTime,
         timeStartReward:DateTime,
+        heightStartReward: Int,
+        lastHeightReward:Int,
+        totalMatureInNextReward:Float,
+        totalImMatureInNextReward:Float,
+        utxosNextReward:[UtxosNextReward]
         createdAt:DateTime,
         updatedAt:DateTime
     payee: String,
@@ -58,17 +73,26 @@ export default gql`
         rewardCount: Float
         rewardAmount: Float
     }
+    type InforReward{
+        _id:String,
+        proTxHash: String,
+        address: String,
+        ipAddress: String,
+        payee: String,
+        status: String,
+    }
     type Query {
         smartnodeCount:countSN
         myNodes:[smartNode]
         getSmartNodes:[smartNode]
+        inforRewardSmartNodes:InforReward
         smartNodes(statusCollateral:String):[smartNode]
         smartNodeEnough:smartNode
         statisticalUser(user:String!):Statistical
     }
     type Mutation {
         createSmartNode(label:String!,ipAddress:String,private:Boolean,showParticipants:Boolean,statusCollateral:String,collateral:Float):smartNode
-        updateSmartNode(_id:String!,tfa:String,label:String,ipAddress:String,private:Boolean,showParticipants:Boolean,statusCollateral:String,collateral:Float):smartNode
+        updateSmartNode(_id:String!,tfa:String,label:String,ipAddress:String,lastHeightReward:Int,private:Boolean,showParticipants:Boolean,statusCollateral:String,collateral:Float):smartNode
         withdrawEnoughSmartNode(_id:String!,amount:Float!,address:String!,tfa:String):smartNode
         deleteSmartNode(_id:String!):Boolean
         joinSmartNode(_id:String,amount:Float, token:String):smartNode
