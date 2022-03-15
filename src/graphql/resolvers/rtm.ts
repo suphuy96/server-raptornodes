@@ -97,7 +97,7 @@ const ServiceResolvers = {
                 arrs.forEach((item)=>{
                     balancePending+=item.amount;
                 });
-                return balancePending;
+                return 0;
             } catch (error) {
                 throw new ApolloError(error);
             }
