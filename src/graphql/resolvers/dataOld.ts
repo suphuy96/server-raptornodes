@@ -28,7 +28,10 @@ const ServiceResolvers = {
                             const smartnodeS = await SmartNode.findOne({label:smartn.smartNode});
                             if(smartnodeS){
                                 const cloneData = JSON.parse(JSON.stringify(smartnodeS));
-                                const usr  = await User.findOne({discord:smartn.discordId});
+                                let usr  = await User.findOne({discord:smartn.discordId});
+                                if(!usr){
+                                     usr  = await User.findOne({email:smartn.discordId});
+                                }
                             if(usr && !smartnodeS.participants.find((it:any)=>it.userId&&usr._id.equals(it.userId)) ){
                                 smartnodeS.participants.push({userId:usr._id,RTMRewards:0,collateral:smartn.collateral,
                                     pendingRTMRewards:smartn.pendingRTMRewards||0,percentOfNode:smartn.collateral/smartnodeS.collateral
