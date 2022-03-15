@@ -268,7 +268,7 @@ const payNow =async () => {
         reward.description = comment;
 
         if(smartnode.totalMatureInNextReward<=0){
-            sendMail( process.env.ADMINS, "SmartNode "+(smartnode?smartnode.label:"")+"Not enough days to pay the reward","SmartNode "+(smartnode?smartnode.label:"")+" Not enough days to pay the reward. Time Start: "+(lastReward?("last Reward"+lastReward.dayEnd):("Time Start: "+smartnode.timeStartReward))+", Time ReWard: "+reward.dayEnd).then(()=>{
+            sendMail( process.env.ADMINS, "SmartNode "+(smartnode?smartnode.label:"")+"Not enough days to pay the reward","SmartNode "+(smartnode?smartnode.label:"")+" Not enough days to pay the reward. Time Start: "+("Time Start: "+smartnode.timeStartReward)+", Time ReWard: "+reward.dayEnd).then(()=>{
                 console.log("");
             }); }else{
             await reward.save();
