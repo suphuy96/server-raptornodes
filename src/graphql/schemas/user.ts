@@ -34,6 +34,8 @@ export default gql`
         balance:Float,
         collateral:Float,
         autoCompounding:Boolean,
+        isVirtual:Boolean,
+        customAddrressRTM:String,
         portfolio:Float,
         status:Boolean,
         enableTfa:Boolean,
@@ -53,6 +55,7 @@ export default gql`
         verifiForGot(email:String!,password:String!,token:String!):String
         verifiLogin(email:String!,password:String!,token:String!):String
         signupUser(email:String!,password:String!,confirmPassword:String!):User
+        createUser(email:String!,name:String,password:String,customAddrressRTM:String,isVirtual:Boolean,tfa:String):User
         updateUser(_id:String,discord:String,enableTfa:Boolean,status:Boolean,tfa:String):User
         updateProfileUser(autoCompounding:Boolean,tfa:String):User
         removeUser(_id:String,tfa:String):Boolean

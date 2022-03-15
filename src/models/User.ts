@@ -22,6 +22,9 @@ export interface IUser {
     addressRTM:string;
     enableTfa:boolean;
     autoCompounding:boolean;
+    customAddressRTM:string;
+    isVirtual:boolean;
+    customAddrressRTM?:string;
     balance?:number;
     collateral?:number;
     portfolio?:number;
@@ -60,15 +63,17 @@ const userSchema = new mongoose.Schema<UserDocument>(
         password: String,
         passwordResetToken: String,
         passwordResetExpires: Number,
-        accountRTM:String,
-        addressRTM:String,
-        accountRTMError:Boolean,
+        accountRTM: String,
+        addressRTM: String,
+        accountRTMError: Boolean,
         tokenJWT:String,
         status:{ type: Boolean, default: true },
         rules:{ type: String, default: "User" },
         verified:{ type: Boolean, default: true },
+        isVirtual:{ type: Boolean, default: false },
+        customAddrressRTM: String,
         verificationToken:String,
-        verificationExpires:Date,
+        verificationExpires: Date,
         tfa:{
             secret: String,
             tempSecret: String,

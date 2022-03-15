@@ -32,7 +32,7 @@ const ServiceResolvers = {
                if(!ctx.user){
                    throw new ApolloError("No session login");
                }
-               return pick(ctx.user,["email","_id","profile","discord","createdAt","rules","updatedAt","addressRTM", "enableTfa"]);
+               return pick(ctx.user,["email","_id","profile","discord","autoCompounding","createdAt","rules","updatedAt","customAddrressRTM","addressRTM", "enableTfa"]);
             } catch (error) {
                 throw new ApolloError(error);
             }
@@ -70,6 +70,93 @@ const ServiceResolvers = {
         },
     },
     Mutation:{
+        createUser: async (__: any, args: {email:string,password:string,name:string,customAddrressRTM:string,tfa:string},ctx:any) => {
+            try {
+                checkIsAdmin(ctx.user);
+                if(ctx.user.enableTfa){
+                    if(!args.tfa||args.tfa===""){
+                        throw new ApolloError("undefined code 2fa");
+                    }
+                    const isVerified = speakeasy.totp.verify({
+                        secret: ctx.user.tfa.secret,
+                        encoding: "base32",
+                        token: args.tfa
+                    });
+                    if(!isVerified){
+                        throw new ApolloError("2fa is not correct");
+                    }
+                }
+                if(args.password&&args.password!==""&&args.password.length<6){
+                    throw new ApolloError("Password must be at least 6 characters long");
+                }
+                if(!args.email||args.email.length<6){
+                    throw new ApolloError("Email is not valid");
+                }
+                if(!args.password||args.password===""){
+                    args.password = crypto.randomBytes(16).toString("hex");
+                }
+                const user = new User({
+                    email: args.email,
+                    password: args.password,
+                    verified:true,
+                    customAddrressRTM:args.customAddrressRTM,
+                    isVirtual:true,
+                    verificationExpires:Date.now()+3600000,
+                    profile:{
+                        name:args.name||args.email
+                    }
+                });
+                    user.customAddrressRTM = args.customAddrressRTM;
+                const existingUser = await  User.findOne({ email: args.email });
+                if (existingUser) {
+                    throw new ApolloError("Account with that email address already exists." );
+                }
+                let uid ="User#"+ args.email;
+                const datas = await RPCRuner.getAddressesByAccount(uid);
+                if(datas && datas.length){
+                    const existingUserUseAddressRTM = await  User.findOne({ accountRTM: uid });
+                    if(existingUserUseAddressRTM){
+                        uid ="User#"+ user.email+"_"+new Date().getTime();
+                    }
+                }
+                try {
+                    let addressRTM: any = await RPCRuner.getAccountAddress(uid).catch((e) => {
+                        console.log("không thể kết nối raptoreum", e.toString());
+                        return false;
+                    });
+                    const addressRTMExist = await User.findOne({addressRTM:addressRTM});
+                    if(addressRTMExist){
+                        // get another wallet address
+                        addressRTM = await RPCRuner.getAccountAddress(uid).catch((e) => {
+                            console.log("không thể kết nối raptoreum", e.toString());
+                            return false;
+                        });
+                    }
+                    if (addressRTM) {
+                        user.accountRTM = uid;
+                        user.addressRTM = addressRTM;
+                    } else {
+                        user.accountRTMError = true;
+                    }
+                }catch (e){
+                    user.accountRTMError = true;
+                }
+                await user.save();
+                try{
+                    const history = new History();
+                    history.action = "createUser";
+                    history.author = user._id;
+                    history.data = user;
+                    history.dataOld = {};
+                    history.save().then();
+                }catch{
+                }
+                return pick(user,["email","_id","profile","autoCompounding","discord","createdAt","rules","updatedAt","addressRTM", "enableTfa"]);
+            } catch (error) {
+                throw new ApolloError(error);
+            }
+        },
+
         signupUser: async (__: any, args: {email:string,password:string,confirmPassword:string},ctx:any) => {
             try {
                 if(ctx.user){
@@ -112,7 +199,7 @@ const ServiceResolvers = {
                     history.save().then();
                 }catch{
                 }
-                return pick(user,["email","_id","profile","discord","createdAt","rules","updatedAt","addressRTM", "enableTfa"]);
+                return pick(user,["email","_id","profile","autoCompounding","discord","createdAt","rules","updatedAt","addressRTM", "enableTfa"]);
             } catch (error) {
                 throw new ApolloError(error);
             }
@@ -209,7 +296,7 @@ const ServiceResolvers = {
                     await user.save();
                     await new Promise((resolve)=>{
                         ctx.req.logIn(user,()=>{
-                            resolve(true)
+                            resolve(true);
                         });
                     });
                     if(process.env.NODE_ENV!=="production"){
@@ -268,7 +355,7 @@ const ServiceResolvers = {
                     await user.save();
                     await new Promise((resolve)=>{
                         ctx.req.logIn(user,()=>{
-                            resolve(true)
+                            resolve(true);
                         });
                     });
 
@@ -383,7 +470,7 @@ const ServiceResolvers = {
                     await history.save();
                 }catch{
                 }
-                return pick(user,["email","_id","profile","discord","createdAt","rules","updatedAt","addressRTM", "enableTfa"]);
+                return pick(user,["email","_id","profile","autoCompounding","discord","createdAt","rules","updatedAt","addressRTM", "enableTfa"]);
             } catch (error) {
                 throw new ApolloError(error);
             }
@@ -464,7 +551,7 @@ const ServiceResolvers = {
                     await history.save();
                 }catch{
                 }
-                return pick(ctx.user,["email","_id","profile","discord","createdAt","rules","updatedAt","addressRTM", "enableTfa"]);
+                return pick(ctx.user,["email","_id","profile","autoCompounding","discord","createdAt","rules","updatedAt","addressRTM", "enableTfa"]);
             } catch (error) {
                 throw new ApolloError(error);
             }

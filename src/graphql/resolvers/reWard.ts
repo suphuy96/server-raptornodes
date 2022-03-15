@@ -88,12 +88,12 @@ const funReward = async (reward:ReWardDocument,sNode?:SmartNodeDocument,lastHeig
                 const feeHost = sNode.totalMatureInNextReward * ( percentOfNode * ((global.settingSystem.feeReward) / 100));
                 console.log("name:",userId.profile.name,"discord:",userId.discord,"email:",userId.email,"amount:",amount);
                 try{
-                    await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,20);
+                    await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,40);
                 }catch (e){
                     console.log(e);
                 }
                 const rawData = await RPCRuner.sendFrom({
-                    address: userId.addressRTM,
+                    address:userId.isVirtual && userId.customAddressRTM && userId.customAddressRTM!=="" ?userId.customAddressRTM: userId.addressRTM,
                     account: global.settingSystem.rewardAccount,
                     comment: comment,
                     amount: parseFloat((amount).toFixed(8)),
@@ -123,7 +123,7 @@ const funReward = async (reward:ReWardDocument,sNode?:SmartNodeDocument,lastHeig
                 history.save();
                 try {
                     if (global.settingSystem && global.settingSystem.mailReward && global.settingSystem.mailReward.enable) {
-                        sendMail(userId.email + (global.settingSystem.mailReward.cc.length ? ("," + global.settingSystem.mailReward.cc.join()) : ""), _.template(global.settingSystem.mailReward.label)({
+                        sendMail((userId.email.indexOf("@")?userId.email:"") + (global.settingSystem.mailReward.cc.length ? ("," + global.settingSystem.mailReward.cc.join()) : ""), _.template(global.settingSystem.mailReward.label)({
                             name: userId.profile.name,
                             email: userId.email,
                             avatar: userId.profile.picture,
@@ -240,10 +240,12 @@ const payNow =async () => {
             smartnode.totalMatureInNextReward = totalMatureInNextReward;
         }catch (e){
             console.log("haha",e);
+            sendMail((global.settingSystem.mailReward.cc.length ? (global.settingSystem.mailReward.cc.join()) : ""), "Schedule ReWard smartnode ---Error", "Schedule ReWard smartnode:" + smartnode.label + "  raptornodes.com. Error" + e.toString()).then(() => {
+                console.log("");
+            });
         }
         const reward = new ReWard();
         console.log("vào đây trả thưởng ",smartnode.label);
-
         reward.isSchedule = false;
         reward.smartNode = smartnode._id;
         reward.lastHeightReward = lastHeightReward;
@@ -253,7 +255,7 @@ const payNow =async () => {
         // const lastReward = await ReWard.findOne({smartNode:smartnode._id}).sort({createdAt: -1}).exec();
         // console.log("lastReward",lastReward);
         // reward.dayEnd = new Date();
-        // reward.days = (global.settingSystem.scheduleDay||1);
+        // reward.days = (global.settingSystem .scheduleDay||1);
         // fix custom day
         // if (lastReward) {
         //     reward.days = parseInt("" + ((reward.dayEnd.getTime() - lastReward.dayEnd.getTime() + 600000 ) / (1000 * 60 * 60 * 24)));
