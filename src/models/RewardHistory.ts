@@ -10,6 +10,7 @@ export interface IReWardHistory  {
     feeReward:number;
     collateral:number;
     days:number;
+    isVitual?:boolean;
     isSchedule:boolean;
     user:UserDocument;
     txid: string;
@@ -31,7 +32,7 @@ const ReWardHistorySchema = new mongoose.Schema<ReWardHistoryDocument>(
         days:Number,
         collateral:Number,
         percentOfNode:Number,
-
+        isVitual:Boolean,
         isSchedule:Boolean,
         dayEnd:Date,
         txid:String,
