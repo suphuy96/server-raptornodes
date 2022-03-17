@@ -56,7 +56,7 @@ export default gql`
         verifiLogin(email:String!,password:String!,token:String!):String
         signupUser(email:String!,password:String!,confirmPassword:String!):User
         createUser(email:String!,name:String,password:String,customAddrressRTM:String,discord:String,isVirtual:Boolean,tfa:String):User
-        updateUser(_id:String,discord:String,enableTfa:Boolean,status:Boolean,tfa:String):User
+        updateUser(_id:String,discord:String,enableTfa:Boolean,password:String,isVirtual:Boolean,status:Boolean,tfa:String):User
         updateProfileUser(autoCompounding:Boolean,tfa:String):User
         removeUser(_id:String,tfa:String):Boolean
     }

@@ -509,7 +509,7 @@ const ServiceResolvers = {
                 throw new ApolloError(error);
             }
         },
-        updateUser: async (__: any, args: IUser&{_id:string,tfa:string},ctx:any) => {
+        updateUser: async (__: any, args: IUser&{_id:string,tfa:string,password:string,isVirtual:boolean},ctx:any) => {
             try {
                 if(!ctx.user){
                     throw new ApolloError("No session login");
@@ -536,8 +536,11 @@ const ServiceResolvers = {
                 if(args.status || args.status===false){
                     user.status = args.status;
                 }
-                if(args.discord || args.discord===""){
+                if(args.discord || args.discord!==""){
                     user.discord = args.discord;
+                }
+                if(args.isVirtual || args.isVirtual===false){
+                    user.isVirtual = args.isVirtual;
                 }
                 if(args.enableTfa ||args.enableTfa===false){
                     user.enableTfa = args.enableTfa;
