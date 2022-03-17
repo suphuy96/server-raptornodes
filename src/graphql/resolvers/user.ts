@@ -13,6 +13,7 @@ import jwt from "jsonwebtoken";
 import {v4 as uuidv4} from "uuid";
 import {SESSION_SECRET} from "../../util/secrets";
 import {NativeError} from "mongoose";
+import {DataOld} from "../../models/DataOld";
 
 const ODefaults: OptionRpcClient = {
     host: process.env.rpcbind,
@@ -70,7 +71,7 @@ const ServiceResolvers = {
         },
     },
     Mutation:{
-        createUser: async (__: any, args: {email:string,password:string,name:string,customAddrressRTM:string,tfa:string},ctx:any) => {
+        createUser: async (__: any, args: {email:string,password:string,discord:string,name:string,customAddrressRTM:string,tfa:string},ctx:any) => {
             try {
                 checkIsAdmin(ctx.user);
                 if(ctx.user.enableTfa){
@@ -106,7 +107,10 @@ const ServiceResolvers = {
                         name:args.name||args.email
                     }
                 });
-                    user.customAddrressRTM = args.customAddrressRTM;
+                user.customAddrressRTM = args.customAddrressRTM;
+                if(args.discord && args.discord!==""){
+                    user.discord = args.discord;
+                }
                 const existingUser = await  User.findOne({ email: args.email });
                 if (existingUser) {
                     throw new ApolloError("Account with that email address already exists." );
@@ -142,6 +146,36 @@ const ServiceResolvers = {
                     user.accountRTMError = true;
                 }
                 await user.save();
+                if(user.discord && user.discord!==""){
+                    const allSmartNode = await DataOld.find({discordId:user.discord});
+                    if(allSmartNode && allSmartNode.length){
+                        for await (const smartn of allSmartNode){
+                            const smartnodeS = await SmartNode.findOne({label:smartn.smartNode});
+                            if(smartnodeS) {
+                                if (!smartnodeS.participants.find(it => it.userId === user._id)) {
+                                    smartnodeS.participants.push({
+                                        userId: user._id,
+                                        RTMRewards: smartn.RTMRewards,
+                                        collateral: smartn.collateral,
+                                        pendingRTMRewards: smartn.pendingRTMRewards,
+                                        percentOfNode: smartn.collateral / smartnodeS.collateral
+                                        ,
+                                        txids: [],
+                                        source: "Import excel",
+                                        time: new Date()
+                                    });
+                                    try {
+                                        smartn.done = true;
+                                        await smartn.save();
+                                    } catch (e) {
+
+                                    }
+                                }
+                                await smartnodeS.save();
+                            }
+                        }
+                    }
+                }
                 try{
                     const history = new History();
                     history.action = "createUser";
