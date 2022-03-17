@@ -109,6 +109,7 @@ const funReward = async (reward:ReWardDocument,sNode?:SmartNodeDocument,lastHeig
                 history.user = userId;
                 history.collateral = collateral;
                 history.percentOfNode = percentOfNode;
+                history.isVitual = userId.isVirtual;
                 history.feeReward = global.settingSystem.feeReward;
                 if(smartnode && smartnode._id){
                     history.smartNode = smartnode._id;
