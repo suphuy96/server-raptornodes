@@ -22,9 +22,7 @@ export interface IUser {
     addressRTM:string;
     enableTfa:boolean;
     autoCompounding:boolean;
-    customAddressRTM:string;
-    isVirtual:boolean;
-    customAddrressRTM?:string;
+    customAddressRTM?:string;
     balance?:number;
     collateral?:number;
     portfolio?:number;
@@ -35,6 +33,7 @@ export interface IUser {
     accountRTMError?:boolean;
     tokenJWT?: string;
     tokens: AuthToken[];
+    isVirtual:boolean;
     profile: {
         name: string;
         discordName?: string;
@@ -71,7 +70,7 @@ const userSchema = new mongoose.Schema<UserDocument>(
         rules:{ type: String, default: "User" },
         verified:{ type: Boolean, default: true },
         isVirtual:{ type: Boolean, default: false },
-        customAddrressRTM: String,
+        customAddressRTM: String,
         verificationToken:String,
         verificationExpires: Date,
         tfa:{

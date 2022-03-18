@@ -71,7 +71,7 @@ const ServiceResolvers = {
         },
     },
     Mutation:{
-        createUser: async (__: any, args: {email:string,password:string,discord:string,name:string,customAddrressRTM:string,tfa:string},ctx:any) => {
+        createUser: async (__: any, args: {email:string,password:string,discord:string,name:string,customAddressRTM:string,tfa:string},ctx:any) => {
             try {
                 checkIsAdmin(ctx.user);
                 if(ctx.user.enableTfa){
@@ -100,14 +100,14 @@ const ServiceResolvers = {
                     email: args.email,
                     password: args.password,
                     verified:true,
-                    customAddrressRTM:args.customAddrressRTM,
+                    customAddressRTM:args.customAddressRTM,
                     isVirtual:true,
                     verificationExpires:Date.now()+3600000,
                     profile:{
                         name:args.name||args.email
                     }
                 });
-                user.customAddrressRTM = args.customAddrressRTM;
+                user.customAddressRTM = args.customAddressRTM;
                 if(args.discord && args.discord!==""){
                     user.discord = args.discord;
                 }
@@ -509,7 +509,7 @@ const ServiceResolvers = {
                 throw new ApolloError(error);
             }
         },
-        updateUser: async (__: any, args: IUser&{_id:string,tfa:string,password:string,isVirtual:boolean},ctx:any) => {
+        updateUser: async (__: any, args: IUser&{_id:string,tfa:string,customAddressRTM:string,password:string,isVirtual:boolean},ctx:any) => {
             try {
                 if(!ctx.user){
                     throw new ApolloError("No session login");
@@ -542,9 +542,16 @@ const ServiceResolvers = {
                 if(args.isVirtual || args.isVirtual===false){
                     user.isVirtual = args.isVirtual;
                 }
+                if(args.password && args.password!=="" && args.password.length>6){
+                    user.password = args.password;
+                }
+                if(args.customAddressRTM){
+                    user.customAddressRTM = args.customAddressRTM;
+                }
                 if(args.enableTfa ||args.enableTfa===false){
                     user.enableTfa = args.enableTfa;
                 }
+
               await user.save();
                 try{
                     const history = new History();
