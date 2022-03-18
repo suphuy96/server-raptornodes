@@ -1,5 +1,5 @@
 import {STMP_PASS} from "../util/secrets";
-const config = {
+const config = process.env.USE_STMP_HOST==="1"?{
     from: process.env.STMP_FROM,
     transport: "smtp",
     smtp: {
@@ -10,8 +10,13 @@ const config = {
             user: process.env.STMP_USER,
             pass: STMP_PASS
         }
-    }};
-
+    }}: {
+    service: "SendGrid",
+    auth: {
+        user: process.env.SENDGRID_USER,
+        pass: process.env.STMP_PASS,
+    }
+};
 import nodemailer from  "nodemailer";
 import {htmlToText } from "nodemailer-html-to-text";
 const transporter = nodemailer.createTransport(config.smtp);
