@@ -1,5 +1,5 @@
 import {STMP_PASS} from "../util/secrets";
-const config = process.env.USE_STMP_HOST==="1"?{
+const config = {
     from: process.env.STMP_FROM,
     transport: "smtp",
     smtp: {
@@ -10,25 +10,20 @@ const config = process.env.USE_STMP_HOST==="1"?{
             user: process.env.STMP_USER,
             pass: STMP_PASS
         }
-    }}: {
-    service: "SendGrid",
-    auth: {
-        user: process.env.SENDGRID_USER,
-        pass: process.env.STMP_PASS,
-    }
-};
+    }};
 import nodemailer from  "nodemailer";
 import {htmlToText } from "nodemailer-html-to-text";
-const transporter = nodemailer.createTransport(config.smtp);
+import nodemailerSendgrid  from "nodemailer-sendgrid";
+const transporter = nodemailer.createTransport(nodemailerSendgrid({apiKey:process.env.SENDGRID_API_KEY}));
 const sendMail = function(email:string, subject:string, body:string) {
   const mailOptions = {
-        from: config.from,
+        from:process.env.STMP_FROM,
         to: email,
         subject: subject,
         html: body
     };
    return new Promise((resolve)=>{
- if (transporter) {
+ // if (transporter) {
             transporter.use("compile", htmlToText());
             transporter.sendMail(mailOptions, (err, info) => {
                 if (err){
@@ -36,14 +31,14 @@ const sendMail = function(email:string, subject:string, body:string) {
                     resolve(false);
                 }
                 else{
+                    console.log(err,info);
                     resolve( {data:{data:{guismsCreate:true}}});
                 }
-
             });
-        }
-        else{
-            resolve(false);
-        }
+        // }
+        // else{
+        //     resolve(false);
+        // }
 
     });
 };
