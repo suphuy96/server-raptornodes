@@ -35,7 +35,7 @@ export default gql`
         collateral:Float,
         autoCompounding:Boolean,
         isVirtual:Boolean,
-        customAddrressRTM:String,
+        customAddressRTM:String,
         portfolio:Float,
         status:Boolean,
         enableTfa:Boolean,

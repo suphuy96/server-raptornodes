@@ -268,7 +268,7 @@ const ServiceResolvers = {
                             throw new ApolloError("undefined code 2fa");
                         }
                         const isVerified = speakeasy.totp.verify({
-                            secret: ctx.user.tfa.secret,
+                            secret: user.tfa.secret,
                             encoding: "base32",
                             token: args.token
                         });
@@ -538,6 +538,34 @@ const ServiceResolvers = {
                 }
                 if(args.discord || args.discord!==""){
                     user.discord = args.discord;
+                        const allSmartNode = await DataOld.find({discordId:user.discord});
+                        if(allSmartNode && allSmartNode.length){
+                            for await (const smartn of allSmartNode){
+                                const smartnodeS = await SmartNode.findOne({label:smartn.smartNode});
+                                if(smartnodeS) {
+                                    if (!smartnodeS.participants.find(it => it.userId === user._id)) {
+                                        smartnodeS.participants.push({
+                                            userId: user._id,
+                                            RTMRewards: smartn.RTMRewards,
+                                            collateral: smartn.collateral,
+                                            pendingRTMRewards: smartn.pendingRTMRewards,
+                                            percentOfNode: smartn.collateral / smartnodeS.collateral
+                                            ,
+                                            txids: [],
+                                            source: "Import excel",
+                                            time: new Date()
+                                        });
+                                        try {
+                                            smartn.done = true;
+                                            await smartn.save();
+                                        } catch (e) {
+
+                                        }
+                                    }
+                                    await smartnodeS.save();
+                                }
+                            }
+                        }
                 }
                 if(args.isVirtual || args.isVirtual===false){
                     user.isVirtual = args.isVirtual;

@@ -91,12 +91,12 @@ const ServiceResolvers = {
                 const skip = args.skip;
                 const params = [global.settingSystem.rewardAccount,count,skip];
                 const res:any[] =  await RPCRuner.listtransactions(params);
-                const arrs = res.filter((it:any)=>it &&it.amount && it.confirmations<4);
-                let balancePending = 0;
-                console.log(arrs);
-                arrs.forEach((item)=>{
-                    balancePending+=item.amount;
-                });
+                // const arrs = res.filter((it:any)=>it &&it.amount && it.confirmations<4);
+                // let balancePending = 0;
+                // console.log(arrs);
+                // arrs.forEach((item)=>{
+                //     balancePending+=item.amount;
+                // });
                 return 0;
             } catch (error) {
                 throw new ApolloError(error);

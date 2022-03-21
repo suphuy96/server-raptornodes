@@ -193,7 +193,7 @@ const funReward = async (reward:ReWardDocument,sNode?:SmartNodeDocument,lastHeig
 const payNow =async () => {
 
     const smartnodes = await SmartNode.find({statusCollateral : "Start Reward" }).populate("participants.userId");
-    console.log("vào đây trả thưởng=====> ");
+    console.log("vào đây trả thưởng=====> ",smartnodes);
     const res:any = await RPCRuner.smartnodelist();
     const objSmartnode:any = {};
     Object.keys(res).forEach((key)=>{
@@ -267,7 +267,7 @@ const payNow =async () => {
         //         reward.days = (global.settingSystem.scheduleDay !== "Everyday" && global.settingSystem.scheduleDay2 && global.settingSystem.scheduleDay2 !== "NoUse") ? 4 : global.settingSystem.scheduleValue;
         //     }
         // }
-        const comment = "ReWard in Raptornodes.com";
+        const comment = "ReWard SmartNode:"+smartnode.label;
         reward.description = comment;
 
         if(smartnode.totalMatureInNextReward<=0){
@@ -281,7 +281,7 @@ const payNow =async () => {
             await new Promise((resolve)=>{
                 setTimeout(()=>{
                     resolve(true);
-                },5000);
+                },1000);
             });
         }
     }
