@@ -12,8 +12,10 @@ export interface IReWardHistory  {
     days:number;
     isVitual?:boolean;
     isSchedule:boolean;
+    reTry:boolean;
     user:UserDocument;
     txid: string;
+    reverse:string;
     amount:number;
     feeHost:number;
     dayEnd:Date;
@@ -34,8 +36,10 @@ const ReWardHistorySchema = new mongoose.Schema<ReWardHistoryDocument>(
         percentOfNode:Number,
         isVitual:Boolean,
         isSchedule:Boolean,
+        reTry:Boolean,
         dayEnd:Date,
         txid:String,
+        reverse:String,
         amount:Number,
         feeHost:Number,
         user:{ type: Schema.Types.ObjectId, ref: "User" },

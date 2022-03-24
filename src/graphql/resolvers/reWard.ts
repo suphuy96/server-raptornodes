@@ -28,6 +28,10 @@ import {WALLET_PASS_PHRASE} from "../../util/secrets";
 import {DataUltraFastEarning, IDataUltraFastEarning,DataUltraFastEarningDocument} from "../../models/dataUltraFastEarning";
 import {IUser,UserDocument} from "../../models/User";
 import {History} from "../../models/History";
+let isWaitToDone = false;
+let timeOutCheck = setTimeout(()=>{console.log("timeOutCheck");},100);
+let timeOutCheckReTry = setTimeout(()=>{console.log("timeOutCheckReTry");},100);
+let isWaitToDoneReTry = false;
 let rewardTask :ScheduledTask= schedule("59 23 * * *",async () => {
     console.log("schedule-- rewardTask ----nulll");
 });
@@ -47,7 +51,7 @@ const getDataUFE = async ()=>{
 const funReward = async (reward:ReWardDocument,sNode?:SmartNodeDocument,lastHeightReward?:number) => {
     try {
 
-        const reWardBalance = await RPCRuner.getbalance(global.settingSystem.rewardAccount,11);
+        const reWardBalance = await RPCRuner.getbalance(global.settingSystem.rewardAccount,4);
         const realReWardBalance = reWardBalance;
         let totalReward = 0;
         if(sNode)
@@ -77,7 +81,7 @@ const funReward = async (reward:ReWardDocument,sNode?:SmartNodeDocument,lastHeig
 
             }
 
-            sendMail( process.env.ADMINS, "Error!! Not enough balance to pay the reward, "+(sNode?sNode.label:"")+" Smartnode","Schedule ReWard  Smartnode "+(sNode?sNode.label:"")+"in raptornodes.com, totalReward:" +totalReward.toFixed(8)+"RTM, reWardBalance:"+reWardBalance+"RTM").then(()=>{
+            sendMail( process.env.ADMINS, "Error!! Not enough balance to pay the reward, "+(sNode?sNode.label:"")+" Smartnode","Schedule ReWard  Smartnode "+(sNode?sNode.label:"")+"in raptornodes.com, totalReward:" +totalReward.toFixed(8)+"RTM, reWardBalance:"+realReWardBalance+"RTM").then(()=>{
                 console.log("");
             });
         }else
@@ -99,6 +103,7 @@ const funReward = async (reward:ReWardDocument,sNode?:SmartNodeDocument,lastHeig
                     amount: parseFloat((amount).toFixed(8)),
                     comment_to: ""
                 }).catch(e => {
+                    console.log(e);
                     sendMail((global.settingSystem.mailReward.cc.length ? (global.settingSystem.mailReward.cc.join()) : ""), "Schedule ReWard User ---Error", "Schedule ReWard User:" + userId.email + "  raptornodes.com. Error" + e.toString()).then(() => {
                         console.log("");
                     });
@@ -178,12 +183,16 @@ const funReward = async (reward:ReWardDocument,sNode?:SmartNodeDocument,lastHeig
                 const settingSystem:SystemDocument = await System.findOne();
                 settingSystem.missingReward = false;
                 settingSystem.save();
+                clearTimeout(timeOutCheck);
+                isWaitToDone = false;
             }catch (e){
-
+                clearTimeout(timeOutCheck);
+                isWaitToDone = false;
             }
         }
         // reward.save();
-
+        isWaitToDone = false;
+        clearTimeout(timeOutCheck);
         // return reward;
     }catch (e){
         throw new ApolloError("Error"+e.toString());
@@ -191,7 +200,10 @@ const funReward = async (reward:ReWardDocument,sNode?:SmartNodeDocument,lastHeig
     }
 };
 const payNow =async () => {
-
+    if(isWaitToDone){
+        throw new ApolloError("The system is paying the reward");
+    }
+    isWaitToDone = true;
     const smartnodes = await SmartNode.find({statusCollateral : "Start Reward" }).populate("participants.userId");
     console.log("vào đây trả thưởng=====> ",smartnodes);
     const res:any = await RPCRuner.smartnodelist();
@@ -253,6 +265,7 @@ const payNow =async () => {
         reward.paymentsPerDay = global.settingSystem.paymentsPerDay;
         reward.feeReward = global.settingSystem.feeReward;
         reward.days =  global.settingSystem&&global.settingSystem.scheduleValue?global.settingSystem.scheduleValue:1;
+        reward.dayEnd = new Date();
         // const lastReward = await ReWard.findOne({smartNode:smartnode._id}).sort({createdAt: -1}).exec();
         // console.log("lastReward",lastReward);
         // reward.dayEnd = new Date();
@@ -271,13 +284,19 @@ const payNow =async () => {
         reward.description = comment;
 
         if(smartnode.totalMatureInNextReward<=0){
+            isWaitToDone = false;
+            clearTimeout(timeOutCheck);
             sendMail( process.env.ADMINS, "SmartNode "+(smartnode?smartnode.label:"")+"Not enough days to pay the reward","SmartNode "+(smartnode?smartnode.label:"")+" Not enough days to pay the reward. Time Start: "+("Time Start: "+smartnode.timeStartReward)+", Time ReWard: "+reward.dayEnd).then(()=>{
                 console.log("");
             }); }else{
             await reward.save();
+            timeOutCheck = setTimeout(()=>{
+                isWaitToDone = false;
+            },280000);
             await funReward(reward,smartnode,lastHeightReward);
             smartnode.lastHeightReward = lastHeightReward;
             await smartnode.save();
+
             await new Promise((resolve)=>{
                 setTimeout(()=>{
                     resolve(true);
@@ -456,7 +475,6 @@ const ServiceResolvers = {
     },
     Mutation: {
         createReward: async (__: any, wr: IReWard &{tfa:string},ctx:any) => {
-            try {
                 checkIsAdmin(ctx.user);
                 if(global.settingSystem.isMaintenance){
                     throw new ApolloError("System is Maintenance");
@@ -474,7 +492,11 @@ const ServiceResolvers = {
                         throw new ApolloError("2fa is not correct");
                     }
                 }
-                await payNow();
+                if(isWaitToDone){
+                    throw new ApolloError("The system is paying the reward");
+                }else{
+                    await payNow();
+                }
                 try{
                     const history = new History();
                     history.action = "Reward By ADMIN";
@@ -484,14 +506,9 @@ const ServiceResolvers = {
                     await history.save();
                 }catch{
                 }
-                return {};
-
-            } catch (error) {
-                throw new ApolloError(error);
-            }
+                return {_id:""};
         },
         tryReward: async (__: any, wr: {_id:string,tfa:string},ctx:any) => {
-            try {
                 checkIsAdmin(ctx.user);
                 const reward = await ReWard.findById(wr._id);
                 if(!reward){
@@ -569,14 +586,175 @@ const ServiceResolvers = {
                 }
 console.log("vào đây xhuwr lý",smartNode);
                 await funReward(reward,smartNode,lastHeightReward);
+                try{
+                    const history = new History();
+                    history.action = "tryReward By ADMIN";
+                    history.author = ctx.user._id;
+                    history.data = {};
+                    history.dataOld = {};
+                    await history.save();
+                }catch{
+                }
                 return reward;
-
-            } catch (error) {
-                throw new ApolloError(error);
+        },
+    tryRewardHistory: async (__: any, wr: {_id:string,tfa:string,ids:[string]},ctx:any) => {
+            checkIsAdmin(ctx.user);
+            const reward = await ReWard.findById(wr._id);
+            if (!reward) {
+                throw new ApolloError("Not found ReWard");
             }
-        }
 
+            if (global.settingSystem.isMaintenance) {
+                throw new ApolloError("System is Maintenance");
+            }
+            if (ctx.user.enableTfa) {
+                if (!wr.tfa || wr.tfa === "") {
+                    throw new ApolloError("undefined code 2fa");
+                }
+                const isVerified = speakeasy.totp.verify({
+                    secret: ctx.user.tfa.secret,
+                    encoding: "base32",
+                    token: wr.tfa
+                });
+                if (!isVerified) {
+                    throw new ApolloError("2fa is not correct");
+                }
+            }
+            const smartNode = await SmartNode.findById(reward.smartNode);
+            if (!smartNode) {
+                throw new ApolloError("not found SmartNode");
+            }
+            if(isWaitToDoneReTry){
+                    throw new ApolloError("The system is paying ReTry");
+            }
+            timeOutCheckReTry = setTimeout(()=>{
+                isWaitToDoneReTry = false;
+            },280000);
+            isWaitToDoneReTry = true;
+           const rewardhistorys = await ReWardHistory.find({reward:wr._id}).populate("user");
+            console.log(rewardhistorys,"rewardhistorys");
+            for await (const rewardhistory of rewardhistorys){
+                    if( (!rewardhistory.txid ||rewardhistory.txid==="")){
+                        try{
+                            await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,40);
+                        }catch (e){
+                            console.log(e);
+                        }
+                        const rawData = await RPCRuner.sendFrom({
+                            address:rewardhistory.user.isVirtual && rewardhistory.user.customAddressRTM && rewardhistory.user.customAddressRTM!=="" ?rewardhistory.user.customAddressRTM: rewardhistory.user.addressRTM,
+                            account: global.settingSystem.rewardAccount,
+                            comment: "reTry Reward #"+smartNode.label,
+                            amount: parseFloat((rewardhistory.amount).toFixed(8)),
+                            comment_to: ""
+                        }).catch(e => {
+                            console.log(e);
+                            sendMail((global.settingSystem.mailReward.cc.length ? (global.settingSystem.mailReward.cc.join()) : ""), "ReTry ReWard User ---Error", "Schedule ReWard User:" + rewardhistory.user.email + "  raptornodes.com. Error" + e.toString()).then(() => {
+                                console.log("");
+                            });
+                        });
+                        if(rawData && rawData!==""){
+                        rewardhistory.reTry = true;
+                        rewardhistory.description = "reTry Reward #"+smartNode.label,
+                        rewardhistory.txid = rawData;
+                        }
+                       await rewardhistory.save();
+                    }
+                }
+            isWaitToDoneReTry = false;
+            clearTimeout(timeOutCheckReTry);
+            try{
+                const history = new History();
+                history.action = "tryRewardHistory By ADMIN";
+                history.author = ctx.user._id;
+                history.data = reward;
+                history.dataOld = {};
+                await history.save();
+            }catch{
+            }
+            return true;
+    },
+    tryReverseRewardHistory: async (__: any, wr: {_id:string,tfa:string},ctx:any) => {
+            checkIsAdmin(ctx.user);
+            const reward = await ReWard.findById(wr._id);
+            if (!reward) {
+                throw new ApolloError("Not found ReWard");
+            }
+            if (reward.reverse) {
+                throw new ApolloError("ReWard is reversed");
+            }
+            if (global.settingSystem.isMaintenance) {
+                throw new ApolloError("System is Maintenance");
+            }
+            if (ctx.user.enableTfa) {
+                if (!wr.tfa || wr.tfa === "") {
+                    throw new ApolloError("undefined code 2fa");
+                }
+                const isVerified = speakeasy.totp.verify({
+                    secret: ctx.user.tfa.secret,
+                    encoding: "base32",
+                    token: wr.tfa
+                });
+                if (!isVerified) {
+                    throw new ApolloError("2fa is not correct");
+                }
+            }
+            const smartNode = await SmartNode.findById(reward.smartNode);
+            if (!smartNode) {
+                throw new ApolloError("not found SmartNode");
+            }
+            if(isWaitToDoneReTry){
+                throw new ApolloError("The system is paying ReTry");
+            }
+            timeOutCheckReTry = setTimeout(()=>{
+                isWaitToDoneReTry = false;
+            },280000);
+            isWaitToDoneReTry = true;
+            const rewardhistorys = await ReWardHistory.find({reward:wr._id}).populate("user");
+            console.log(rewardhistorys,"rewardhistorys");
+            for await (const rewardhistory of rewardhistorys){
+                if(rewardhistory.txid &&!rewardhistory.reverse && !rewardhistory.user.isVirtual){
+                    try{
+                        await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,40);
+                    }catch (e){
+                        console.log(e);
+                    }
+                    const rawData = await RPCRuner.sendFrom({
+                        address:settingSystem.rewardAddress,
+                        account: rewardhistory.user.accountRTM,
+                        comment: "Reverse Reward #"+smartNode.label,
+                        amount: parseFloat((rewardhistory.amount).toFixed(8)),
+                        comment_to: ""
+                    }).catch(e => {
+                        console.log(e);
+                        sendMail((global.settingSystem.mailReward.cc.length ? (global.settingSystem.mailReward.cc.join()) : ""), "ReTry ReWard User ---Error", "Schedule ReWard User:" + rewardhistory.user.email + "  raptornodes.com. Error" + e.toString()).then(() => {
+                            console.log("");
+                        });
+                    });
+                    if(rawData && rawData!=="") {
+                        rewardhistory.reverse = rawData;
+                        rewardhistory.description = "Reverse Reward #"+smartNode.label;
+                        await rewardhistory.save();
+                    }
+                }
+            }
+            reward.reverse = true;
+            await reward.save();
+            isWaitToDoneReTry = false;
+            clearTimeout(timeOutCheckReTry);
+            try{
+                const history = new History();
+                history.action = "tryReverseRewardHistory By ADMIN";
+                history.author = ctx.user._id;
+                history.data = reward;
+                history.dataOld = {};
+                await history.save();
+            }catch{
+            }
+            return true;
     }
+    },
+    // tryRewardHistory(_id:String,tfa:String):Boolean
+    // tryReverseRewardHistory(_id:String,tfa:String):Boolean
 };
 
 export default ServiceResolvers;

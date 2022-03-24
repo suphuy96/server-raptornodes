@@ -4,6 +4,8 @@ import {checkIsAdmin, checkIsAuthen} from "../../util/checkAuthen";
 import {OptionRpcClient} from "../../libs/rpc-raptoreum";
 import RpcRaptoreum from "../../libs/rpc-raptoreum";
 import {mongo} from "mongoose";
+import {ReWard} from "../../models/Reward";
+import speakeasy from "speakeasy";
 const ODefaults: OptionRpcClient = {
     host: process.env.rpcbind,
     port:  parseInt(process.env.rpcport||"19998"),
@@ -58,8 +60,35 @@ const ServiceResolvers = {
             }
         }
     },
-    Mutation: {
-    }
+    // Mutation: {
+    //     reTryrewardHistory tryReward: async (__: any, wr: {_id:string,tfa:string},ctx:any) => {
+    // try {
+    //     checkIsAdmin(ctx.user);
+    //     const reward = await ReWard.findById(wr._id);
+    //     if(!reward){
+    //         throw new ApolloError("Not found ReWard");
+    //     }
+    //     if(!reward.missingReward ){
+    //         throw new ApolloError("ReWard not Missing");
+    //     }
+    //     if(global.settingSystem.isMaintenance){
+    //         throw new ApolloError("System is Maintenance");
+    //     }
+    //     if(ctx.user.enableTfa){
+    //         if(!wr.tfa||wr.tfa===""){
+    //             throw new ApolloError("undefined code 2fa");
+    //         }
+    //         const isVerified = speakeasy.totp.verify({
+    //             secret: ctx.user.tfa.secret,
+    //             encoding: "base32",
+    //             token: wr.tfa
+    //         });
+    //         if(!isVerified){
+    //             throw new ApolloError("2fa is not correct");
+    //         }
+    //     }}
+    // }
+    // }
 };
 
 export default ServiceResolvers;

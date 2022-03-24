@@ -26,7 +26,7 @@ const ServiceResolvers = {
                 // if(ctx.user.rules==="Admin"){
                 //     return await History.find(args).populate("user");
                 // }
-               const ars = await History.find(objFilter).populate("author").limit(args.limit||100).skip(args.offset||0);
+               const ars = await History.find(objFilter).populate("author").sort({createdAt:-1}).limit(args.limit||100).skip(args.offset||0);
                 return ars;
             } catch (error) {
                 throw new ApolloError(error);

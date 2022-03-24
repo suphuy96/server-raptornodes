@@ -8,6 +8,8 @@ export interface IReWard  {
     smartNode:string;
     lastHeightReward?:number;
     missingReward?:boolean,
+    reverse?:boolean;
+    timeReverse?:boolean;
     timeReTry?:Date,
     dayStart?:Date;
     dayEnd:Date;
@@ -24,6 +26,8 @@ const ReWardSchema = new mongoose.Schema<ReWardDocument>(
         isSchedule:Boolean,
         smartNode:String,
         missingReward:Boolean,
+        reverse:Boolean,
+        timeReverse:Boolean,
         timeReTry:Date,
         dayStart:Date,
         dayEnd:Date,

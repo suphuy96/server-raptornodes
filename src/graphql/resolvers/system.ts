@@ -25,6 +25,7 @@ const ServiceResolvers = {
             try {
                 checkIsAdmin(ctx.user);
                 const  address = global.settingSystem.rewardAddress;
+                console.log("WithdrawlWeekly",global.settingSystem.rewardAccount);
                 const balance = await RPCRuner.getbalance(global.settingSystem.rewardAccount,4);
                 const received = await RPCRuner.getreceivedbyaccount(global.settingSystem.rewardAccount);
                 return {balance:balance?(balance):0,received:received?(received):0,rewardAddress:global.settingSystem.rewardAddress};

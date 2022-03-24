@@ -11,6 +11,8 @@ export default gql`
         isSchedule:Boolean,
         dayEnd: Date,
         missingReward:Boolean,
+        reverse:Boolean,
+        timeReverse:Boolean,
         createdAt:DateTime,
         updatedAt:DateTime
         
@@ -27,6 +29,8 @@ export default gql`
         days:Int,
         isSchedule:Boolean,
         user:Author,
+        reTry:Boolean,
+        reverse:String,
         txid:String,
         amount:Float,
         
@@ -42,6 +46,8 @@ export default gql`
     }
     type Mutation {
         tryReward(_id:String,tfa:String):Reward
+        tryRewardHistory(_id:String!,ids:[String]!,tfa:String):Boolean
+        tryReverseRewardHistory(_id:String!,tfa:String):Boolean
         createReward(days:Int,description:String,tfa:String):Reward
     }
 `;
