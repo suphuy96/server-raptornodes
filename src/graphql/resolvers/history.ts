@@ -52,7 +52,7 @@ const ServiceResolvers = {
                 const params =[null,count,skip];
                 const res:any =  await RPCRuner.listtransactions(params);
                const arrss:any[] = [] ;
-               const minDate:number = new Date().getTime()-(86400000*7);
+               const minDate:number = args.time?args.time: new Date().getTime()-(86400000*7);
                 // console.log(res);
                res.forEach((item:any)=>{
                    if(item.time*1000>minDate){

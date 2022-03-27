@@ -4,9 +4,6 @@ export default gql`
     type participant {
         userId:Author,
         collateral:Float,
-        fullName:String,
-        isManual:Boolean,
-        addressReward:String,
         percentOfNode:Float,
         exchange:Float,
         RTMRewards:Float,
@@ -81,6 +78,19 @@ export default gql`
         payee: String,
         status: String,
     }
+    input inputParticipant {
+        userId:String!,
+        collateral:Float!,
+        percentOfNode:Float,
+        exchange:Float,
+        txids:[String],
+        source:String,
+        time:Date
+    }
+    input inputBalanceNode {
+        _id:String!,
+        participants:inputParticipant!
+    }
     type Query {
         smartnodeCount:countSN
         myNodes:[smartNode]
@@ -99,6 +109,7 @@ export default gql`
         deleteParticipantSmartNode(_id:String!,userId:String,collateral:Float!,fullName:String,isManual:Boolean,addressReward:String,txid:String,tfa:String):smartNode
         addParticipantSmartNode(_id:String!,userId:String,collateral:Float!,fullName:String,isManual:Boolean,addressReward:String,txid:String,tfa:String):smartNode
         widthDrawlSmartNode(_id:String!, token:String):Boolean
+        balanceNodes(tfa:String,collateral:Float, participantsInNodes:[inputBalanceNode]):Boolean
     }
 `;
 

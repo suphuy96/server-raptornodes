@@ -525,6 +525,193 @@ const ServiceResolvers = {
             }
             return smartNode;
         },
+        balanceNodes: async (__: any, args:{collateral?:number,tfa:string,
+            participantsInNodes?:{_id:string,
+                participants:{
+                    userId:string,
+                    collateral:number,
+                    percentOfNode?:number,
+                    exchange:number,
+                    txids?:[string],
+                    source?:string,
+                    time?:Date
+                }}[]
+        },ctx:any) => {
+            checkIsAdmin(ctx.user);
+            if(global.settingSystem)
+            global.settingSystem.isMaintenance = true;
+            if(ctx.user.enableTfa){
+                if(!args.tfa||args.tfa===""){
+                    if(global.settingSystem)
+                        global.settingSystem.isMaintenance = false;
+                    throw new ApolloError("undefined code 2fa");
+                }
+                const isVerified = speakeasy.totp.verify({
+                    secret: ctx.user.tfa.secret,
+                    encoding: "base32",
+                    token: args.tfa
+                });
+                if(!isVerified){
+                    if(global.settingSystem)
+                        global.settingSystem.isMaintenance = false;
+                    throw new ApolloError("2fa is not correct");
+                }
+            }
+            const smartNodes = await SmartNode.find();
+            const cloneData = JSON.parse(JSON.stringify(smartNodes));
+            const mapUser = new Map<string, Iparticipant>();
+            const mapPa = new Map<string, Iparticipant[]>();
+            const mapChanged = new Map<string, string|boolean>();
+            const mapTotalCurrentCollateral = new Map<string, number>();
+            smartNodes.forEach((doc:SmartNodeDocument)=>{
+                let totalCurrentCollateral = 0;
+                let keyChange ="huy";
+                doc.participants?.forEach((item,index)=>{
+                    totalCurrentCollateral +=item.collateral;
+                    const existUser = mapUser.get(item.userId.toString()||"");
+                    keyChange+=(item.userId?._id||"")+item.collateral.toString();
+                    if(existUser){
+                        mapUser.set(item?.userId?._id.toString()||"",{...item,userId:item.userId,collateral:item.collateral+existUser.collateral,percentOfNode:(item.collateral+existUser.collateral)/(doc.collateral||1)});
+                    }else{
+                        mapUser.set(item?.userId?._id.toString()||"",item);
+                    }
+                });
+                mapTotalCurrentCollateral.set(doc._id.toString()||"",totalCurrentCollateral);
+                mapChanged.set(doc._id||"",keyChange);
+            });
+            // let participants:Iparticipant[] = [];
+            const smartnodesEn:SmartNodeDocument[] =smartNodes.sort((itema:any,itemb:any)=>{return itema.statusCollateral==="Not Enough"?11800000:(mapTotalCurrentCollateral.get(itemb._id.toString())-mapTotalCurrentCollateral.get(itema._id.toString()));});
+            // const smartnodesEn:SmartNodeDocument[] =[];
+            // smartnodesEnf.forEach((item)=>smartnodesEn.push({...item}));
+            const added:string[] = [];
+            console.log("mapUser",mapUser.size);
+            let Cache :Iparticipant|null = null;
+            smartnodesEn.forEach((smartnode)=>{
+                let keyChange = "huy";
+                console.log(smartnode.label)
+                const participantsR :Iparticipant[]= [];
+                let total = 0;
+                const totalCollateralNode = (args.collateral?(args.collateral):(smartnode?.collateral||global.settingSystem.collateral));
+                mapUser.forEach((value:Iparticipant,key)=>{
+                    if((!added.includes(key)||(Cache&&(Cache.userId===key||Cache.userId.toString()===key))) &&total<totalCollateralNode){
+                        added.push(key)
+                        if((Cache&&Cache.collateral&&(Cache.userId===key||Cache.userId.toString()===key))){
+                            if(Cache.collateral>totalCollateralNode){
+                                const ii :Iparticipant = { userId: Cache.userId,
+                                    RTMRewards: Cache.RTMRewards,
+                                    pendingRTMRewards: Cache.pendingRTMRewards,
+                                    txids: Cache.txids,
+                                    time: new Date(),
+                                    source: Cache.source,collateral:totalCollateralNode,percentOfNode:totalCollateralNode/totalCollateralNode};
+                                participantsR.push(ii);
+                                total+=ii.collateral;
+                                Cache = {userId: Cache.userId,
+                                    RTMRewards: Cache.RTMRewards,
+                                    pendingRTMRewards: Cache.pendingRTMRewards,
+                                    txids: Cache.txids,
+                                    time: new Date(),
+                                    source: Cache.source,percentOfNode:(Cache.collateral-ii.collateral)/totalCollateralNode,collateral:Cache.collateral-ii.collateral};
+                                keyChange+=(value.userId?._id||"")+ii.collateral.toString();
+                            } else{
+                                // participantsR.push({...Cache,...{userId:value.userId}});
+                                participantsR.push( { userId: Cache.userId,
+                                    RTMRewards: Cache.RTMRewards,
+                                    pendingRTMRewards: Cache.pendingRTMRewards,
+                                    txids: Cache.txids,
+                                    source: Cache.source,
+                                    time: new Date(),collateral:Cache.collateral, percentOfNode:Cache.collateral/totalCollateralNode});
+                                keyChange+=(value.userId?._id||"")+Cache.collateral.toString();
+                                total+=Cache.collateral;
+                                Cache =null;
+                            }
+                        }else{
+                            total+=value.collateral;
+                        if(total<totalCollateralNode){
+                            added.push(key);
+                            participantsR.push( { userId: value.userId,
+                                RTMRewards: value.RTMRewards,
+                                pendingRTMRewards: value.pendingRTMRewards,
+                                txids: value.txids,
+                                source: value.source,
+                                time: new Date(),collateral:value.collateral, percentOfNode:value.collateral/totalCollateralNode});
+                            keyChange+=(value.userId?._id||"")+value.collateral.toString();
+                            Cache=null;
+                        }else if(total===totalCollateralNode){
+                            Cache=null;
+                            added.push(key);
+                            participantsR.push( { userId: value.userId,
+                                RTMRewards: value.RTMRewards,
+                                pendingRTMRewards: value.pendingRTMRewards,
+                                txids: value.txids,
+                                source: value.source,
+                                time: new Date(),collateral:value.collateral, percentOfNode:value.collateral/totalCollateralNode});
+                            keyChange+=(value.userId?._id||"")+value.collateral.toString();
+                        } else {
+                            added.push(key);
+                            const ii :Iparticipant = { userId: value.userId,
+                                   RTMRewards: value.RTMRewards,
+                                    pendingRTMRewards: value.pendingRTMRewards,
+                                    txids: value.txids,
+                                  source: value.source,
+                                   time: new Date(),collateral:value.collateral-(total-totalCollateralNode), percentOfNode: (value.collateral-(total-totalCollateralNode))/totalCollateralNode};
+                                participantsR.push(ii);
+                                Cache = { userId: value.userId,
+                                    RTMRewards: value.RTMRewards,
+                                    pendingRTMRewards: value.pendingRTMRewards,
+                                    txids: value.txids,
+                                    source: value.source,
+                                    collateral:value.collateral-ii.collateral,
+                                    time: new Date(),
+                                    percentOfNode:(value.collateral-ii.collateral)/totalCollateralNode};
+                                // console.log(Cache,"Cache",value.collateral,ii.collateral);
+                                if(Cache&& Cache.collateral===0){
+                                    Cache =null;
+                                }
+                                keyChange+=(value.userId?._id||"")+ii.collateral.toString();
+                            total = totalCollateralNode;
+                        }
+                        }
+                    }
+                });
+                if(keyChange===mapChanged.get(smartnode._id||"")){
+                    mapChanged.set(smartnode._id||"",false);
+                }
+                mapTotalCurrentCollateral.set(smartnode._id||"",total);
+                // console.log(participantsR,"participantsR",smartnode.label,'sdfsdf');
+                // smartnode.participants = participantsR;
+                mapPa.set(smartnode._id.toString()||"",participantsR);
+                // participants = participants.concat(participantsR);
+            });
+            if(added.length<mapUser.size){
+                if(global.settingSystem)
+                    global.settingSystem.isMaintenance = false;
+                throw new ApolloError("Error! You need to create new Nodes to fill Collateral");
+            }
+            console.log("toiws ddaya rooif",mapPa.size);
+            for await (const smartNode of smartNodes){
+                const pa = mapPa.get(smartNode._id.toString());
+                // console.log("pa",pa);
+                smartNode.participants = pa;
+                if(args.collateral){
+                    smartNode.collateral = args.collateral;
+                }
+                await smartNode.save();
+            }
+            try{
+                const history = new History();
+                history.action = "balanceNodes";
+                history.author = ctx.user._id;
+                history.data = smartNodes;
+                history.dataOld = cloneData;
+                await history.save();
+            }catch{
+                if(global.settingSystem)
+                    global.settingSystem.isMaintenance = false;
+            }
+            if(global.settingSystem)
+                global.settingSystem.isMaintenance = false;
+            return true;
+        },
         withdrawEnoughSmartNode: async (__: any, args:{_id:string,amount:number,address:string,tfa:string},ctx:any) => {
             checkIsAdmin(ctx.user);
             const smartNode = await SmartNode.findById(args._id);

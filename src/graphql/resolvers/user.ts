@@ -576,7 +576,7 @@ const ServiceResolvers = {
                 if(args.customAddressRTM){
                     user.customAddressRTM = args.customAddressRTM;
                 }
-                if(args.email && args.email!==user.email && args.email!==''){
+                if(args.email && args.email!==user.email && args.email!=='' && user.isVirtual){
                     user.email = args.email;
                         let uid ="User#"+ user.email;
                         const datas = await RPCRuner.getAddressesByAccount(uid);

@@ -16,7 +16,7 @@ export default gql`
     }
  
     type Query {
-        historyUsers(time:InputSearchDate,author:String):[HistoryUser]
+        historyUsers(time:Float,author:String):[HistoryUser]
         historys(action:String,author:String,createdAt:InputSearchDate,limit:Int,offset:Int):[History]
     }
 `;
