@@ -75,7 +75,7 @@ const ServiceResolvers = {
                 const params = ctx.user.rules==="Admin"?[args.account?args.account:null,count,skip]:[ctx.user.accountRTM,count,skip];
                 const res:any =  await RPCRuner.listtransactions(params);
                 // "walletconflicts": null,
-                console.log(args.time);
+                // console.log(args.time);
                 if(args.category){
                     return  res.filter((item:any)=>item.category===args.category);
                 }

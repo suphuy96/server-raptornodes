@@ -588,7 +588,7 @@ console.log("vào đây xhuwr lý",smartNode);
                 await funReward(reward,smartNode,lastHeightReward);
                 try{
                     const history = new History();
-                    history.action = "tryReward By ADMIN";
+                    history.action = "tryReward";
                     history.author = ctx.user._id;
                     history.data = {};
                     history.dataOld = {};
@@ -664,7 +664,7 @@ console.log("vào đây xhuwr lý",smartNode);
             clearTimeout(timeOutCheckReTry);
             try{
                 const history = new History();
-                history.action = "tryRewardHistory By ADMIN";
+                history.action = "tryRewardHistory";
                 history.author = ctx.user._id;
                 history.data = reward;
                 history.dataOld = {};
@@ -743,7 +743,7 @@ console.log("vào đây xhuwr lý",smartNode);
             clearTimeout(timeOutCheckReTry);
             try{
                 const history = new History();
-                history.action = "tryReverseRewardHistory By ADMIN";
+                history.action = "tryReverseRewardHistory";
                 history.author = ctx.user._id;
                 history.data = reward;
                 history.dataOld = {};

@@ -576,6 +576,39 @@ const ServiceResolvers = {
                 if(args.customAddressRTM){
                     user.customAddressRTM = args.customAddressRTM;
                 }
+                if(args.email && args.email!==user.email && args.email!==''){
+                    user.email = args.email;
+                        let uid ="User#"+ user.email;
+                        const datas = await RPCRuner.getAddressesByAccount(uid);
+                        if(datas && datas.length){
+                            const existingUserUseAddressRTM = await  User.findOne({ accountRTM: uid });
+                            if(existingUserUseAddressRTM){
+                                uid ="User#"+ user.email+"_"+new Date().getTime();
+                            }
+                        }
+                        try {
+                            let addressRTM: any = await RPCRuner.getAccountAddress(uid).catch((e) => {
+                                console.log("không thể kết nối raptoreum", e.toString());
+                                return false;
+                            });
+                            const addressRTMExist = await User.findOne({addressRTM:addressRTM});
+                            if(addressRTMExist){
+                                // get another wallet address
+                                addressRTM = await RPCRuner.getAccountAddress(uid).catch((e) => {
+                                    console.log("không thể kết nối raptoreum", e.toString());
+                                    return false;
+                                });
+                            }
+                            if (addressRTM) {
+                                user.accountRTM = uid;
+                                user.addressRTM = addressRTM;
+                            } else {
+                                user.accountRTMError = true;
+                            }
+                        }catch (e){
+                            user.accountRTMError = true;
+                        }
+                }
                 if(args.enableTfa ||args.enableTfa===false){
                     user.enableTfa = args.enableTfa;
                 }

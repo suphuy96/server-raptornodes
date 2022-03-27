@@ -9,8 +9,14 @@ export default gql`
         author:Author,
         createdAt:DateTime
     }
+    type HistoryUser  {
+        type:String,
+        value:Float,
+        time:Float,
+    }
  
     type Query {
+        historyUsers(time:InputSearchDate,author:String):[HistoryUser]
         historys(action:String,author:String,createdAt:InputSearchDate,limit:Int,offset:Int):[History]
     }
 `;
