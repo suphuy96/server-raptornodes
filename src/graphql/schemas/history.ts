@@ -4,8 +4,8 @@ export default gql`
     type History  {
         _id:String,
         action:String,
-        data:JSONObject,
-        dataOld:JSONObject,
+        data:JSON,
+        dataOld:JSON,
         author:Author,
         createdAt:DateTime
     }

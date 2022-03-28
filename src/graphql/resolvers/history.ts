@@ -20,12 +20,15 @@ const ServiceResolvers = {
         historys: async (__: any, args: any,ctx:any) => {
             try {
                 checkIsAuthen(ctx.user);
-                const objFilter:any&{status?:string,author?:string,createdAt?:any} = ctx.user.rules==="Admin"?{}:{author:ctx.user._id};
+                const objFilter:any&{status?:string,author?:string,createdAt?:any,action?:string} = ctx.user.rules==="Admin"?{}:{author:ctx.user._id};
                 if (args.action){
                     objFilter.action =args.action;
                 }
                 if (ctx.user.rules==="Admin" && args.author){
                     objFilter.author =args.author;
+                }
+                if (ctx.user.action){
+                    objFilter.action =args.action;
                 }
                 if (args.createdAt){
                     objFilter.createdAt = {};

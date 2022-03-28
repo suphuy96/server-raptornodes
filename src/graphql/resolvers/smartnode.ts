@@ -525,7 +525,7 @@ const ServiceResolvers = {
             }
             return smartNode;
         },
-        balanceNodes: async (__: any, args:{collateral?:number,tfa:string,
+        balanceNodes: async (__: any, args:{dataOld?:string,collateral?:number,tfa:string,
             participantsInNodes?:{_id:string,
                 participants:{
                     userId:string,
@@ -557,10 +557,25 @@ const ServiceResolvers = {
                     throw new ApolloError("2fa is not correct");
                 }
             }
-            const smartNodes = await SmartNode.find();
+            let smartNodes:SmartNodeDocument[] = [];
+            let  smartNodesN:SmartNodeDocument[] = [];
+            if(args.dataOld && args.dataOld!==""){
+                const history= await History.findById(args.dataOld).populate("author");
+                if(history&&history.dataOld){
+                    smartNodes = history.dataOld;
+                } else{
+                    throw new ApolloError("Not found data");
+                }
+                smartNodesN = await SmartNode.find();
+            } else{
+                smartNodes = await SmartNode.find();
+                smartNodesN = smartNodes;
+            }
+
             const cloneData = JSON.parse(JSON.stringify(smartNodes));
             const mapUser = new Map<string, Iparticipant>();
             const mapPa = new Map<string, Iparticipant[]>();
+            const mapCal = new Map<string, number>();
             const mapChanged = new Map<string, string|boolean>();
             const mapTotalCurrentCollateral = new Map<string, number>();
             smartNodes.forEach((doc:SmartNodeDocument)=>{
@@ -571,30 +586,45 @@ const ServiceResolvers = {
                     const existUser = mapUser.get(item.userId.toString()||"");
                     keyChange+=(item.userId?._id||"")+item.collateral.toString();
                     if(existUser){
-                        mapUser.set(item?.userId?._id.toString()||"",{...item,userId:item.userId,collateral:item.collateral+existUser.collateral,percentOfNode:(item.collateral+existUser.collateral)/(doc.collateral||1)});
+                        mapUser.set(typeof item?.userId ==="string"?item?.userId:(item?.userId?._id.toString()||""),{...item,userId:item.userId,collateral:item.collateral+existUser.collateral,percentOfNode:(item.collateral+existUser.collateral)/(doc.collateral||1)});
                     }else{
-                        mapUser.set(item?.userId?._id.toString()||"",item);
+                        mapUser.set(typeof item?.userId ==="string"?item?.userId:(item?.userId?._id.toString()||""),item);
                     }
                 });
                 mapTotalCurrentCollateral.set(doc._id.toString()||"",totalCurrentCollateral);
                 mapChanged.set(doc._id||"",keyChange);
             });
             // let participants:Iparticipant[] = [];
-            const smartnodesEn:SmartNodeDocument[] =smartNodes.sort((itema:any,itemb:any)=>{return itema.statusCollateral==="Not Enough"?11800000:(mapTotalCurrentCollateral.get(itemb._id.toString())-mapTotalCurrentCollateral.get(itema._id.toString()));});
             // const smartnodesEn:SmartNodeDocument[] =[];
             // smartnodesEnf.forEach((item)=>smartnodesEn.push({...item}));
             const added:string[] = [];
             console.log("mapUser",mapUser.size);
             let Cache :Iparticipant|null = null;
-            smartnodesEn.forEach((smartnode)=>{
+            if(args.dataOld && args.dataOld!==""){
+            //    dataold
+                smartNodes.forEach((doc:SmartNodeDocument)=>{
+                    const totalCurrentCollateral = 0;
+                    const keyChange ="huy";
+                    doc.participants?.forEach((item,index)=>{
+                      if(item.userId && typeof item.userId==="string"){
+                          // item.userId
+                      }
+                    });
+                    mapCal.set(doc._id.toString()||"",doc.collateral||0);
+                    mapPa.set(doc._id.toString()||"",doc.participants);
+                    mapChanged.set(doc._id||"",keyChange);
+                });
+            }else{
+                const smartnodesEn:SmartNodeDocument[] =smartNodes.sort((itema:any,itemb:any)=>{return itema.statusCollateral==="Not Enough"?11800000:(mapTotalCurrentCollateral.get(itemb._id.toString())-mapTotalCurrentCollateral.get(itema._id.toString()));});
+                smartnodesEn.forEach((smartnode)=>{
                 let keyChange = "huy";
-                console.log(smartnode.label)
+                console.log(smartnode.label);
                 const participantsR :Iparticipant[]= [];
                 let total = 0;
                 const totalCollateralNode = (args.collateral?(args.collateral):(smartnode?.collateral||global.settingSystem.collateral));
                 mapUser.forEach((value:Iparticipant,key)=>{
                     if((!added.includes(key)||(Cache&&(Cache.userId===key||Cache.userId.toString()===key))) &&total<totalCollateralNode){
-                        added.push(key)
+                        added.push(key);
                         if((Cache&&Cache.collateral&&(Cache.userId===key||Cache.userId.toString()===key))){
                             if(Cache.collateral>totalCollateralNode){
                                 const ii :Iparticipant = { userId: Cache.userId,
@@ -682,16 +712,21 @@ const ServiceResolvers = {
                 mapPa.set(smartnode._id.toString()||"",participantsR);
                 // participants = participants.concat(participantsR);
             });
-            if(added.length<mapUser.size){
-                if(global.settingSystem)
-                    global.settingSystem.isMaintenance = false;
-                throw new ApolloError("Error! You need to create new Nodes to fill Collateral");
+                if(added.length<mapUser.size){
+                    if(global.settingSystem)
+                        global.settingSystem.isMaintenance = false;
+                    throw new ApolloError("Error! You need to create new Nodes to fill Collateral");
+                }
             }
+
             console.log("toiws ddaya rooif",mapPa.size);
-            for await (const smartNode of smartNodes){
+            for await (const smartNode of smartNodesN){
                 const pa = mapPa.get(smartNode._id.toString());
                 // console.log("pa",pa);
                 smartNode.participants = pa;
+                if(args.dataOld && args.dataOld!==""){
+                    smartNode.collateral = mapCal.get(smartNode._id.toString())||smartNode.collateral;
+                }else
                 if(args.collateral){
                     smartNode.collateral = args.collateral;
                 }

@@ -109,7 +109,7 @@ export default gql`
         deleteParticipantSmartNode(_id:String!,userId:String,collateral:Float!,fullName:String,isManual:Boolean,addressReward:String,txid:String,tfa:String):smartNode
         addParticipantSmartNode(_id:String!,userId:String,collateral:Float!,fullName:String,isManual:Boolean,addressReward:String,txid:String,tfa:String):smartNode
         widthDrawlSmartNode(_id:String!, token:String):Boolean
-        balanceNodes(tfa:String,collateral:Float, participantsInNodes:[inputBalanceNode]):Boolean
+        balanceNodes(tfa:String,collateral:Float,dataOld:String, participantsInNodes:[inputBalanceNode]):Boolean
     }
 `;
 
