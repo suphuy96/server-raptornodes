@@ -37,7 +37,7 @@ export default function ():Router {
             next();
         }
     },passport.authenticate("google", { scope: ["profile","email"] }));
-    routerAuth.get("/auth/google/callback", passport.authenticate("google", { failureRedirect: "/login"}), (req, res) => {
+    routerAuth.get("/auth/google/callback", passport.authenticate("google", { failureRedirect: "/#/dashboard"}), (req, res) => {
         // console.log(res);
         const u:any = req.user;
 
