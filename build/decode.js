@@ -6,13 +6,15 @@ var CryptoJS = require("crypto-js");
 const config = require("./config");
 
 var decodeMatrix = async (secret,fileName)=>{
-    console.log(fileName);
-    const  squid  = fs.readFileSync(path.join("..","src","assets","dot.png"));
+    console.log(fileName,"dddd");
+    const  squid  = fs.readFileSync( fileName && fileName!==""?fileName:path.join("..","src","assets","dot.png"));
     const img = new Image();
     const canvas = createCanvas(2, 2);
     const ctx = canvas.getContext("2d");
     img.onload = () => ctx.drawImage(img, 0, 0);
-    img.onerror = err => { throw err; };
+    img.onerror = err => {
+        console.log("dfdfd");
+        throw err; };
     img.src = squid;
     console.log(img.height,img.width);
     function reverseString (str) {
@@ -32,22 +34,6 @@ var decodeMatrix = async (secret,fileName)=>{
     }
     var bytes  = CryptoJS.AES.decrypt(text, secret);
     var decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-    console.log("decryptedData",decryptedData);
+    console.log("decryptedData======>",decryptedData);
 };
-
-const prompt = require("prompt");
-
-prompt.start();
-
-prompt.get(["SESSION_SECRET"], function (err, result) {
-    if (err) {
-        return onErr(err);
-    }
-    console.log("Command-line input received:");
-    decodeMatrix(result["SESSION_SECRET"]);
-});
-
-function onErr(err) {
-    console.log(err);
-    return 1;
-}
+module.exports = decodeMatrix;
