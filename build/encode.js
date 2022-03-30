@@ -12,7 +12,7 @@ var creDotMatrix = async (secret,name,objDot,path2)=>{
     let data  = JSON.stringify(objDot);
     // objDot.CHECK_FH =  "huyquansu hello raptornodes.com " + new Date();
     data +="             ";
-    var ciphertext = CryptoJS.AES.encrypt(data+'                                                            ', secret).toString();
+    var ciphertext = CryptoJS.AES.encrypt(data+'                    ', secret).toString();
     console.log(data.length,ciphertext.length,ciphertext.length/3,ciphertext.length%3);
     console.log(data.length,ciphertext.length,ciphertext.length/3,ciphertext.length%3,data);
 // Decrypt
