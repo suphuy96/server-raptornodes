@@ -204,6 +204,7 @@ const payNow =async () => {
         throw new ApolloError("The system is paying the reward");
     }
     isWaitToDone = true;
+    let arsNot = '';
     const smartnodes = await SmartNode.find({statusCollateral : "Start Reward" }).populate("participants.userId");
     console.log("vào đây trả thưởng=====> ",smartnodes);
     const res:any = await RPCRuner.smartnodelist();
@@ -286,9 +287,8 @@ const payNow =async () => {
         if(smartnode.totalMatureInNextReward<=0){
             isWaitToDone = false;
             clearTimeout(timeOutCheck);
-            sendMail( process.env.ADMINS, "SmartNode "+(smartnode?smartnode.label:"")+"Not enough days to pay the reward","SmartNode "+(smartnode?smartnode.label:"")+" Not enough days to pay the reward. Time Start: "+("Time Start: "+smartnode.timeStartReward)+", Time ReWard: "+reward.dayEnd).then(()=>{
-                console.log("");
-            }); }else{
+            arsNot += "\nSmartNode "+(smartnode?smartnode.label:"")+" Not enough days to pay the reward. Time Start: "+("Time Start: "+smartnode.timeStartReward)+", Time ReWard: "+reward.dayEnd;
+            }else{
             await reward.save();
             timeOutCheck = setTimeout(()=>{
                 isWaitToDone = false;
@@ -300,10 +300,14 @@ const payNow =async () => {
             await new Promise((resolve)=>{
                 setTimeout(()=>{
                     resolve(true);
-                },1000);
+                },40);
             });
         }
     }
+    sendMail( process.env.ADMINS, "SmartNode Not enough days to pay the reward",arsNot).then(()=>{
+        console.log("");
+    });
+
 };
 const scheduleReward =()=>{
     if(rewardTask){
@@ -416,7 +420,7 @@ const ServiceResolvers = {
         rewards: async (__: any, args: any,ctx:any) => {
             try {
                 checkIsAuthen(ctx.user);
-               const ars = await ReWard.find({});
+               const ars = await ReWard.find({}).sort({createdAt:-1}).limit(args.limit||60).skip(args.offset||0);
                 // const res:any =  await RPCRuner.listtransactions([ctx.user.accountRTM]);
                 // //
                 // // "walletconflicts": null,

@@ -353,7 +353,7 @@ export const isAuthenticated = (req: Request, res: Response, next: NextFunction)
         return next();
     }
     // console.log(req.user,"req.user");
-    res.redirect("/login");
+    res.redirect("/#/login");
 };
 
 /**

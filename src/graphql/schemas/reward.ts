@@ -40,7 +40,7 @@ export default gql`
 
     }
     type Query {
-        rewards:[Reward]
+        rewards(limit:Int,offset:Int):[Reward]
         dataRewardUser(smartNode:String):[JSONObject]
         rewardHistorys(reward:String,smartNode:String,user:String):[RewardHistory]
     }

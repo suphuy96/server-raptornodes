@@ -55,7 +55,7 @@ export default function ():Router {
                 next();
             }
         }, passport.authenticate("discord", { scope: ["email", "identify"] }));
-        routerAuth.get("/auth/discord/callback", passport.authenticate("discord", { failureRedirect: "/login"
+        routerAuth.get("/auth/discord/callback", passport.authenticate("discord", { failureRedirect: "/#/login"
         }), (req, res) => {
             // console.log(res);
             res.redirect( process.env.NODE_ENV==="production"?"/#dashboard":"http://localhost:8080/#/settings?refresh=1");
