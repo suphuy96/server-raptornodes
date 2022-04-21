@@ -9,7 +9,7 @@ const ServiceResolvers = {
         backups: async (__: any, args: any,ctx:any) => {
             try {
                 checkIsAdmin(ctx.user);
-               return await Backup.find().populate("author");
+               return await Backup.find().sort({createdAt:-1}).populate("author");
             } catch (error) {
                 throw new ApolloError(error);
             }

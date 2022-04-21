@@ -569,11 +569,12 @@ const ServiceResolvers = {
                     let index = 0;
                     for await (const txos of arrTxAfterLastHeightReWard) {
                         try {
-                            lastHeightReward = txos.height;
+                            // lastHeightReward = txos.height;
                             const infoTran = await RPCRuner.getrawtransaction(txos.txid);
                             txos.time = (infoTran.time||0)*1000;
                             if (infoTran && infoTran.confirmations > 101) {
                                 txos.isNomal = true;
+                                lastHeightReward = txos.height;
                                 totalMatureInNextReward += txos.satoshis / 100000000;
                             } else {
                                 totalImMatureInNextReward += txos.satoshis / 100000000;
