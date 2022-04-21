@@ -14,8 +14,7 @@ export function reStoreBK  (pathZip:string):Promise<string>{
             const dir = path.join(__dirname,"..","backup",pathZip);
     console.log(dir,"dir");
     const backupProcess = spawn("mongorestore", [
-         "--uri="+MONGODB_URI,
-        "--db="+dbName,
+         "--uri="+MONGODB_URI+dbName,
         "--archive="+dir,
         "--gzip"
     ]);
@@ -40,9 +39,9 @@ export default  (name:string):Promise<string>=>{
         const dir = path.join(__dirname,"..","backup",name);
         console.log(dir,"dir");
         const backupProcess = spawn("mongodump", [
-            "--uri="+MONGODB_URI,
-            "--db="+dbName,
+            "--uri="+MONGODB_URI+dbName,
             "--archive="+dir,
+            "--forceTableScan",
             "--gzip"
         ]);
 
