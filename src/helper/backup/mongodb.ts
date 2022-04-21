@@ -35,11 +35,12 @@ export function reStoreBK  (pathZip:string):Promise<string>{
 }
 export default  (name:string):Promise<string>=>{
     return new Promise((resolve)=>{
-        const dbName = process.env.DB_NAME;
+        const dbName = ENVIRONMENT === "production"?DB_NAME_MANNET:process.env.DB_NAME_TESTNET;
         const day = moment(new Date()).format("DD-MM-YYYY_HH_mm");
         const dir = path.join(__dirname,"..","backup",name);
         console.log(dir,"dir");
         const backupProcess = spawn("mongodump", [
+            "--uri="+MONGODB_URI,
             "--db="+dbName,
             "--archive="+dir,
             "--gzip"
