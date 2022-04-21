@@ -1,6 +1,7 @@
 import path from "path";
 import {spawn} from "child_process";
 import moment from "moment";
+import { MONGODB_URI } from "../../util/secrets";
 export function  getPathFile():string {
     const dir = path.join(__dirname,"..","..","..","src","backup");
     return dir;
@@ -13,6 +14,7 @@ export function reStoreBK  (pathZip:string):Promise<string>{
             const dir = path.join(__dirname,"..","..","..","src","backup",pathZip);
     console.log(dir,"dir");
     const backupProcess = spawn("mongorestore", [
+         "--uri="+MONGODB_URI,
         "--db="+dbName,
         "--archive="+dir,
         "--gzip"
