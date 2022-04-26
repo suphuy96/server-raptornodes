@@ -48,9 +48,9 @@ const getDataUFE = async ()=>{
     }
     return ars[0];
 };
+
 const funReward = async (reward:ReWardDocument,sNode?:SmartNodeDocument,lastHeightReward?:number) => {
     try {
-
         const reWardBalance = await RPCRuner.getbalance(global.settingSystem.rewardAccount,4);
         const realReWardBalance = reWardBalance;
         let totalReward = 0;
@@ -81,9 +81,11 @@ const funReward = async (reward:ReWardDocument,sNode?:SmartNodeDocument,lastHeig
 
             }
 
+
             sendMail( process.env.ADMINS, "Error!! Not enough balance to pay the reward, "+(sNode?sNode.label:"")+" Smartnode","Schedule ReWard  Smartnode "+(sNode?sNode.label:"")+"in raptornodes.com, totalReward:" +totalReward.toFixed(8)+"RTM, reWardBalance:"+realReWardBalance+"RTM").then(()=>{
                 console.log("");
             });
+            return false;
         }else
         {
             const funReW = async(userId:UserDocument,collateral:number,percentOfNode:number,smartnode?:SmartNodeDocument)=>{
@@ -193,18 +195,28 @@ const funReward = async (reward:ReWardDocument,sNode?:SmartNodeDocument,lastHeig
         // reward.save();
         isWaitToDone = false;
         clearTimeout(timeOutCheck);
+        return true;
         // return reward;
     }catch (e){
-        throw new ApolloError("Error"+e.toString());
+        sendMail( process.env.ADMINS, "Error!! Not enough balance to pay the reward, "+e.toString()+" Smartnode","Schedule ReWard  Smartnode ").then(()=>{
+            console.log("");
+        });
         console.log("fixx",e);
+        throw new ApolloError("Error"+e.toString());
+        return false;
     }
 };
+// const run = async()=>{
+//     const ttt =await funReward();
+//     console.log('test',ttt);
+// };
+// run();
 const payNow =async () => {
     if(isWaitToDone){
         throw new ApolloError("The system is paying the reward");
     }
     isWaitToDone = true;
-    let arsNot = '';
+    let arsNot = "";
     const smartnodes = await SmartNode.find({statusCollateral : "Start Reward" }).populate("participants.userId");
     console.log("vào đây trả thưởng=====> ",smartnodes);
     const res:any = await RPCRuner.smartnodelist();
@@ -294,8 +306,11 @@ const payNow =async () => {
             timeOutCheck = setTimeout(()=>{
                 isWaitToDone = false;
             },280000);
-            await funReward(reward,smartnode,lastHeightReward);
-            smartnode.lastHeightReward = lastHeightReward;
+
+           const isDone = await funReward(reward,smartnode,lastHeightReward);
+           if(isDone){
+               smartnode.lastHeightReward = lastHeightReward;
+           }
             await smartnode.save();
 
             await new Promise((resolve)=>{
@@ -591,7 +606,13 @@ const ServiceResolvers = {
                     console.log("haha",e);
                 }
 console.log("vào đây xhuwr lý",smartNode);
-                await funReward(reward,smartNode,lastHeightReward);
+                // await funReward(reward,smartNode,lastHeightReward);
+            const isDone = await funReward(reward,smartNode,lastHeightReward);
+            if(isDone){
+                smartNode.lastHeightReward = lastHeightReward;
+            }
+            await smartNode.save();
+
                 try{
                     const history = new History();
                     history.action = "tryReward";
