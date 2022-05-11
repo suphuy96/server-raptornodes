@@ -60,7 +60,7 @@ export default class RpcRaptoreum {
            return axios.post(
                 this.urlRPC,
                 payload, {
-                    timeout: options.timeout,
+                    timeout: options.timeout||120000,
                     auth: {
                         username: this.user,
                         password: this.pass
