@@ -96,7 +96,7 @@ export default gql`
         myNodes:[smartNode]
         getSmartNodes:[smartNode]
         inforRewardSmartNodes:InforReward
-        smartNodes(statusCollateral:String):[smartNode]
+        smartNodes(statusCollateral:String,limit:Int,offset:Int):[smartNode]
         smartNodeEnough:smartNode
         statisticalUser(user:String!):Statistical
     }

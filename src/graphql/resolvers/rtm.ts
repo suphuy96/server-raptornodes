@@ -15,20 +15,50 @@ const ODefaults: OptionRpcClient = {
     queueSize: 16,
 };
 const RPCRuner = new RpcRaptoreum(ODefaults);
+// let mapBalance:Map<string, number> = new Map();
+let objBalance:any = {};
+let objBalance11:any = {};
+let objreceived:any = {};
+let timeLastRequest = 1;
+const timeCache = 300000;
 const ServiceResolvers = {
     Query: {
         getBalance: async (__: any, args: any,ctx:any) => {
             try {
                 checkIsAuthen(ctx.user);
-                const balance = await RPCRuner.getbalance(ctx.user.accountRTM);
-                const balanceHaveConfirmations = await RPCRuner.getbalance(ctx.user.accountRTM,11);
-                const received = await RPCRuner.getreceivedbyaccount(ctx.user.accountRTM);
-               let rewarded = 0;
-              const rewards = await ReWardHistory.find({user:ctx.user._id});
-                rewards.forEach((reward)=>{
-                    rewarded += reward.amount;
-                });
-                return await {balance,balanceHaveConfirmations,received,rewarded};
+                if(timeLastRequest+timeCache<new Date().getTime()) {
+                    objBalance = await RPCRuner.listaccounts().catch(() => {
+                        return {};
+                    });
+                    // console.log('get nuew')
+                }
+                if(timeLastRequest+(timeCache)<new Date().getTime()||(!objBalance11[ctx.user.accountRTM]&&objBalance11[ctx.user.accountRTM]!==0)) {
+                    const balanceHaveConfirmations = await RPCRuner.getbalance(ctx.user.accountRTM,11);
+                    objBalance11[ctx.user.accountRTM] = balanceHaveConfirmations;
+                    // console.log('get n2uew')
+
+                }
+                if(timeLastRequest+timeCache<new Date().getTime()||(!objBalance11[ctx.user.accountRTM]&&objBalance11[ctx.user.accountRTM]!==0)) {
+                    const received = await RPCRuner.getreceivedbyaccount(ctx.user.accountRTM);
+                    objreceived[ctx.user.accountRTM] = received;
+                    // console.log('get nue33w')
+
+                }
+                timeLastRequest = new Date().getTime();
+                // console.log('----===',timeLastRequest);
+
+
+                const balance = await objBalance[ctx.user.accountRTM];
+                const balanceHaveConfirmations = objBalance11[ctx.user.accountRTM];
+                const received = objreceived[ctx.user.accountRTM];
+                const dataReward:{amount:number}[] = await ReWardHistory.aggregate([{ $match:{user:ctx.user._id}},{
+                    $group :{
+                        _id : null,
+                        count:{ "$sum":1
+                        },
+                        amount:{ "$sum":"$amount"
+                        }}}]).exec();
+                return await {balance,balanceHaveConfirmations,rewarded:dataReward&&dataReward[0]?dataReward[0].amount:0,received};
             } catch (error) {
                 throw new ApolloError(error);
             }

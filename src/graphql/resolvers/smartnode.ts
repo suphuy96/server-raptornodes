@@ -71,7 +71,7 @@ const ServiceResolvers = {
                         }}}]).exec();
                 console.log("dataReward",dataReward);
                 if(dataReward&&dataReward.length){
-                    return {statisticalNodes,rewardCount:dataReward[0].cound,rewardAmount:dataReward[0].amount};
+                    return {statisticalNodes,rewardCount:dataReward[0].count,rewardAmount:dataReward[0].amount};
                 }
                 return {statisticalNodes,rewardCount:0,rewardAmount:0};
             }catch (e){
@@ -81,7 +81,12 @@ const ServiceResolvers = {
         smartNodes: async (__: any, args: any,ctx:any) => {
             try {
                 // checkIsAuthen(ctx.user);
-                const smartNodes = await SmartNode.find(args).populate("participants.userId");
+                const query:any= args||{};
+                delete query.limit ;
+                delete query.offset ;
+                const limit = args.limit||10000;
+                const offset = args.offset||0;
+                const smartNodes = await SmartNode.find(query).populate("participants.userId").limit(limit).skip(offset);
                 const res:any = await RPCRuner.smartnodelist();
                 const objSmartnode:any = {};
                 Object.keys(res).forEach((key)=>{
@@ -116,6 +121,7 @@ const ServiceResolvers = {
                 });
                 const resChain = await RPCRuner.getblockchaininfo();
                 for await (const smartN of smartnodesr){
+                    console.log("vào đây này");
                     if(smartN.ipAddress && smartN.ipAddress!=="" && smartN.statusCollateral ==="Start Reward" && smartN.payee){
                         try {
                             const as = await RPCRuner.getaddressdeltas(smartN.payee,((smartN.lastHeightReward||0)+1),resChain.blocks);
