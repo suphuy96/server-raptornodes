@@ -32,13 +32,13 @@ const ServiceResolvers = {
                     });
                     // console.log('get nuew')
                 }
-                if(timeLastRequest+(timeCache)<new Date().getTime()||(!objBalance11[ctx.user.accountRTM]&&objBalance11[ctx.user.accountRTM]!==0)) {
+                // if(timeLastRequest+(timeCache)<new Date().getTime()||(!objBalance11[ctx.user.accountRTM]&&objBalance11[ctx.user.accountRTM]!==0)) {
                     const balanceHaveConfirmations = await RPCRuner.getbalance(ctx.user.accountRTM,11);
                     objBalance11[ctx.user.accountRTM] = balanceHaveConfirmations;
                     // console.log('get n2uew')
 
-                }
-                if(timeLastRequest+timeCache<new Date().getTime()||(!objBalance11[ctx.user.accountRTM]&&objBalance11[ctx.user.accountRTM]!==0)) {
+                // }
+                if(timeLastRequest+timeCache<new Date().getTime()||(!objreceived[ctx.user.accountRTM]&&objreceived[ctx.user.accountRTM]!==0)) {
                     const received = await RPCRuner.getreceivedbyaccount(ctx.user.accountRTM);
                     objreceived[ctx.user.accountRTM] = received;
                     // console.log('get nue33w')
@@ -49,7 +49,7 @@ const ServiceResolvers = {
 
 
                 const balance = await objBalance[ctx.user.accountRTM];
-                const balanceHaveConfirmations = objBalance11[ctx.user.accountRTM];
+                // const balanceHaveConfirmations = objBalance11[ctx.user.accountRTM];
                 const received = objreceived[ctx.user.accountRTM];
                 const dataReward:{amount:number}[] = await ReWardHistory.aggregate([{ $match:{user:ctx.user._id}},{
                     $group :{
