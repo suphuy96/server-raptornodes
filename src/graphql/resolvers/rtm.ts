@@ -26,11 +26,13 @@ const ServiceResolvers = {
         getBalance: async (__: any, args: any,ctx:any) => {
             try {
                 checkIsAuthen(ctx.user);
-                if(timeLastRequest+timeCache<new Date().getTime()) {
+
+                if(new Date().getTime()>timeLastRequest+timeCache) {
                     objBalance = await RPCRuner.listaccounts().catch(() => {
                         return {};
                     });
-                    // console.log('get nuew')
+                    // this
+                    timeLastRequest = new Date().getTime();
                 }
                 // if(timeLastRequest+(timeCache)<new Date().getTime()||(!objBalance11[ctx.user.accountRTM]&&objBalance11[ctx.user.accountRTM]!==0)) {
                     const balanceHaveConfirmations = await RPCRuner.getbalance(ctx.user.accountRTM,11);
@@ -44,7 +46,7 @@ const ServiceResolvers = {
                     // console.log('get nue33w')
 
                 }
-                timeLastRequest = new Date().getTime();
+
                 // console.log('----===',timeLastRequest);
 
 
