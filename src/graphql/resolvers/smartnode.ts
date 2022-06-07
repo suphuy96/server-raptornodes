@@ -90,7 +90,7 @@ const ServiceResolvers = {
                 const res:any = await RPCRuner.smartnodelist();
                 const objSmartnode:any = {};
                 Object.keys(res).forEach((key)=>{
-                    const ipAddress =res[key].address.replace(":10227","").replace(":10226","");
+                    const ipAddress =res[key].address.substring(0,res[key].address.lastIndexOf(":"));
                     objSmartnode[ipAddress]=res[key];
                     objSmartnode[ipAddress].ipAddress = ipAddress;
                 });
@@ -176,7 +176,7 @@ const ServiceResolvers = {
                 const res:any = await RPCRuner.smartnodelist();
                 const objSmartnode:any = {};
                 Object.keys(res).forEach((key)=>{
-                    const ipAddress =res[key].address.replace(":10227","").replace(":10226","");
+                    const ipAddress =res[key].address.substring(0,res[key].address.lastIndexOf(":"));
                     objSmartnode[ipAddress]=res[key];
                     objSmartnode[ipAddress].ipAddress = ipAddress;
                 });
@@ -213,7 +213,7 @@ const ServiceResolvers = {
                 const res:any = await RPCRuner.smartnodelist();
                 const objSmartnode:any = {};
                 Object.keys(res).forEach((key)=>{
-                    const ipAddress =res[key].address.replace(":10227","").replace(":10226","");
+                    const ipAddress =res[key].address.substring(0,res[key].address.lastIndexOf(":"));
                     objSmartnode[ipAddress]=res[key];
                     objSmartnode[ipAddress].ipAddress = ipAddress;
                 });
