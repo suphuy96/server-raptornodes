@@ -2,7 +2,7 @@ import { ApolloError } from "apollo-server-express";
 import {ReWard, ReWardDocument, IReWard} from "../../models/Reward";
 import {ReWardHistory} from "../../models/RewardHistory";
 import {WithdrawWeekly, WithdrawWeeklyDocument, IWithdrawWeekly} from "../../models/WithdrawWeekly";
-import {ISmartNode, SmartNode,SmartNodeDocument} from "../../models/SmartNode";
+import {Iparticipant, ISmartNode, SmartNode, SmartNodeDocument} from "../../models/SmartNode";
 import {checkIsAuthen,checkIsAdmin} from "../../util/checkAuthen";
 import {OptionRpcClient} from "../../libs/rpc-raptoreum";
 import RpcRaptoreum from "../../libs/rpc-raptoreum";
@@ -28,6 +28,7 @@ import {WALLET_PASS_PHRASE} from "../../util/secrets";
 import {DataUltraFastEarning, IDataUltraFastEarning,DataUltraFastEarningDocument} from "../../models/dataUltraFastEarning";
 import {IUser,UserDocument} from "../../models/User";
 import {History} from "../../models/History";
+import {Withdraw} from "../../models/Withdraw";
 let isWaitToDone = false;
 let timeOutCheck = setTimeout(()=>{console.log("timeOutCheck");},100);
 let timeOutCheckReTry = setTimeout(()=>{console.log("timeOutCheckReTry");},100);
@@ -150,15 +151,151 @@ const funReward = async (reward:ReWardDocument,sNode?:SmartNodeDocument,lastHeig
                 }
                 return rawData;
             };
+            const funReAutoCompounding = async(userId:UserDocument,collateral:number,percentOfNode:number,smartnode?:SmartNodeDocument)=>{
+                const comment = "Auto Compounding in Raptornodes.com";
+                const amount = sNode.totalMatureInNextReward *( percentOfNode * ((100 - global.settingSystem.feeReward) / 100));
+                const feeHost = sNode.totalMatureInNextReward * ( percentOfNode * ((global.settingSystem.feeReward) / 100));
+                console.log("AutoCompounding:",userId.profile.name,"discord:",userId.discord,"email:",userId.email,"amount:",amount);
+                try{
+                    await RPCRuner.walletpassphrase(WALLET_PASS_PHRASE,40);
+                }catch (e){
+                    console.log(e);
+                }
+
+
+                // const smartNode = await SmartNode.findById({}).limit(1);
+                let smartNode = await SmartNode.findOne({statusCollateral : "Not Enough"}).populate("participants.userId");
+                if(!smartNode){
+                     smartNode = new SmartNode();
+                     const counts =await SmartNode.find();
+                    let accountAddress ="SmartNode#"+ counts.length;
+                    const datas = await RPCRuner.getAddressesByAccount(accountAddress);
+                    //check used account
+                    if(datas && datas.length){
+                        accountAddress ="SmartNode#"+ smartNode.label+"_"+new Date().getTime();
+                    }
+                    // const privateAddress: any = await RPCRuner.getAccountAddress("SmartNode#"+smartNode.label).catch((e) => {
+                    //     console.log("không thể kết nối raptoreum", e.toString());
+                    //     return false;
+                    // });
+                    const privateAddress: any = await RPCRuner.getAccountAddress(accountAddress).catch((e) => {
+                        console.log("không thể kết nối raptoreum", e.toString());
+                        return false;
+                    });
+                    smartNode.privateAddress = privateAddress;
+                    smartNode.privateAccount = "SmartNode#"+smartNode.label;
+                    smartNode.collateral = global.settingSystem.collateral||1500000;
+                    smartNode.statusCollateral = "Not Enough";
+                    smartNode.save();
+                }
+                const cloneData = JSON.parse(JSON.stringify(smartNode));
+                const rawData = await RPCRuner.sendFrom({
+                    address:smartNode.privateAddress,
+                    account: global.settingSystem.rewardAccount,
+                    comment: comment,
+                    amount: parseFloat((amount).toFixed(8)),
+                    comment_to: ""
+                }).catch(e => {
+                    console.log(e);
+                    sendMail((global.settingSystem.mailReward.cc.length ? (global.settingSystem.mailReward.cc.join()) : ""), "Schedule ReWard User AutoCompounding ---Error", "Schedule ReWard User:" + userId.email + "  raptornodes.com. Error" + e.toString()).then(() => {
+                        console.log("");
+                    });
+                });
+                console.log("rawData", rawData);
+                    // const rawData:string = await RPCRuner.sendFrom({address:smartNode.privateAddress,account:ctx.user.accountRTM,comment,amount:args.amount,comment_to:""});
+                    if(rawData){
+                        const withdraw = new Withdraw();
+                        withdraw.address = smartNode.privateAddress;
+                        withdraw.amount =   amount;
+                        withdraw.description = comment;
+                        // withdraw.type = comment;
+                        withdraw.author = userId._id;
+                        withdraw.txid = rawData;
+                        withdraw.save();
+                        const participants = smartNode.participants.find((ii:Iparticipant)=>ii.userId && typeof ii.userId==="object"&&userId._id.equals(userId._id));
+                        if(participants){
+                            participants.collateral+= amount;
+                            participants.percentOfNode=participants.collateral/smartNode.collateral;
+                            participants.txids.push(rawData);
+                            participants.time =new Date();
+                        }else{
+                            smartNode.participants.push({userId:userId._id,RTMRewards:0,collateral:amount,pendingRTMRewards:0,percentOfNode:amount/smartNode.collateral
+                                ,txids:[rawData]
+                                ,time:new Date()});
+                        }
+                        let collateral = 0;
+                        smartNode.participants.forEach((ii:Iparticipant)=>{
+                            collateral+=ii.collateral;
+                        });
+                        if(collateral>=smartNode.collateral){
+                            smartNode.statusCollateral ="Enough";
+                        }
+                        await smartNode.save();
+                        try{
+                            const history = new History();
+                            history.action = "joinSmartNodeAutoCompounding";
+                            history.author = userId._id;
+                            history.data = cloneData;
+                            history.dataOld = smartNode;
+                            await history.save();
+                        }catch{
+                        }
+                        return smartNode;
+                    }
+
+
+
+                const history = new ReWardHistory();
+                history.description = comment;
+                history.user = userId;
+                history.collateral = collateral;
+                history.percentOfNode = percentOfNode;
+                history.isVitual = userId.isVirtual;
+                history.feeReward = global.settingSystem.feeReward;
+                if(smartnode && smartnode._id){
+                    history.smartNode = smartnode._id;
+                }
+                history.feeHost = feeHost;
+                history.amount = parseFloat((amount).toFixed(8));
+                history.reward = reward._id;
+                history.days = reward.days;
+                history.dayEnd = reward.dayEnd || new Date();
+                history.txid = rawData;
+                history.paymentsPerDay = global.settingSystem.paymentsPerDay;
+                history.save();
+                try {
+                    if (global.settingSystem && global.settingSystem.mailReward && global.settingSystem.mailReward.enable) {
+                        sendMail((userId.email.indexOf("@")?userId.email:"") + (global.settingSystem.mailReward.cc.length ? ("," + global.settingSystem.mailReward.cc.join()) : ""), _.template(global.settingSystem.mailReward.label)({
+                            name: userId.profile.name,
+                            email: userId.email,
+                            avatar: userId.profile.picture,
+                            data: ""
+                        }), _.template(global.settingSystem.mailReward.template)({
+                            name: userId.profile.name,
+                            email: userId.email,
+                            avatar: userId.profile.picture,
+                            data: ""
+                        })).then(data => {
+                            console.log("đàads");
+                        });
+                    }
+                } catch (e) {
+                    console.log(e);
+                }
+                return rawData;
+            };
             console.log("vào aydadfasdlfjasldjfasd");
 
             //    payment in smartnode
             // for await (const smartnode of smartnodes) {
             if(sNode){
                 for await (const participant of sNode.participants) {
-                    console.log("tới đây00000",participant);
-
-                    await  funReW(participant.userId,participant.collateral,participant.percentOfNode,sNode);
+                    console.log("_",participant);
+                                if(participant.userId?.autoCompounding){
+                                    await  funReAutoCompounding(participant.userId,participant.collateral,participant.percentOfNode,sNode);
+                                }else{
+                                    await  funReW(participant.userId,participant.collateral,participant.percentOfNode,sNode);
+                                }
                 }
                 sNode.lastReward = new Date();
                 sNode.lastHeightReward = lastHeightReward;
